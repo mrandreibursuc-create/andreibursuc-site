@@ -11,7 +11,7 @@ TOOLS=[
  ('lower-extremity-nerve-explorer','lower-limb.html','Explorateur des nerfs du membre inférieur','Lower-limb nerve explorer','Plexus lombo-sacré, territoires et localisation.','Lumbosacral plexus, territories and localization.','FR / EN','EMG'),
  ('fascicle-explorer','fascicle.html','Explorateur des fascicules intraneuraux','Intraneural fascicle explorer','Explorer l’organisation des fascicules à l’intérieur des nerfs.','Explore the organization of fascicles within nerves.','FR / EN','EMG'),
  ('motor-block-explorer','motor-blocks.html','Explorateur des blocs moteurs','Motor block explorer','Membres supérieurs et inférieurs réunis dans un seul outil.','Upper and lower limbs together in one tool.','FR / EN','Neuro'),
- ('ultrasound-muscles-échographie-muscles','muscle-ultrasound.html','Muscles en échographie','Muscle ultrasound','Anatomie musculaire et vidéos échographiques.','Muscle anatomy and ultrasound videos.','FR / EN','Neuro')]
+ ('muscle-ultrasound','muscle-ultrasound.html','Muscles en échographie','Muscle ultrasound','Anatomie musculaire et vidéos échographiques.','Muscle anatomy and ultrasound videos.','FR / EN','Neuro')]
 URLS=[]
 from faq_content import faq_html, faq_teaser
 def rel(path,target):return os.path.relpath(target or '.',start=os.path.dirname(path) or '.').replace(os.sep,'/')
