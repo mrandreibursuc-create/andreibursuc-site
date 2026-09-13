@@ -1,0 +1,47 @@
+{
+  "updated": "2026-09-13",
+  "tools": [
+    {
+      "repository": "https://github.com/mrandreibursuc-create/Nerve-explorer",
+      "commit": "366e2a792becfb8ddf162dd5e3d01c9b155896e4",
+      "source": "index.html",
+      "local": "tools/upper-limb-en.html",
+      "sha256": "d916c724bc98beaf6af6d132d1f8f5b2a7f5029e2f975be6955e306c2af66f60"
+    },
+    {
+      "repository": "https://github.com/mrandreibursuc-create/Nerve-explorer",
+      "commit": "366e2a792becfb8ddf162dd5e3d01c9b155896e4",
+      "source": "explorateur_nerfs_membre_superieur.html",
+      "local": "tools/upper-limb-fr.html",
+      "sha256": "8c71306a9ae7869e777ad4377d2e44ff9c18674010a5ebdc4c7c851d36d9bc41"
+    },
+    {
+      "repository": "https://github.com/mrandreibursuc-create/Nerve-explorer",
+      "commit": "366e2a792becfb8ddf162dd5e3d01c9b155896e4",
+      "source": "le_nerve_explorer_4.html",
+      "local": "tools/lower-limb.html",
+      "sha256": "0057cbbb8d349d95332cb4159fe2cff14242dc787b2ac95a5b60fe6d39b2ce0c"
+    },
+    {
+      "repository": "https://github.com/mrandreibursuc-create/Nerve-explorer",
+      "commit": "366e2a792becfb8ddf162dd5e3d01c9b155896e4",
+      "source": "muscle-ultrasound-explorer.html",
+      "local": "tools/muscle-ultrasound.html",
+      "sha256": "322fcb66a4583f5411e10a6792ddab2726bd2fc3d1b08b13187f8cc9e312ddc5"
+    },
+    {
+      "repository": "https://github.com/mrandreibursuc-create/fascicle",
+      "commit": "a601c164ce59f726c590e2784c1e79613f2658be",
+      "source": "index.html",
+      "local": "tools/fascicle.html",
+      "sha256": "a692c0c1c2673c7aea0e64526a89d27698820299291d61e4b5f8a445f83bd265"
+    },
+    {
+      "repository": "https://github.com/mrandreibursuc-create/nerveblockerfinal",
+      "commit": "2e31c8390b7b845834afec55751c34d581da8426",
+      "source": "index.html",
+      "local": "tools/motor-blocks.html",
+      "sha256": "90ea3a69a3bc3aaabfc27045cd6116e413729e88a5f4f2ca4e34ee7cddf2a92a"
+    }
+  ]
+}

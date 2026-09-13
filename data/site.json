@@ -1,0 +1,16 @@
+{
+  "name": "Dr Andrei Bursuc",
+  "credentials": "MD, MSc",
+  "domain": "https://www.andreibursuc.com",
+  "clinic": {
+    "name": "Clinique de physiatrie CDN",
+    "street": "5515, rue Saint-Jacques Ouest, bureau 101",
+    "city": "Montréal, Québec H4A 2E3",
+    "phone": "514 735-5547",
+    "phoneLink": "+15147355547",
+    "fax": "514 735-5722",
+    "email": "info@physiatriecdn.com"
+  },
+  "youtube": "https://www.youtube.com/@DrAndreiBursucVideos",
+  "instagram": "https://www.instagram.com/apprendrempr_learnpmr/"
+}

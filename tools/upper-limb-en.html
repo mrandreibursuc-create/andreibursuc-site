@@ -1,0 +1,1534 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Upper-Limb Nerve Explorer — brachial plexus to hand</title>
+<style>
+  :root{
+    --ink:#161b22; --ink-soft:#445; --line:#e3e7ee; --line-soft:#eef1f6;
+    --paper:#f6f7f9; --card:#ffffff;
+    --nerve:#b8332a; --motor:#2566a8; --sensory:#c2761a; --pass:#2c8a5f; --pearl:#9a7a16; --root:#475569;
+    --nerve-bg:#fbecea; --motor-bg:#eaf1f9; --sensory-bg:#fbf1e3; --pass-bg:#e7f4ec; --pearl-bg:#f7f1dc; --root-bg:#eef1f5;
+    --focus:#161b22;
+    --r:10px; --r-sm:6px;
+    --mono:ui-monospace,"SF Mono",Menlo,Consolas,"Liberation Mono",monospace;
+    --sans:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{font-family:var(--sans);color:var(--ink);background:var(--paper);line-height:1.45;
+       -webkit-font-smoothing:antialiased;font-size:14px}
+  a{color:inherit}
+
+  /* ---------- top bar ---------- */
+  header.bar{position:sticky;top:0;z-index:40;background:rgba(246,247,249,.92);
+    backdrop-filter:saturate(140%) blur(8px);border-bottom:1px solid var(--line);padding:10px 18px}
+  .bar-row{display:flex;gap:14px;align-items:center;flex-wrap:wrap;max-width:1500px;margin:0 auto}
+  .title{display:flex;flex-direction:column;line-height:1.1;margin-right:6px}
+  .title b{font-size:15px;letter-spacing:-.01em}
+  .title span{font-size:11px;color:var(--ink-soft);font-family:var(--mono);letter-spacing:.02em}
+  .search{flex:1 1 220px;min-width:170px;position:relative}
+  .search input{width:100%;padding:8px 30px 8px 12px;border:1px solid var(--line);border-radius:var(--r-sm);
+    background:var(--card);font:inherit;color:var(--ink)}
+  .search input:focus{outline:2px solid var(--focus);outline-offset:0;border-color:transparent}
+  .search .x{position:absolute;right:8px;top:50%;transform:translateY(-50%);cursor:pointer;color:var(--ink-soft);
+    border:0;background:none;font-size:15px;display:none}
+  .chips{display:flex;gap:5px;align-items:center}
+  .chips .lab{font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-soft);margin-right:2px}
+  .rootchip{font-family:var(--mono);font-size:12px;padding:6px 9px;border:1px solid var(--line);
+    border-radius:var(--r-sm);background:var(--card);cursor:pointer;color:var(--root);font-weight:600;
+    transition:.12s}
+  .rootchip:hover{border-color:var(--root)}
+  .rootchip.on{background:var(--root);color:#fff;border-color:var(--root)}
+  .toggles{display:flex;gap:5px}
+  .tg{font-size:11px;padding:6px 9px;border:1px solid var(--line);border-radius:var(--r-sm);
+    background:var(--card);cursor:pointer;display:flex;gap:6px;align-items:center;color:var(--ink-soft)}
+  .tg .dot{width:9px;height:9px;border-radius:2px}
+  .tg.off{opacity:.4;text-decoration:line-through}
+  .tg[data-t=motor] .dot{background:var(--motor)} .tg[data-t=sensory] .dot{background:var(--sensory)}
+  .tg[data-t=pass] .dot{background:var(--pass)} .tg[data-t=pearl] .dot{background:var(--pearl)}
+  .ghost{font-size:11px;color:var(--ink-soft);border:1px solid var(--line);background:var(--card);
+    border-radius:var(--r-sm);padding:6px 9px;cursor:pointer}
+  .ghost:hover{border-color:var(--ink-soft)}
+
+  /* status line for cross-highlight */
+  .status{max-width:1500px;margin:8px auto 0;font-size:12px;color:var(--ink-soft);min-height:16px}
+  .status b{color:var(--ink)} .status .key{font-family:var(--mono)}
+
+  main{max-width:1500px;margin:0 auto;padding:16px 18px 60px}
+
+  /* ---------- plexus navigator ---------- */
+  .nav-wrap{background:var(--card);border:1px solid var(--line);border-radius:var(--r);
+    padding:6px 10px 2px;margin-bottom:18px;position:relative;overflow:hidden}
+  .nav-wrap .hint{position:absolute;right:12px;top:10px;font-size:11px;color:var(--ink-soft);
+    font-family:var(--mono)}
+  svg.braid{width:100%;height:auto;display:block;touch-action:manipulation}
+  .cmap-wrap{background:var(--card);border:1px solid var(--line);border-radius:var(--r);
+    padding:8px 12px;margin:2px 0 18px;overflow-x:auto}
+  svg.cmap{width:100%;min-width:780px;height:auto;display:block;font-family:var(--sans)}
+  .cmap .creg{fill:#9aa4b1;font-size:11px;font-weight:600;text-anchor:middle;text-transform:uppercase;letter-spacing:.05em}
+  .cmap .cdiv{stroke:#eef1f5;stroke-width:1}
+  .cmap .clane{font-size:12.5px;font-weight:700}
+  .cmap .claneln{stroke-width:2.6;opacity:.30;stroke-linecap:round}
+  .cmap .clbl{fill:#3a4654;font-size:10px;paint-order:stroke;stroke:#fff;stroke-width:3px;stroke-linejoin:round}
+  .csite{cursor:pointer}
+  .csite .cdot,.csite .chalo{transition:.12s}
+  .csite:hover .cdot{r:6.5}
+  .csite:hover .chalo{stroke:#1f2a37;stroke-width:1.6}
+  .csite.sel .cdot{fill:#0b6b3a}
+  .csite.sel .chalo{stroke:#0b3b22;stroke-width:2}
+  .csite.sel .clbl{font-weight:700;fill:#0b3b22}
+  /* compression-site text highlight that KEEPS the rest of the card visible */
+  .sitehit{background:#e7f6ee;box-shadow:inset 0 0 0 1.5px #97d3b1;border-radius:7px}
+  .braid .seg{fill:none;stroke:#c4ccd6;stroke-width:2.4;stroke-linecap:round}
+  .braid .seg.post{stroke-dasharray:1 5}
+  .braid .seg.lit{stroke:#475569;stroke-width:3.4}
+  .braid .node{cursor:pointer}
+  .braid .node circle,.braid .node rect{stroke:#fff;stroke-width:1.5}
+  .braid .nodetext{font-family:var(--mono);font-size:11px;fill:#fff;font-weight:600;
+    text-anchor:middle;dominant-baseline:central;pointer-events:none}
+  .braid .chiplbl{font-family:var(--sans);font-size:11.5px;font-weight:600;fill:#33404f;
+    text-anchor:middle;dominant-baseline:central;pointer-events:none}
+  .braid .nlabel{font-family:var(--sans);font-size:10.5px;fill:var(--ink-soft);text-anchor:middle}
+  .braid .structlbl{font-family:var(--sans);font-size:12px;font-weight:600;fill:#2a3340;text-anchor:middle}
+  .braid .lvdim{opacity:.12}
+  .braid .seg.lvhit{stroke:#475569;stroke-width:3.4;opacity:1}
+  .braid .node.lvhit,.braid .branchbox.lvhit{opacity:1}
+  .braid .node.root.lvhit circle{stroke:#111827;stroke-width:3}
+  .braid.rootlit .seglabel{opacity:.12}
+  .braid .colhdr{font-family:var(--sans);font-size:10px;fill:#9aa4b1;text-anchor:middle;
+    text-transform:uppercase;letter-spacing:.1em}
+  .braid .seglabel{font-family:var(--sans);font-size:9.5px;font-style:italic;fill:#7a8694;
+    text-anchor:middle;paint-order:stroke;stroke:#fff;stroke-width:2.8px;stroke-linejoin:round}
+  .braid .term text{font-size:10.5px}
+  .braid .node.dim{opacity:.28}
+  .braid .seg.dim{opacity:.12}
+  .braid .branchbox{cursor:default}
+  .treewrap{margin:8px 0 6px;overflow-x:auto;border:1px solid var(--line-soft);border-radius:8px;
+    background:#fcfdfe;padding:8px 10px}
+  .treelabel{font-size:9.5px;text-transform:uppercase;letter-spacing:.1em;color:var(--ink-soft);
+    font-weight:600;margin:0 2px 6px}
+  .tnode.tn-on{cursor:pointer}
+  .tnode.tn-on .tnbox{transition:.12s}
+  .tnode.tn-on:hover .tnbox{stroke-opacity:1}
+  .tnode.sel .tnbox{stroke-width:2.4;stroke-opacity:1}
+  .cbody.treemode [data-search]:not(.thit){opacity:.25}
+  .cbody.treemode .thit{background:#eaf3ff;box-shadow:inset 0 0 0 1px #c5dcf5;border-radius:6px}
+  .braid .node.small.lvhit rect{stroke:#475569;stroke-width:1.6}
+  .braid .branchbox .bbg{transition:.12s}
+  .braid .branchbox:hover .bbg{stroke-opacity:.9;filter:brightness(.985)}
+  .braid .branchbox.dim{opacity:.3}
+  .braid .bconn.dim{opacity:.3}
+  .braid .bconn.lvhit{opacity:1}
+
+  @keyframes sweep{to{stroke-dashoffset:0}}
+  .braid .seg.sweep{stroke-dasharray:var(--len);stroke-dashoffset:var(--len);
+    animation:sweep .75s ease forwards}
+
+  /* ---------- section labels ---------- */
+  .eyebrow{font-size:10px;text-transform:uppercase;letter-spacing:.12em;color:var(--ink-soft);
+    font-weight:600;margin:0 2px 8px;display:flex;align-items:center;gap:8px}
+  .eyebrow::after{content:"";flex:1;height:1px;background:var(--line)}
+
+  /* ---------- lesion explorer ---------- */
+  .lesionbar{display:flex;flex-wrap:wrap;gap:10px 14px;margin:0 2px 12px}
+  .lgroup{display:flex;flex-wrap:wrap;gap:5px;align-items:center}
+  .lgrp-label{font-size:11px;font-weight:700;margin-right:1px}
+  .lpill{border:1.4px solid;border-radius:999px;padding:4px 11px;font-size:12px;font-weight:600;
+    background:#fff;cursor:pointer;line-height:1.25;transition:.12s;font-family:var(--sans)}
+  .lpill:hover{filter:brightness(.96)}
+  .lesionpanel{border:1px solid var(--line);border-radius:var(--r);padding:13px 15px;margin:0 0 16px;background:var(--card)}
+  .lesionpanel .lphead{font-weight:700;font-size:14px;margin:0 0 9px}
+  .lcols{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  @media(max-width:560px){.lcols{grid-template-columns:1fr}}
+  .lcol h4{margin:0 0 6px;font-size:10.5px;text-transform:uppercase;letter-spacing:.07em}
+  .lcol.aff h4{color:#b8332a}
+  .lcol.spd h4{color:#2c8a5f}
+  .lcol ul{margin:0;padding:0;list-style:none;display:flex;flex-wrap:wrap;gap:4px}
+  .lcol li{font-size:12px;padding:2px 8px;border-radius:6px}
+  .lcol.aff li{background:#fceeec;color:#9a2a22}
+  .lcol.spd li{background:#eaf6ef;color:#1f6d49}
+  .lsens{margin:11px 0 0;font-size:12.5px;color:#33404f;line-height:1.5}
+  .lsens b{color:#1f2937}
+  .lnote{margin:7px 0 0;font-size:12px;color:var(--ink-soft);font-style:italic;line-height:1.5}
+  /* ---------- plexus pattern ---------- */
+  .braid .plexel rect{cursor:pointer}
+  .braid .plexel:hover rect{stroke:#475569;stroke-width:2}
+  body.plexmode .item:not(.hit){opacity:.3}
+  body.plexmode .item.hit{background:#eaf2fb;box-shadow:inset 0 0 0 1px #c2d8f0}
+  body.plexmode .item.hit .lvl.match{background:#2566a8;color:#fff;opacity:1}
+  .plexpanel{border:1px solid var(--line);border-left:4px solid #475569;border-radius:var(--r);
+    padding:13px 15px;margin:0 0 14px;background:var(--card)}
+  .plexpanel .pphead{font-weight:700;font-size:14.5px;margin:0 0 3px;color:#2a3340}
+  .plexpanel .ppsub{font-size:11px;color:var(--ink-soft);margin:0 0 10px}
+  .pprow{display:grid;grid-template-columns:120px 1fr;gap:4px 12px;font-size:12.5px;line-height:1.5;
+    padding:5px 0;border-top:1px solid var(--line-soft)}
+  .pprow:first-of-type{border-top:0}
+  .pprow .ppk{font-weight:700;color:#475569;font-size:10.5px;text-transform:uppercase;letter-spacing:.04em;padding-top:1px}
+  .pprow.warn .ppk{color:#b8332a}
+  .pprow .ppv b{color:#1f2937}
+  @media(max-width:560px){.pprow{grid-template-columns:1fr;gap:1px}}
+
+  /* ---------- anomalous innervation + eponyms ---------- */
+  .anomsigns{margin:9px 0 0;padding-left:18px}
+  .anomsigns li{font-size:12.5px;line-height:1.5;margin:3px 0;color:#33404f}
+  .eponyms{display:grid;grid-template-columns:1fr 1fr;gap:7px 22px;margin:0 2px 10px}
+  @media(max-width:620px){.eponyms{grid-template-columns:1fr}}
+  .epi{font-size:12.5px;line-height:1.5;color:#33404f}
+  .epi b{color:#1f2937}
+  #cmap .cprox .cdot{stroke:#fff;stroke-width:1}
+  #cmap .cprox.sel .cdot{r:7}
+  #cmap .cprox .clbl{fill:#475569}
+
+  /* ---------- roots strip ---------- */
+  .roots{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:22px}
+  .rootcard{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:11px 12px;
+    border-top:3px solid var(--root);transition:.12s}
+  .rootcard.on{box-shadow:0 0 0 2px var(--root) inset;border-top-color:var(--root)}
+  .rootcard h3{margin:0 0 6px;font-family:var(--mono);font-size:15px;color:var(--root);display:flex;
+    justify-content:space-between;align-items:baseline}
+  .rootcard h3 em{font-style:normal;font-size:10px;color:var(--ink-soft);font-family:var(--sans)}
+  .rootcard .blk{margin:6px 0}
+  .rootcard .blk .t{font-size:9.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-soft);
+    margin-bottom:2px}
+  .rootcard .blk .v{font-size:12px}
+  .derm{color:var(--sensory)}
+
+  /* ---------- nerve cards ---------- */
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));
+    gap:14px;align-items:start}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);overflow:hidden;
+    transition:.15s;scroll-margin-top:130px}
+  .card.span2{grid-column:span 2}
+  .card.focus{box-shadow:0 0 0 2px var(--focus);}
+  .card.dimcard{opacity:.5}
+  .chead{padding:12px 14px;border-bottom:1px solid var(--line-soft);cursor:pointer;
+    display:flex;align-items:center;gap:10px;border-left:4px solid var(--nerve)}
+  .chead .nm{font-size:15px;font-weight:650;letter-spacing:-.01em}
+  .chead .lv{font-family:var(--mono);font-size:11px;color:#fff;background:var(--nerve);
+    padding:2px 7px;border-radius:20px;margin-left:auto;white-space:nowrap}
+  .chead .car{color:var(--ink-soft);font-size:11px;transition:.15s}
+  .card.collapsed .car{transform:rotate(-90deg)}
+  .card.collapsed .cbody{display:none}
+  .cbody{padding:4px 14px 14px}
+
+  .sec{margin-top:12px}
+  .sec .sh{font-size:10px;text-transform:uppercase;letter-spacing:.08em;font-weight:700;
+    display:flex;align-items:center;gap:6px;margin-bottom:6px}
+  .sec .sh .sq{width:9px;height:9px;border-radius:2px}
+  .sh.motor{color:var(--motor)} .sh.motor .sq{background:var(--motor)}
+  .sh.sensory{color:var(--sensory)} .sh.sensory .sq{background:var(--sensory)}
+  .sh.pass{color:var(--pass)} .sh.pass .sq{background:var(--pass)}
+  .sh.pearl{color:var(--pearl)} .sh.pearl .sq{background:var(--pearl)}
+
+  .item{display:flex;align-items:flex-start;gap:8px;padding:4px 6px;border-radius:var(--r-sm);
+    font-size:13px;transition:.1s}
+  .item .mn{flex:1}
+  .item .mn .note{color:var(--ink-soft);font-size:11.5px}
+  .lvls{display:flex;gap:3px;flex-wrap:wrap;justify-content:flex-end}
+  .lvl{font-family:var(--mono);font-size:10px;padding:1px 5px;border-radius:10px;
+    background:var(--root-bg);color:var(--root);white-space:nowrap}
+  .lvl.minor{opacity:.5}
+  .pass-item{background:var(--pass-bg)} .pass-item .nm2{color:var(--pass);font-weight:600}
+  .pearl-item{font-size:12.5px;color:#5b4d10;background:var(--pearl-bg);display:block;padding:6px 8px}
+
+  /* sub-nerve callout (AIN, PIN, deep ulnar) */
+  .sub{margin:8px 0;border:1px dashed var(--line);border-radius:var(--r-sm);padding:8px 10px;background:#fafbfc}
+  .sub .subh{font-family:var(--mono);font-size:12px;font-weight:700;color:var(--nerve);margin-bottom:4px;
+    display:flex;gap:8px;align-items:center}
+  .sub .subh .tag{font-size:9px;background:var(--nerve);color:#fff;padding:1px 6px;border-radius:10px;
+    text-transform:uppercase;letter-spacing:.05em}
+
+  /* sites list (entrapment) */
+  ol.sites{margin:4px 0 0;padding-left:20px;font-size:12.5px}
+  ol.sites li{margin:2px 0}
+  ol.sites li.key{font-weight:600;color:var(--pass)}
+
+  /* cross-highlight states */
+  body.rootmode .item:not(.hit){opacity:.32}
+  body.rootmode .item.hit{background:#fff6cc;box-shadow:inset 0 0 0 1px #efe09a}
+  body.rootmode .item.hit .lvl.match{background:var(--root);color:#fff;opacity:1}
+
+  mark{background:#fde68a;color:inherit;border-radius:2px;padding:0 1px}
+
+  footer{max-width:1500px;margin:0 auto;padding:0 18px 40px;font-size:11px;color:var(--ink-soft)}
+  footer code{font-family:var(--mono);background:#eef1f5;padding:1px 4px;border-radius:3px}
+
+  @media (max-width:760px){
+    .roots{grid-template-columns:repeat(2,1fr)}
+    .card.span2{grid-column:span 1}
+  }
+  @media (prefers-reduced-motion:reduce){
+    .braid .seg.sweep{animation:none;stroke-dashoffset:0}
+    *{transition:none!important}
+  }
+  @media print{
+    header.bar,.nav-wrap .hint,.toggles,.search,.chips,.ghost,#qx,#lesionbar,#anombar{display:none!important}
+    .card.collapsed .cbody{display:block!important}
+    body{background:#fff}
+    .grid{display:block} .card{break-inside:avoid;margin-bottom:10px}
+    .card.dimcard,.item{opacity:1!important}
+    /* neutralise every interactive dim/highlight state for a clean handout */
+    .braid .dim,.braid .lvdim,.braid .lvhit,.braid .lit,.braid .sweep{opacity:1!important}
+    .cbody.treemode [data-search]{opacity:1!important;background:none!important;box-shadow:none!important}
+    body.rootmode .item,body.plexmode .item,.item.hit,.lvl.match{opacity:1!important}
+    .nav-wrap,.cmap-wrap{break-inside:avoid;overflow:visible}
+    svg.cmap{min-width:0}
+    .eyebrow{break-after:avoid}
+  }
+</style>
+</head>
+<body>
+<header class="bar">
+  <div class="bar-row">
+    <div class="title"><b>Upper-Limb Nerve Explorer</b><span>brachial plexus → hand · electrodiagnostic reference</span></div>
+    <div class="search">
+      <input id="q" type="search" placeholder="Search a muscle, nerve, or site — e.g. FDP, AIN, Guyon" autocomplete="off">
+      <button class="x" id="qx" aria-label="clear">×</button>
+    </div>
+    <div class="chips">
+      <span class="lab">Root</span>
+      <button class="rootchip" data-root="C5">C5</button>
+      <button class="rootchip" data-root="C6">C6</button>
+      <button class="rootchip" data-root="C7">C7</button>
+      <button class="rootchip" data-root="C8">C8</button>
+      <button class="rootchip" data-root="T1">T1</button>
+    </div>
+    <div class="toggles">
+      <button class="tg" data-t="motor"><span class="dot"></span>Motor</button>
+      <button class="tg" data-t="sensory"><span class="dot"></span>Sensory</button>
+      <button class="tg" data-t="pass"><span class="dot"></span>Passage</button>
+      <button class="tg" data-t="pearl"><span class="dot"></span>Pearls</button>
+    </div>
+    <button class="ghost" id="reset">Reset</button>
+    <button class="ghost" id="printbtn" title="Open the print dialog — choose “Save as PDF” for a clean handout">Print / PDF</button>
+  </div>
+  <div class="status" id="status">Tip: click a root level, a nerve in the plexus, or search a muscle. Nothing selected.</div>
+</header>
+
+<main>
+  <!-- ================= PLEXUS NAVIGATOR ================= -->
+  <div class="nav-wrap">
+    <span class="hint">solid = anterior · dashed = posterior · click a trunk, cord or nerve →</span>
+    <svg class="braid" id="braid" viewBox="0 0 1060 706" role="img" aria-label="Brachial plexus navigator">
+      <g id="segs"></g>
+      <g id="branches"></g>
+      <g id="nodes"></g>
+    </svg>
+  </div>
+
+  <div class="plexpanel" id="plexpanel" hidden></div>
+
+  <!-- ================= COMPRESSION / ENTRAPMENT MAP ================= -->
+  <div class="eyebrow">Compression / entrapment sites — anatomical course (<span style="color:#2c8a5f;font-weight:700">●</span> distal site → opens its card · <span style="color:#475569;font-weight:700">●</span> proximal nerve → opens a clinical summary)</div>
+  <div class="cmap-wrap">
+    <svg class="cmap" id="cmap" role="img" aria-label="Upper-limb nerve entrapment map by anatomical region"></svg>
+  </div>
+  <div class="plexpanel" id="proxpanel" hidden></div>
+
+  <!-- ================= LESION EXPLORER ================= -->
+  <div class="eyebrow">Lesion explorer — pick a site to see the expected exam pattern (weak vs spared)</div>
+  <div class="lesionbar" id="lesionbar"></div>
+  <div class="lesionpanel" id="lesionpanel" hidden></div>
+
+  <!-- ================= ROOTS ================= -->
+  <div class="eyebrow">Roots — myotome, reflex, dermatome</div>
+  <div class="roots" id="roots"></div>
+
+  <!-- ================= NERVE CARDS ================= -->
+  <div class="eyebrow">Nerves — course, motor, sensory, pearls</div>
+  <div class="grid" id="grid"></div>
+
+  <!-- ================= ANOMALOUS INNERVATION ================= -->
+  <div class="eyebrow">Anomalous innervation — the “why doesn’t this study make sense?” set</div>
+  <div class="lesionbar" id="anombar"></div>
+  <div class="lesionpanel" id="anompanel" hidden></div>
+
+  <!-- ================= EPONYMS & PROXIMAL SITES ================= -->
+  <div class="eyebrow">Eponyms &amp; proximal entrapment sites</div>
+  <div class="eponyms" id="eponyms"></div>
+</main>
+
+<footer>
+  Levels shown are each muscle's myotome (the root that muscle tests on EMG), not always the parent nerve's full span; faded chips = lesser contribution.
+  Single editable source — to add a muscle, add one line to the <code>DATA</code> object. Works offline, no dependencies.
+</footer>
+
+<script>
+/* =====================================================================
+   DATA  — single source of truth.
+   level string syntax:  "C6,C7"  primary;  parentheses = lesser, e.g. "C5,C6,(C7)"
+   ===================================================================== */
+const ROOTS = [
+  {id:"C5", rot:"Biceps, brachioradialis",
+   myo:[["Deltoid","Axillary"],["Infraspinatus","Suprascapular"],["Teres minor","Axillary"]],
+   pns:"Lateral forearm (lat. cut. n. forearm)", asia:"Lateral antecubital fossa, proximal to elbow"},
+  {id:"C6", rot:"Biceps, brachioradialis",
+   myo:[["Biceps","Musculocut."],["Brachioradialis","Radial"],["ECRL","Radial"],["ECRB","PIN"]],
+   pns:"Palmar thumb (median)", asia:"Dorsal D1 (radial)"},
+  {id:"C7", rot:"Triceps",
+   myo:[["Triceps","Radial"],["FCR","Median"],["PT","Median"],["EDC","PIN"],["Latissimus dorsi","Thoracodorsal"]],
+   pns:"Palmar D3 (median)", asia:"Dorsal D3 (radial)"},
+  {id:"C8", rot:"—",
+   myo:[["FDP 1–2","Median/AIN"],["FDP 3–4","Ulnar"],["FPL","AIN"],["FDS","Median"],["FCU","Ulnar"],["EIP/ECU","PIN"]],
+   pns:"Palmar D5 (ulnar)", asia:"Dorsal D5 (ulnar)"},
+  {id:"T1", rot:"—",
+   myo:[["APB","Median"],["ADM","Ulnar"],["FDI","Ulnar"],["Interossei","Ulnar"]],
+   pns:"Medial forearm (med. cut. n. forearm)", asia:"Medial antecubital fossa, proximal to med. epicondyle"},
+];
+
+/* m(name, levels, note) ; s = sensory ; helpers below */
+const m=(n,l,note)=>({n,l,note:note||""});
+const s=(n,l,note)=>({n,l,note:note||""});
+
+const DATA = [
+  /* ---- Localization rules (cross-cutting) ---- */
+  {id:"plexus", name:"Localization rules", level:"root ⟷ plexus ⟷ DRG", span:true, kind:"plexus"},
+
+  /* ---- Musculocutaneous ---- */
+  {id:"mcn", name:"Musculocutaneous n.", level:"C5,C6,(C7)", cord:"Lateral cord",
+   motor:[ m("Biceps brachii","C5,C6"), m("Brachialis","C5,C6"), m("Coracobrachialis","C5,C6,(C7)") ],
+   sensory:[ s("Lateral cutaneous n. of forearm","C5,C6,(C7)","lateral forearm — continuation of MCN") ],
+   pearls:[ "Lateral forearm sensory loss with biceps weakness → MCN (vs C6 root, which also hits brachioradialis/wrist extensors)." ]},
+
+  /* ---- Axillary ---- */
+  {id:"ax", name:"Axillary n.", level:"C5,C6", cord:"Posterior cord",
+   pass:[ {n:"Quadrangular space", d:"with posterior circumflex humeral artery"} ],
+   motor:[ m("Deltoid","C5,C6"), m("Teres minor","C5,C6") ],
+   sensory:[ s("Superior lateral cutaneous n. of arm","C5,C6","“sergeant’s patch” over deltoid") ],
+   pearls:[ "Isolated deltoid + teres minor weakness + patch sensory loss → axillary (quadrangular space / anterior shoulder dislocation)." ]},
+
+  /* ---- Median ---- */
+  {id:"med", name:"Median n.", level:"C6,C7,C8,T1,(C5)", cord:"Lateral + medial cords", span:true,
+   pass:[
+     {n:"Arm", d:"ligament/canal of Struthers → under bicipital aponeurosis → between the 2 heads of pronator teres"},
+     {n:"Forearm", d:"FDS arcade (sublimis bridge)"},
+   ],
+   motor:[
+     m("Pronator teres","C6,C7"), m("FCR","C6,C7"), m("Palmaris longus","C7,C8"),
+     m("FDS","C7,C8,T1","C8 predominant"),
+   ],
+   subnerves:[
+     {tag:"branch", name:"AIN (anterior interosseous n.)", level:"C7,C8,(T1)", note:"motor only — no sensory",
+      motor:[ m("FDP 1–2","C7,C8","digits 2–3"), m("FPL","C7,C8"), m("Pronator quadratus","C7,C8") ]},
+   ],
+   pass2:[ {n:"Carpal tunnel", d:"median n. + FPL/FDS/FDP tendons; scaphoid–trapezium to hook of hamate–pisiform"} ],
+   sensory:[
+     s("Palmar cutaneous branch","C6,C7,C8","central palm — arises proximal to tunnel, SPARED in CTS"),
+     s("Digital sensory branches","C6,C7,C8","3½ palmar fingers (thumb–radial ring)"),
+   ],
+   handmotor:[
+     m("Opponens pollicis","C8,T1"), m("APB","C8,T1"), m("FPB superficial head","C8,T1"), m("Lumbricals 1–2","C8,T1"),
+   ],
+   pearls:[
+     "AIN: pure motor (FPL · FDP2–3 · PQ; “OK”-sign loss). Usually Parsonage–Turner, not a true entrapment.",
+     "Thenar sensation spared in CTS (palmar cutaneous arises proximal); its loss → proximal median lesion.",
+     "PT often spared in pronator syndrome — sample FPL/FCR too.",
+     "Severe CTS can slow forearm CV (fast fibres blocked) — not a 2nd lesion.",
+     "DML >130% ULN = demyelinating. Palm:wrist amp ratio >1.2 motor / >1.6 sensory = conduction block.",
+     "US: wrist CSA ≥13 mm² or wrist:forearm ratio >1.4; long-axis notch sign = ongoing compression.",
+   ]},
+
+  /* ---- Radial ---- */
+  {id:"rad", name:"Radial n.", level:"C5,C6,C7,C8,(T1)", cord:"Posterior cord", span:true,
+   pass:[
+     {n:"Axilla", d:"high radial / crutch palsy — adds triceps weakness + posterior arm & forearm sensory loss; deltoid and latissimus spared (vs a posterior-cord lesion)"},
+     {n:"Arm", d:"triangular interval (with profunda brachii) → spiral (radial) groove of humerus — “Saturday-night” palsy"},
+     {n:"Distal forearm / wrist", d:"superficial radial n. turns subcutaneous over the distal radius → cheiralgia paraesthetica / Wartenberg (tight watch-strap, bracelet, handcuffs); pure sensory"},
+   ],
+   motor:[
+     m("Triceps","C6,C7,C8","C7 predominant — branches arise PROXIMAL to groove"),
+     m("Anconeus","C7,C8"),
+     m("Brachioradialis","C5,C6"), m("ECRL","C6,C7"),
+   ],
+   sensory:[
+     s("Posterior cutaneous n. of arm","C5,C6,C7,C8","posterior arm"),
+     s("Inferior lateral cutaneous n. of arm","C5,C6,C7,C8","infero-lateral arm"),
+     s("Posterior cutaneous n. of forearm","C5,C6,C7,C8","posterior forearm"),
+     s("Superficial radial n.","C6,C7,C8","dorsoradial hand / dorsum of radial 3½ digits — SENSORY only"),
+   ],
+   subnerves:[
+     {tag:"branch", name:"PIN (deep branch → posterior interosseous n.)", level:"C7,C8", note:"motor only",
+      motor:[
+        m("ECRB","C6,C7"), m("Supinator","C6,C7"), m("EDC","C7,C8"), m("EDM","C7,C8"),
+        m("ECU","C7,C8"), m("APL","C7,C8"), m("EPL","C7,C8"), m("EPB","C7,C8"), m("EIP","C7,C8"),
+      ],
+      sites:["Fibrous bands at the radial head","Tendinous edge of ECRB","Leash of Henry (recurrent radial vessels)","Arcade of Frohse (proximal supinator) — classic PIN syndrome","Distal edge of supinator"],
+      sitesLabel:"5 PIN compression sites (proximal → distal)", keyIndex:3},
+   ],
+   pearls:[
+     "Spiral-groove (“Saturday-night”) palsy: wrist/finger drop + BR weak, triceps SPARED, dorsoradial sensory loss.",
+     "PIN: finger drop + radial wrist deviation (ECU out, ECRL in), NO sensory loss.",
+     "Wrist drop + normal superficial-radial SNAP → PIN, demyelinating groove/axilla, C7, central, or <4-day axonal.",
+     "Sample brachioradialis (not ECRB) to separate main-radial vs deep-branch lesions (ECRB innervation is variable).",
+     "Radial motor CV is unreliable — read conduction block across the groove + distal CMAP, not velocity.",
+   ]},
+
+  /* ---- Ulnar ---- */
+  {id:"uln", name:"Ulnar n.", level:"C8,T1", cord:"Medial cord", span:true,
+   motor:[ m("FCU","C7,C8,T1","C8 predominant"), m("FDP 3–4","C7,C8","digits 4–5") ],
+   sites:["Arcade of Struthers (mid-arm intermuscular septum)","Retrocondylar (ulnar) groove — behind the medial epicondyle (epitrochleo-olecranon)","Cubital tunnel (humero-ulnar aponeurosis / Osborne band)","FCU exit (deep flexor–pronator aponeurosis)"],
+   sitesLabel:"Elbow entrapment sites", keyIndex:[1,2],
+   pass2:[ {n:"Guyon’s canal (wrist)", d:"ulnar n. + artery/vein; floor = flexor retinaculum/pisohamate lig.; roof = palmar carpal lig.; between pisiform & hook of hamate"} ],
+   sensory:[
+     s("Palmar cutaneous branch","C8,T1","ulnar palm — arises proximal"),
+     s("Dorsal cutaneous branch","C8,T1","dorso-ulnar hand & digits — SPARED in Guyon (arises ~5 cm proximal to wrist)"),
+     s("Superficial terminal branch","C8,T1","palmar D5 + ulnar D4; supplies palmaris brevis"),
+   ],
+   subnerves:[
+     {tag:"deep motor branch", name:"Deep (motor) branch", level:"C8,T1", note:"in & beyond Guyon’s canal",
+      groups:[
+        {label:"Hypothenar", motor:[ m("ADM","C8,T1"), m("ODM","C8,T1"), m("FDM","C8,T1") ]},
+        {label:"Deep / interossei", motor:[
+          m("Lumbricals 3–4","C8,T1"), m("Dorsal & palmar interossei","C8,T1"),
+          m("FDI","C8,T1","Froment / first dorsal interosseous"),
+          m("Adductor pollicis","C8,T1"), m("FPB deep head","C8,T1"),
+        ]},
+      ]},
+   ],
+   pearls:[
+     "FCU/FDP4–5 weak → above wrist; but FCU is often SPARED in UNE (fascicular) — a normal FCU doesn’t exclude the elbow.",
+     "Study elbow FLEXED; localise on slowing >10–11 m/s across the elbow (extended → factitious slowing).",
+     "Apparent block wrist→below-elbow = usually Martin–Gruber — confirm (stim median, record ulnar) before calling it.",
+     "Abnormal dorsal-ulnar-cutaneous SNAP → lesion proximal to wrist; a NORMAL one does not exclude UNE.",
+     "UNW mimics MND (painless wasting) — discriminator = intact APB; localise with wrist-vs-palm FDI (block / CV <37 m/s).",
+     "US: ulnar CSA >10 mm² abnormal; swelling ratio (elbow ÷ forearm or ÷ arm) >1.5 localises.",
+   ]},
+];
+
+/* localization pearls (cross-cutting) */
+const LOCALIZE = [
+  "MABC sensory loss → lower trunk / medial cord.",
+  "Horner syndrome → very proximal: T1 root / lower trunk (e.g. Pancoast, avulsion).",
+  "Combined median + ulnar intrinsic weakness, normal radial → lower trunk / medial cord.",
+  "Deltoid + triceps (axillary + radial) weakness → posterior cord.",
+  "Absent SNAP → lesion at/distal to the DRG. Preserved SNAP in numb skin → root, demyelinating block, or <4-day axonal.",
+  "Double crush (e.g. UNE + C8 radic): sample paraspinals — fibrillations there put a 2nd lesion at/proximal to the root.",
+];
+
+/* =====================================================================
+   helpers
+   ===================================================================== */
+const ALL_LV=["C5","C6","C7","C8","T1"];
+function parseLevels(str){
+  // returns {levels:[...all], minor:[...]}
+  const out=[],minor=[];
+  (str||"").split(",").map(x=>x.trim()).filter(Boolean).forEach(tok=>{
+    const mn=tok.startsWith("(");
+    const lv=tok.replace(/[()]/g,"");
+    out.push(lv); if(mn) minor.push(lv);
+  });
+  return {levels:out,minor};
+}
+function lvlChips(str){
+  const {levels,minor}=parseLevels(str);
+  return `<span class="lvls">`+levels.map(l=>
+    `<span class="lvl ${minor.includes(l)?'minor':''}" data-lvl="${l}">${l}</span>`).join("")+`</span>`;
+}
+function dataLevels(str){return parseLevels(str).levels.join(" ");}
+const TYPE_COLOR={nerve:"var(--nerve)",motor:"var(--motor)",sensory:"var(--sensory)",pass:"var(--pass)"};
+const el=(h)=>{const t=document.createElement("template");t.innerHTML=h.trim();return t.content.firstChild;};
+
+/* =====================================================================
+   render ROOTS strip
+   ===================================================================== */
+const rootsEl=document.getElementById("roots");
+ROOTS.forEach(r=>{
+  const myo=r.myo.map(([mm,nn])=>`<div class="item" data-type="motor" data-search="${mm.toLowerCase()}">
+      <span class="mn">${mm} <span class="note">· ${nn}</span></span></div>`).join("");
+  rootsEl.appendChild(el(`
+    <div class="rootcard" data-root="${r.id}" id="rc-${r.id}">
+      <h3>${r.id}<em>${r.rot==="—"?"no reflex":"ROT: "+r.rot}</em></h3>
+      <div class="blk"><div class="t">Myotome</div><div class="v">${myo}</div></div>
+      <div class="blk"><div class="t">Dermatome</div>
+        <div class="v derm">PNS · ${r.pns}<br><span style="color:var(--ink-soft)">ASIA · ${r.asia}</span></div></div>
+    </div>`));
+});
+
+/* =====================================================================
+   render NERVE cards
+   ===================================================================== */
+const grid=document.getElementById("grid");
+
+function motorRows(arr){return arr.map(x=>`
+  <div class="item" data-type="motor" data-levels="${dataLevels(x.l)}" data-search="${(x.n+' '+x.note).toLowerCase()}">
+    <span class="mn">${x.n}${x.note?` <span class="note">· ${x.note}</span>`:""}</span>${lvlChips(x.l)}
+  </div>`).join("");}
+function sensRows(arr){return arr.map(x=>`
+  <div class="item" data-type="sensory" data-levels="${dataLevels(x.l)}" data-search="${(x.n+' '+x.note).toLowerCase()}">
+    <span class="mn">${x.n}${x.note?` <span class="note">· ${x.note}</span>`:""}</span>${lvlChips(x.l)}
+  </div>`).join("");}
+function passRows(arr){return arr.map(p=>`
+  <div class="item pass-item" data-type="pass" data-search="${(p.n+' '+p.d).toLowerCase()}">
+    <span class="mn"><span class="nm2">${p.n}</span> <span class="note">· ${p.d}</span></span>
+  </div>`).join("");}
+function sitesBlock(o){
+  const arr=o.sites, key=o.keyIndex;
+  const isKey=i=>Array.isArray(key)?key.includes(i):i===key;
+  return `<div class="sec"><div class="sh pass"><span class="sq"></span>${o.sitesLabel||"Entrapment sites"}</div>
+    <ol class="sites" data-type="pass">${arr.map((sName,i)=>
+      `<li class="${isKey(i)?'key':''}" data-type="pass" data-search="${sName.toLowerCase()}">${sName}</li>`).join("")}</ol></div>`;
+}
+function secMotor(arr,title){return arr&&arr.length?`<div class="sec"><div class="sh motor"><span class="sq"></span>${title||"Motor"}</div>${motorRows(arr)}</div>`:"";}
+function secSens(arr,title){return arr&&arr.length?`<div class="sec"><div class="sh sensory"><span class="sq"></span>${title||"Sensory"}</div>${sensRows(arr)}</div>`:"";}
+function secPass(arr,title){return arr&&arr.length?`<div class="sec"><div class="sh pass"><span class="sq"></span>${title||"Course / passages"}</div>${passRows(arr)}</div>`:"";}
+function secPearl(arr){return arr&&arr.length?`<div class="sec"><div class="sh pearl"><span class="sq"></span>Pearls</div>${arr.map(p=>`<div class="item pearl-item" data-type="pearl" data-search="${p.toLowerCase()}">${p}</div>`).join("")}</div>`:"";}
+
+function subBlock(sub){
+  let inner="";
+  if(sub.motor) inner+=motorRows(sub.motor);
+  if(sub.groups) inner+=sub.groups.map(g=>`<div class="sec" style="margin-top:6px"><div class="sh motor" style="font-size:9px"><span class="sq"></span>${g.label}</div>${motorRows(g.motor)}</div>`).join("");
+  if(sub.sites) inner+=sitesBlock(sub);
+  return `<div class="sub">
+    <div class="subh"><span class="tag">${sub.tag}</span>${sub.name}<span class="lvl" style="margin-left:auto">${sub.level}</span></div>
+    ${sub.note?`<div class="note" style="margin-bottom:6px;color:var(--ink-soft);font-size:11.5px">${sub.note}</div>`:""}
+    ${inner}</div>`;
+}
+
+function buildPlexusCard(d){
+  const intro=`<div class="note" style="margin:0 0 8px;color:var(--ink-soft);font-size:11.5px;line-height:1.5">Cross-cutting rules — use alongside the clickable trunks/cords above and the proximal-nerve map.</div>`;
+  return cardShell(d, intro+secPearl(LOCALIZE.map(x=>x)).replace("Pearls","Localization"));
+}
+function cardShell(d, body){
+  return el(`<div class="card ${d.span?'span2':''}" id="card-${d.id}" data-nerve="${d.id}">
+    <div class="chead">
+      <span class="nm">${d.name}</span>
+      ${d.cord?`<span class="note" style="font-size:11px;color:var(--ink-soft)">${d.cord}</span>`:""}
+      <span class="lv">${d.level}</span><span class="car">▸</span>
+    </div>
+    <div class="cbody">${body}</div></div>`);
+}
+
+DATA.forEach(d=>{
+  if(d.kind==="plexus"){ grid.appendChild(buildPlexusCard(d)); return; }
+  let body="";
+  body+=secPass(d.pass,"Course / passages");
+  body+=secMotor(d.motor, d.id==="med"?"Motor — forearm":(d.id==="rad"?"Motor — arm & elbow":"Motor"));
+  (d.subnerves||[]).forEach(sub=>{ body+=subBlock(sub); });
+  if(d.pass2) body+=secPass(d.pass2, d.id==="med"?"Wrist":"Wrist passage");
+  if(d.sites) body+=sitesBlock(d);
+  body+=secSens(d.sensory);
+  body+=secMotor(d.handmotor,"Motor — hand (thenar)");
+  body+=secPearl(d.pearls);
+  grid.appendChild(cardShell(d,body));
+});
+
+/* =====================================================================
+   DISTAL BRANCH TREES  (per nerve: shows where each branch leaves,
+   proximal → distal, with passages as green waypoints)
+   ===================================================================== */
+const TREES={
+  mcn:{label:"Musculocutaneous",type:"nerve",level:"C5–C7",children:[
+    {label:"Arm motor",type:"motor",level:"C5–6",note:"biceps · brachialis · coracobrach.",keys:["biceps","brachialis","coracobrach"]},
+    {label:"Lat. cutaneous n. forearm",type:"sensory",level:"C5–6",note:"lateral forearm",keys:["lateral cutaneous"]},
+  ]},
+  ax:{label:"Axillary",type:"nerve",level:"C5–C6",children:[
+    {label:"Quadrangular space",type:"pass",keys:["quadrangular"],children:[
+      {label:"Deltoid · teres minor",type:"motor",level:"C5–6",keys:["deltoid","teres minor"]},
+    ]},
+    {label:"Sup. lat. cutaneous n. arm",type:"sensory",level:"C5–6",note:"“sergeant’s patch”",keys:["superior lateral"]},
+  ]},
+  med:{label:"Median",type:"nerve",level:"C6–T1",children:[
+    {label:"Forearm motor",type:"motor",level:"C6–8",note:"PT · FCR · PL · FDS",keys:["pronator teres","fcr","palmaris","fds"]},
+    {label:"Palmar cutaneous br.",type:"sensory",level:"C6–8",note:"spared in CTS",keys:["palmar cutaneous"]},
+    {label:"AIN",type:"nerve",level:"C7–T1",note:"motor only — FPL · FDP2 · PQ",keys:["fpl","fdp 1","pronator quadratus"],children:[
+      {label:"“OK”-sign test",type:"test",note:"FPL + index FDP pinch; lost → pinch/triangle sign",keys:["fpl","fdp 1"]},
+    ]},
+    {label:"Carpal tunnel",type:"pass",keys:["carpal tunnel"],children:[
+      {label:"Digital sensory",type:"sensory",level:"C6–8",note:"3½ palmar fingers",keys:["digital sensory"]},
+      {label:"Thenar / lumbrical motor",type:"motor",level:"C8–T1",note:"APB · OP · FPB-s · L1–2",keys:["opponens","apb","fpb superficial","lumbricals 1"]},
+    ]},
+  ]},
+  rad:{label:"Radial",type:"nerve",level:"C5–C8",children:[
+    {label:"Arm motor",type:"motor",level:"C7",note:"triceps",keys:["triceps"]},
+    {label:"Posterior cutaneous brs.",type:"sensory",level:"C5–8",note:"arm + forearm",keys:["posterior cutaneous"]},
+    {label:"Spiral groove",type:"pass",keys:["spiral"],children:[
+      {label:"Elbow motor",type:"motor",level:"C5–7",note:"BR · ECRL",keys:["brachioradialis","ecrl"]},
+      {label:"Divides at elbow",type:"split",children:[
+        {label:"Superficial radial",type:"sensory",level:"C6–8",note:"dorsoradial — sensory only",keys:["superficial radial"]},
+        {label:"Deep branch",type:"nerve",level:"C6–8",children:[
+          {label:"Arcade of Frohse",type:"pass",keys:["frohse"],children:[
+            {label:"PIN",type:"nerve",level:"C7–8",note:"motor only — ECRB→EIP",keys:["ecrb","supinator","edc","edm","ecu","apl","epl","epb","eip"]},
+          ]},
+        ]},
+      ]},
+    ]},
+  ]},
+  uln:{label:"Ulnar",type:"nerve",level:"C8–T1",children:[
+    {label:"Cubital tunnel",type:"pass",note:"+ 3 other elbow sites",keys:["struthers","epicondyle","cubital tunnel","fcu exit","retrocondylar"],children:[
+      {label:"Forearm motor",type:"motor",level:"C8",note:"FCU · FDP3–4",keys:["fcu","fdp 3"]},
+      {label:"Dorsal cutaneous br.",type:"sensory",level:"C8–T1",note:"spared in Guyon",keys:["dorsal cutaneous"]},
+      {label:"Palmar cutaneous br.",type:"sensory",level:"C8–T1",keys:["palmar cutaneous"]},
+      {label:"Guyon canal",type:"pass",keys:["guyon"],children:[
+        {label:"Superficial branch",type:"sensory",level:"C8–T1",note:"D4–5 · palmaris brevis",keys:["superficial terminal","palmaris brevis"]},
+        {label:"Deep motor branch",type:"nerve",level:"C8–T1",children:[
+          {label:"Hypothenar",type:"motor",note:"ADM · ODM · FDM",keys:["adm","odm","fdm"]},
+          {label:"Interossei / AdP / L3–4",type:"motor",note:"+ FDI · FPB-deep",keys:["lumbricals 3","interossei","adductor pollicis","fdi","fpb deep"]},
+        ]},
+      ]},
+    ]},
+  ]},
+};
+const TSTYLE={
+  nerve:{fill:"#fceeec",stroke:"#b8332a",text:"#b8332a"},
+  motor:{fill:"#eaf1f9",stroke:"#2566a8",text:"#2566a8"},
+  sensory:{fill:"#fbf3e8",stroke:"#c2761a",text:"#c2761a"},
+  pass:{fill:"#e9f5ee",stroke:"#2c8a5f",text:"#2c8a5f"},
+  split:{fill:"#eef0f3",stroke:"#9aa3b0",text:"#5b6573"},
+  test:{fill:"#f3effa",stroke:"#7d5ba6",text:"#7d5ba6"},
+};
+function esc(s){return (s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");}
+function nodeW(n){
+  const t=(n.label||"").length + (n.level?n.level.length+1:0);
+  const nl=(n.note||"").length;
+  return Math.min(248, Math.max(104, Math.max(t*6.6, nl*5.4)+22));
+}
+function buildTree(root){
+  let leaf=0; const rowH=48; const nodes=[];
+  (function place(n,depth){
+    n.depth=depth; n.w=nodeW(n); nodes.push(n);
+    if(n.children&&n.children.length){
+      n.children.forEach(c=>place(c,depth+1));
+      n.cy=(n.children[0].cy+n.children[n.children.length-1].cy)/2;
+    } else { n.cy=leaf*rowH+rowH/2; leaf++; }
+  })(root,0);
+  const maxD=Math.max(...nodes.map(n=>n.depth));
+  const colW=[],colX=[]; const gap=30; let acc=6;
+  for(let d=0;d<=maxD;d++) colW[d]=Math.max(...nodes.filter(n=>n.depth===d).map(n=>n.w));
+  for(let d=0;d<=maxD;d++){ colX[d]=acc; acc+=colW[d]+gap; }
+  nodes.forEach(n=>n.x=colX[n.depth]);
+  return {nodes,W:acc-gap+6,H:Math.max(1,leaf)*rowH+6};
+}
+function renderTree(root,cardId){
+  const {nodes,W,H}=buildTree(root);
+  let s=`<svg viewBox="0 0 ${Math.round(W)} ${Math.round(H)}" xmlns="http://www.w3.org/2000/svg" `+
+        `style="width:100%;min-width:${Math.round(Math.min(W,560))}px;height:auto;display:block;font-family:var(--sans)">`;
+  nodes.forEach(n=>{ if(n.children) n.children.forEach(c=>{
+    const x1=n.x+n.w,y1=n.cy,x2=c.x,y2=c.cy,mx=(x1+x2)/2;
+    s+=`<path d="M${x1},${y1} C${mx},${y1} ${mx},${y2} ${x2},${y2}" fill="none" stroke="#cfd6df" stroke-width="1.7"/>`;
+  });});
+  nodes.forEach(n=>{
+    const st=TSTYLE[n.type]||TSTYLE.split, h=n.note?40:28, y=n.cy-h/2, tx=n.x+10;
+    const clk=n.keys&&n.keys.length;
+    s+=`<g class="tnode${clk?' tn-on':''}"${clk?` data-keys="${esc(n.keys.join('|'))}" data-card="${cardId}" data-label="${esc(n.label)}"`:''}>`;
+    s+=`<rect class="tnbox" x="${n.x}" y="${y}" width="${n.w}" height="${h}" rx="7" fill="${st.fill}" stroke="${st.stroke}" stroke-opacity="0.6"/>`+
+       `<rect x="${n.x}" y="${y}" width="3.5" height="${h}" rx="2" fill="${st.stroke}"/>`;
+    const titleY=n.note?n.cy-4:n.cy;
+    s+=`<text x="${tx}" y="${titleY}" font-size="11.5" font-weight="650" fill="${st.text}" dominant-baseline="middle">${esc(n.label)}`;
+    if(n.level) s+=`<tspan dx="5" font-family="ui-monospace,Menlo,monospace" font-size="9.5" font-weight="400" fill="#7a8694">${esc(n.level)}</tspan>`;
+    s+=`</text>`;
+    if(n.note) s+=`<text x="${tx}" y="${n.cy+10}" font-size="9.5" fill="#8a93a0">${esc(n.note)}</text>`;
+    s+=`</g>`;
+  });
+  return s+`</svg>`;
+}
+Object.entries(TREES).forEach(([id,root])=>{
+  const card=document.getElementById("card-"+id); if(!card) return;
+  const cbody=card.querySelector(".cbody"); if(!cbody) return;
+  const wrap=document.createElement("div"); wrap.className="treewrap";
+  wrap.innerHTML=`<div class="treelabel">Branching · proximal → distal · <span style="text-transform:none;letter-spacing:0">click a branch to highlight its muscles</span></div>`+renderTree(root,id);
+  cbody.insertBefore(wrap,cbody.firstChild);
+});
+
+/* =====================================================================
+   PLEXUS BRAID (SVG navigator)
+   ===================================================================== */
+const COLOR={mcn:"#b8332a",ax:"#7d5ba6",med:"#2566a8",rad:"#2c8a5f",uln:"#c2761a"};
+// coordinate model (skeleton shifted down to leave room for branch labels above & below)
+const RX=70,TX=255,DX=430,CX=600,NX=880;
+const rootY={C5:250,C6:312,C7:374,C8:436,T1:498};
+const trunkY={S:281,M:374,I:467};
+const divY={Sa:264,Sp:300,Ma:356,Mp:392,Ia:448,Ip:484};
+const cordY={L:312,P:386,M:474};
+const nerveY={mcn:258,ax:312,med:380,rad:440,uln:500};
+const SVGNS="http://www.w3.org/2000/svg";
+const segG=document.getElementById("segs"), nodeG=document.getElementById("nodes"), brG=document.getElementById("branches");
+
+function path(x1,y1,x2,y2,cls,nerves,lv,pathN,elN){
+  const mx=(x1+x2)/2;
+  const p=document.createElementNS(SVGNS,"path");
+  p.setAttribute("d",`M${x1},${y1} C${mx},${y1} ${mx},${y2} ${x2},${y2}`);
+  p.setAttribute("class","seg "+(cls||""));
+  if(nerves) p.dataset.nerves=nerves.join(" ");
+  if(lv) p.dataset.lv=lv;
+  if(pathN) p.dataset.path=pathN;
+  if(elN) p.dataset.el=elN;
+  segG.appendChild(p); return p;
+}
+// roots→trunks
+path(RX,rootY.C5,TX,trunkY.S,"",null,"C5","mcn ax med rad"); path(RX,rootY.C6,TX,trunkY.S,"",null,"C6","mcn ax med rad");
+path(RX,rootY.C7,TX,trunkY.M,"",null,"C7","mcn med rad");
+path(RX,rootY.C8,TX,trunkY.I,"",null,"C8","med rad uln"); path(RX,rootY.T1,TX,trunkY.I,"",null,"T1","med uln");
+// trunks→divisions
+path(TX,trunkY.S,DX,divY.Sa,"",null,"C5 C6","mcn med","TS"); path(TX,trunkY.S,DX,divY.Sp,"post",null,"C5 C6","ax rad","TS");
+path(TX,trunkY.M,DX,divY.Ma,"",null,"C7","mcn med","TM"); path(TX,trunkY.M,DX,divY.Mp,"post",null,"C7","rad","TM");
+path(TX,trunkY.I,DX,divY.Ia,"",null,"C8 T1","med uln","TI"); path(TX,trunkY.I,DX,divY.Ip,"post",null,"C8 T1","rad","TI");
+// divisions→cords
+path(DX,divY.Sa,CX,cordY.L,"",null,"C5 C6","mcn med","TS"); path(DX,divY.Ma,CX,cordY.L,"",null,"C7","mcn med","TM"); path(DX,divY.Ia,CX,cordY.M,"",null,"C8 T1","med uln","TI");
+path(DX,divY.Sp,CX,cordY.P,"post",null,"C5 C6","ax rad","TS"); path(DX,divY.Mp,CX,cordY.P,"post",null,"C7","rad","TM"); path(DX,divY.Ip,CX,cordY.P,"post",null,"C8 T1","rad","TI");
+// cords→terminal nerves
+path(CX,cordY.L,NX,nerveY.mcn,"",["mcn"],"C5 C6 C7","mcn","CL TS TM");
+path(CX,cordY.L,NX,nerveY.med,"",["med"],"C5 C6 C7","med","CL TS TM");
+path(CX,cordY.M,NX,nerveY.med,"",["med"],"C8 T1","med","CM TI");
+path(CX,cordY.M,NX,nerveY.uln,"",["uln"],"C8 T1","uln","CM TI");
+path(CX,cordY.P,NX,nerveY.ax,"",["ax"],"C5 C6","ax","CP TS");
+path(CX,cordY.P,NX,nerveY.rad,"",["rad"],"C5 C6 C7 C8","rad","CP TS TM TI");
+
+// ---- column headers ----
+[["Roots",70],["Trunks",255],["Divisions",430],["Cords",600],["Terminal nerves",955]].forEach(([t,x])=>{
+  const e=document.createElementNS(SVGNS,"text");
+  e.setAttribute("class","colhdr"); e.setAttribute("x",x); e.setAttribute("y",30);
+  e.setAttribute("text-anchor","middle");
+  e.textContent=t; nodeG.appendChild(e);
+});
+
+// ---- labels written on the division lines (anterior / posterior) ----
+function segLabel(x,y,txt){
+  const t=document.createElementNS(SVGNS,"text");
+  t.setAttribute("class","seglabel"); t.setAttribute("x",x); t.setAttribute("y",y);
+  t.textContent=txt; nodeG.appendChild(t);
+}
+const LBX=DX-50;
+segLabel(LBX,divY.Sa+3,"anterior");  segLabel(LBX,divY.Sp+3,"posterior");
+segLabel(LBX,divY.Ma+3,"anterior");  segLabel(LBX,divY.Mp+3,"posterior");
+segLabel(LBX,divY.Ia+3,"anterior");  segLabel(LBX,divY.Ip+3,"posterior");
+
+// ===== PRE-TERMINAL BRANCHES (tapped at their level, labeled like the PDF) =====
+const TAP={C5root:[RX,rootY.C5],C6root:[RX,rootY.C6],C7root:[RX,rootY.C7],Strunk:[TX,trunkY.S],
+           Lcord:[CX,cordY.L],Pcord:[CX,cordY.P],Mcord:[CX,cordY.M]};
+const LVORDER=["C4","C5","C6","C7","C8","T1"];
+function expandLv(str){
+  if(!str) return [];
+  const s=str.replace(/–/g,"-");
+  if(s.includes("-")){ const [a,b]=s.split("-").map(t=>t.trim());
+    const i=LVORDER.indexOf(a), j=LVORDER.indexOf(b);
+    if(i>=0&&j>=0) return LVORDER.slice(i,j+1); }
+  return s.split(",").map(t=>t.trim());
+}
+const BR=[
+ {name:"Dorsal scapular n.",lvl:"C4–C5",sup:"Rhomboids|Levator scapulae",type:"nerve",tap:"C5root",box:[40,66]},
+ {name:"N. to subclavius",lvl:"C5–C6",sup:"Subclavius",type:"nerve",tap:"Strunk",box:[252,52],w:168,el:"TS"},
+ {name:"Suprascapular n.",lvl:"C5–C6",sup:"Supraspinatus|Infraspinatus",type:"nerve",tap:"Strunk",box:[252,134],w:202,el:"TS"},
+ {name:"Lateral pectoral n.",lvl:"C5–C7",sup:"Pec major (clavicular head)",type:"nerve",tap:"Lcord",box:[582,86],w:210,el:"CL TS TM"},
+ {name:"Long thoracic n.",lvl:"C5–C7",sup:"Serratus anterior",type:"nerve",taps:["C5root","C6root","C7root"],box:[40,566]},
+ {name:"Subscapular nn. (upper + lower)",lvl:"C5–C6",sup:"Subscapularis|Teres major",type:"nerve",tap:"Pcord",box:[300,566],w:218,el:"CP TS"},
+ {name:"Thoracodorsal n.",lvl:"C6–C8",sup:"Latissimus dorsi",type:"nerve",tap:"Pcord",box:[548,566],el:"CP TS TM TI"},
+ {name:"Medial pectoral n.",lvl:"C8–T1",sup:"Pec major (sternal)|Pec minor",type:"nerve",tap:"Mcord",box:[762,560],w:206,el:"CM TI"},
+ {name:"Medial cutaneous nn.",lvl:"C8–T1",sup:"Medial arm + forearm (sensory)",type:"sensory",tap:"Mcord",box:[762,636],w:206,anchor:"left",el:"CM TI"},
+];
+function branch(o){
+  const w=o.w||186, [bx,by]=o.box;
+  const taps=(o.taps||[o.tap]).map(t=>TAP[t]);
+  const ty=taps.reduce((a,p)=>a+p[1],0)/taps.length;
+  const sup=o.sup?o.sup.split("|"):[];
+  const titleC=o.type==="sensory"?"#c2761a":"#b8332a";
+  const tint=o.type==="sensory"?"#fbf3e8":"#fceeec";
+  const stub=o.type==="sensory"?"#d9bd97":"#d4a39d";
+  const supC=o.type==="sensory"?"#9a6b2e":"#2566a8";
+  const h=18+14+sup.length*13+8;
+  // stub anchor on the box edge facing the taps
+  let ax,ay;
+  if(o.anchor==="left"){ ax=bx; ay=by+h/2; }
+  else if(o.anchor==="right"){ ax=bx+w; ay=by+h/2; }
+  else if(by+h<=ty){ ax=bx+w/2; ay=by+h; } else if(by>=ty){ ax=bx+w/2; ay=by; }
+  else { ax=(bx>taps[0][0])?bx:bx+w; ay=by+h/2; }
+  let conns="";
+  taps.forEach(([tx,tpy])=>{
+    const my=(tpy+ay)/2;
+    conns+=`<path d="M${tx},${tpy} C${tx},${my} ${ax},${my} ${ax},${ay}" fill="none" stroke="${stub}" stroke-width="1.6"/>`+
+           `<circle cx="${tx}" cy="${tpy}" r="3.2" fill="${titleC}"/>`;
+  });
+  const lvstr=expandLv(o.lvl).join(" ");
+  // connector lines go on the BACK layer so they never paint over a later box
+  const cg=document.createElementNS(SVGNS,"g");
+  cg.setAttribute("class","bconn"); cg.dataset.lv=lvstr; if(o.el) cg.dataset.el=o.el;
+  cg.innerHTML=conns;
+  brConnL.appendChild(cg);
+  // box + label go on the FRONT layer
+  const g=document.createElementNS(SVGNS,"g");
+  g.setAttribute("class","branchbox"); g.dataset.jump="plexus";
+  g.dataset.lv=lvstr; if(o.el) g.dataset.el=o.el;
+  const tx0=bx+11; let ty0=by+16;
+  let txt=`<text><tspan x="${tx0}" y="${ty0}" fill="${titleC}" font-weight="700" font-size="11.5">${o.name}</tspan>`+
+          `<tspan x="${tx0}" dy="13.5" fill="#7a8694" font-family="${'ui-monospace,Menlo,monospace'}" font-size="10">${o.lvl}</tspan>`;
+  sup.forEach(s=>{ txt+=`<tspan x="${tx0}" dy="13" fill="${supC}" font-size="10.5">${s}</tspan>`; });
+  txt+=`</text>`;
+  g.innerHTML=
+    `<rect class="bbg" x="${bx}" y="${by}" width="${w}" height="${h}" rx="7" fill="${tint}" stroke="${titleC}" stroke-opacity="0.35"/>`+
+    `<rect x="${bx}" y="${by}" width="4" height="${h}" rx="2" fill="${titleC}"/>`+
+    txt;
+  brBoxL.appendChild(g);
+}
+const brConnL=document.createElementNS(SVGNS,"g"); brConnL.setAttribute("class","brconnL");
+const brBoxL=document.createElementNS(SVGNS,"g"); brBoxL.setAttribute("class","brboxL");
+brG.appendChild(brConnL); brG.appendChild(brBoxL);
+BR.forEach(branch);
+
+function rootNode(id,y,pathN){
+  const g=document.createElementNS(SVGNS,"g");
+  g.setAttribute("class","node root"); g.dataset.root=id; if(pathN) g.dataset.path=pathN;
+  g.innerHTML=`<circle cx="${RX}" cy="${y}" r="15" fill="#475569"></circle><text class="nodetext" x="${RX}" y="${y}">${id}</text>`;
+  nodeG.appendChild(g);
+}
+const ROOTPATH={C5:"mcn ax med rad",C6:"mcn ax med rad",C7:"mcn med rad",C8:"med rad uln",T1:"med uln"};
+Object.entries(rootY).forEach(([k,v])=>rootNode(k,v,ROOTPATH[k]));
+
+function smallNode(x,y,label,lv,big,pathN,el){
+  const g=document.createElementNS(SVGNS,"g"); g.setAttribute("class","node small");
+  if(lv) g.dataset.lv=lv; if(pathN) g.dataset.path=pathN; if(el) g.dataset.el=el;
+  g.innerHTML=`<circle cx="${x}" cy="${y}" r="6" fill="#aab3c0"></circle>`;
+  if(label){g.innerHTML+=`<text class="${big?'structlbl':'nlabel'}" x="${x}" y="${y-12}">${label}</text>`;}
+  nodeG.appendChild(g);
+}
+function chipNode(x,y,label,lv,pathN,elself,el){
+  const w=label.length*7.0+22, h=25;
+  const g=document.createElementNS(SVGNS,"g"); g.setAttribute("class","node small chip"+(elself?" plexel":""));
+  if(lv) g.dataset.lv=lv; if(pathN) g.dataset.path=pathN;
+  if(elself) g.dataset.elself=elself; if(el) g.dataset.el=el;
+  g.innerHTML=`<rect x="${x-w/2}" y="${y-h/2}" width="${w}" height="${h}" rx="7" fill="#eef2f7" stroke="#c3cdd9"></rect>`+
+              `<text class="chiplbl" x="${x}" y="${y}">${label}</text>`;
+  nodeG.appendChild(g);
+}
+[["Superior",trunkY.S,"C5 C6","mcn ax med rad","TS"],["Middle",trunkY.M,"C7","mcn med rad","TM"],["Inferior",trunkY.I,"C8 T1","med rad uln","TI"]]
+  .forEach(([l,y,lv,pn,es])=>chipNode(TX,y,l,lv,pn,es,""));
+[["Sa",divY.Sa,"C5 C6","mcn med","TS"],["Sp",divY.Sp,"C5 C6","ax rad","TS"],["Ma",divY.Ma,"C7","mcn med","TM"],["Mp",divY.Mp,"C7","rad","TM"],["Ia",divY.Ia,"C8 T1","med uln","TI"],["Ip",divY.Ip,"C8 T1","rad","TI"]]
+  .forEach(([k,y,lv,pn,el])=>smallNode(DX,y,"",lv,false,pn,el));
+[["Lateral",cordY.L,"C5 C6 C7","mcn med","CL","TS TM"],["Posterior",cordY.P,"C5 C6 C7 C8 T1","ax rad","CP","TS TM TI"],["Medial",cordY.M,"C8 T1","med uln","CM","TI"]]
+  .forEach(([l,y,lv,pn,es,el])=>chipNode(CX,y,l,lv,pn,es,el));
+
+const NAME={mcn:"Musculocutaneous",ax:"Axillary",med:"Median",rad:"Radial",uln:"Ulnar"};
+const NLV ={mcn:"C5 C6 C7",ax:"C5 C6",med:"C5 C6 C7 C8 T1",rad:"C5 C6 C7 C8",uln:"C8 T1"};
+const NEL ={mcn:"CL TS TM",ax:"CP TS",med:"CL CM TS TM TI",rad:"CP TS TM TI",uln:"CM TI"};
+Object.entries(nerveY).forEach(([id,y])=>{
+  const g=document.createElementNS(SVGNS,"g");
+  g.setAttribute("class","node term"); g.dataset.nerve=id; g.dataset.lv=NLV[id]; g.dataset.path=id; g.dataset.el=NEL[id]||"";
+  const nm=NAME[id], pw=Math.round(nm.length*8.2+20);
+  g.innerHTML=`<rect x="${NX}" y="${y-14}" width="${pw}" height="28" rx="8" fill="${COLOR[id]}"></rect>
+    <text class="nodetext" x="${NX+pw/2}" y="${y}" font-size="12.5" text-anchor="middle" dominant-baseline="central">${nm}</text>`;
+  nodeG.appendChild(g);
+});
+
+/* =====================================================================
+   COMPRESSION / ENTRAPMENT MAP  (anatomical: Shoulder → Hand)
+   ===================================================================== */
+const CREG=["Shoulder","Arm","Elbow","Forearm","Wrist","Hand"];
+const CMAP=[
+  {id:"med",name:"Median", dots:[
+    {r:1,label:"Struthers lig.",key:"struthers"},
+    {r:2,label:"Lacertus fibrosus",key:"bicipital aponeurosis"},
+    {r:2,label:"Pronator teres",key:"between the 2 heads"},
+    {r:3,label:"FDS arcade",key:"fds arcade"},
+    {r:4,label:"Carpal tunnel",key:"carpal tunnel"} ]},
+  {id:"rad",name:"Radial / PIN", dots:[
+    {r:0,label:"Axilla (crutch)",key:"axilla"},
+    {r:1,label:"Triangular int.",key:"triangular interval"},
+    {r:1,label:"Spiral groove",key:"spiral"},
+    {r:2,label:"Radial-head",key:"fibrous bands at the radial head"},
+    {r:2,label:"ECRB edge",key:"tendinous edge of ecrb"},
+    {r:3,label:"Leash of Henry",key:"leash of henry"},
+    {r:3,label:"Arcade of Frohse",key:"arcade of frohse"},
+    {r:3,label:"Distal supinator",key:"distal edge of supinator"},
+    {r:4,label:"Wartenberg",key:"wartenberg"} ]},
+  {id:"uln",name:"Ulnar", dots:[
+    {r:1,label:"Arc. Struthers",key:"arcade of struthers"},
+    {r:2,label:"Retrocond. groove",key:"retrocondylar"},
+    {r:2,label:"Cubital tunnel",key:"cubital tunnel"},
+    {r:3,label:"FCU exit",key:"fcu exit"},
+    {r:4,label:"Guyon’s canal",key:"guyon"} ]},
+];
+/* proximal / shoulder-girdle nerves — clinical summaries (Preston & Shapiro ch.34) */
+const PROX=[
+  {id:"ssc",name:"Suprascapular", col:"#475569", dots:[
+    {r:0,label:"Suprascapular notch",pid:"ssc_n"},{r:0,label:"Spinoglenoid notch",pid:"ssc_sg"}]},
+  {id:"ax", name:"Axillary", col:"#7d5ba6", dots:[
+    {r:0,label:"Quadrilateral space",pid:"ax"}]},
+  {id:"mcn",name:"Musculocutaneous", col:"#b8332a", dots:[
+    {r:1,label:"Proximal (trauma)",pid:"mcn"},{r:2,label:"LABC at elbow",pid:"mcn"}]},
+  {id:"ltn",name:"Long thoracic", col:"#2c8a5f", dots:[
+    {r:1,label:"Stretch / NA → winging",pid:"ltn"}]},
+  {id:"san",name:"Spinal accessory", col:"#c2761a", dots:[
+    {r:0,label:"Post. cervical triangle",pid:"san"}]},
+];
+const PROXINFO={
+ ssc_n:{name:"Suprascapular n. — suprascapular notch",origin:"Upper trunk · C5–C6",col:"#475569",
+   sites:"Under the transverse scapular ligament — the commonest site.",
+   motor:"Supraspinatus (abduction) + infraspinatus (external rotation) — BOTH.",
+   sensory:"No cutaneous SNAP. Deep sensory to the shoulder joint → deep boring superior-scapular pain, worse with cross-body adduction (scapular protraction).",
+   edx:"Needle BOTH supra- + infraspinatus (both abnormal here). Sample deltoid, biceps, BR + cervical paraspinals to exclude a C5–C6 root / upper-trunk lesion. LABC, median- & radial-thumb SNAPs should be NORMAL if isolated.",
+   pearl:"Causes: scapular overuse/protraction (weightlifting, volleyball, pitching), big rotator-cuff tear (medial retraction → traction), NA."},
+ ssc_sg:{name:"Suprascapular n. — spinoglenoid notch",origin:"Upper trunk · C5–C6 (distal branch)",col:"#475569",
+   sites:"Under the spinoglenoid ligament, AFTER the branch to supraspinatus has left.",
+   motor:"Infraspinatus ONLY — supraspinatus is spared.",
+   sensory:"Usually PAINLESS — the deep sensory branches to the shoulder joint have already exited proximally.",
+   edx:"The tell is an abnormal infraspinatus with a NORMAL supraspinatus — that separates it from a notch lesion. Same exclusion muscles (deltoid, biceps, BR, cervical paraspinals).",
+   pearl:"Painless infraspinatus-only wasting → think a paralabral ganglion cyst at the spinoglenoid notch (volleyball, pitchers)."},
+ ax:{name:"Axillary n.",origin:"Posterior cord · C5–C6",col:"#7d5ba6",
+   sites:"Quadrilateral space (humerus · teres minor · teres major · long head of triceps).",
+   motor:"Deltoid (abduction) + teres minor (external rotation) — only partial (supra/infraspinatus also abduct & externally rotate).",
+   sensory:"Oval patch over the lateral shoulder (superior lateral brachial cutaneous). No routine SNAP.",
+   edx:"Needle all three deltoid heads + teres minor; sample biceps, spinati, triceps, BR + paraspinals to exclude a posterior-cord/upper-trunk plexopathy or C5–C6 root. Axillary motor from Erb’s/axilla recording deltoid — compare side-to-side. Radial & LABC SNAPs help exclude a wider posterior-cord lesion.",
+   pearl:"Causes: shoulder dislocation, humeral-neck fracture, direct deltoid blow, volleyball. Deltoid + radial weakness together → posterior cord, not an isolated axillary lesion."},
+ mcn:{name:"Musculocutaneous n.",origin:"Lateral cord · C5–C6",col:"#b8332a",
+   sites:"Distal (common): LABC entrapment at the elbow between the biceps tendon/fascia and brachialis. Proximal (rare): trauma / proximal-humerus fracture.",
+   motor:"Proximal: biceps + brachialis (elbow flexion), absent biceps reflex. Distal: none (pure sensory).",
+   sensory:"Lateral forearm (LABC). Distal entrapment worsens with the arm pronated + extended (e.g. tennis hyperextension).",
+   edx:"The LABC SNAP is the key study (stimulate just lateral to the biceps tendon, record 12 cm distal). Distal lesion → abnormal LABC, normal needle. Proximal → abnormal LABC + denervation in biceps. Needle biceps; sample PT/FCR (lateral cord) + deltoid/BR/spinati (upper trunk) + paraspinals. Median & radial SNAPs exclude a plexopathy.",
+   pearl:"Isolated lateral-forearm numbness with normal strength = distal LABC entrapment, not a plexopathy."},
+ ltn:{name:"Long thoracic n.",origin:"Roots C5–C6–C7 (proximal to the plexus)",col:"#2c8a5f",
+   sites:"No true entrapment — stretch / neuralgic amyotrophy, often in isolation.",
+   motor:"Serratus anterior ONLY → medial scapular winging (worst with the arms outstretched forward).",
+   sensory:"None — pure motor.",
+   edx:"Needle the serratus anterior over a rib in the mid-axillary line (pneumothorax risk); no reliable NCS. Sample C5–C7 limb muscles + paraspinals. KEY: serratus, rhomboids & paraspinals are SPARED in a plexopathy (they branch off the roots) — so isolated serratus involvement points proximal (NA / root-level branch).",
+   pearl:"Winging: long thoracic → inferior tip toward the midline, worse arms-forward; spinal accessory → tip lateral, worse with abduction."},
+ san:{name:"Spinal accessory n. (CN XI)",origin:"C1–C4 · pure motor",col:"#c2761a",
+   sites:"Posterior cervical triangle — most often injured at cervical lymph-node biopsy (3–10%).",
+   motor:"Trapezius → shoulder drop, lateral scapular displacement, mild winging worse with abduction. A proximal lesion also weakens the SCM (neck flexion / contralateral head turn).",
+   sensory:"None — pure motor.",
+   edx:"Easy NCS: stimulate behind the mid-SCM, record the upper trapezius, compare side-to-side amplitude. Needle trapezius (upper/middle/lower) ± SCM — have the patient shrug to confirm the needle is IN trapezius (don’t pass through an atrophic trapezius into supraspinatus/rhomboids). Also sample spinati, deltoid, rhomboids.",
+   pearl:"A “droopy shoulder” after neck surgery that mimics a plexopathy — confirm with trapezius wasting + lateral winging brought out by abduction."},
+};
+(function buildCMap(){
+  const svg=document.getElementById("cmap"); if(!svg) return;
+  const x0=124,colW=115,top=30,rowGap=16,pad=18,labelX=6,sepH=30;
+  const xC=r=>x0+r*colW+colW/2;
+  const setRowH=l=>{ const per={}; l.dots.forEach(d=>per[d.r]=(per[d.r]||0)+1); l.maxc=Math.max(1,...Object.values(per)); l.rowH=l.maxc*rowGap+pad; };
+  CMAP.forEach(setRowH); PROX.forEach(setRowH);
+  const H=top+CMAP.reduce((a,l)=>a+l.rowH,0)+sepH+PROX.reduce((a,l)=>a+l.rowH,0)+6, W=x0+6*colW+8;
+  let inner="";
+  for(let r=0;r<6;r++) inner+=`<text class="creg" x="${xC(r)}" y="17">${CREG[r]}</text>`;
+  for(let r=0;r<=6;r++){ const x=x0+r*colW; inner+=`<line class="cdiv" x1="${x}" y1="24" x2="${x}" y2="${H-4}"/>`; }
+  let y=top;
+  function lane(l,prox){
+    const cy=y+l.rowH/2, col=l.col||COLOR[l.id]||"#475569";
+    inner+=`<line class="claneln" x1="${x0}" y1="${cy}" x2="${x0+6*colW}" y2="${cy}" stroke="${col}"/>`;
+    inner+=`<text class="clane" x="${labelX}" y="${cy}" dominant-baseline="central" fill="${col}">${esc(l.name)}</text>`;
+    const byR={}; l.dots.forEach(d=>{(byR[d.r]=byR[d.r]||[]).push(d);});
+    Object.keys(byR).forEach(rk=>{
+      const arr=byR[rk], r=+rk, k=arr.length, cellL=x0+r*colW;
+      arr.forEach((d,i)=>{
+        const dy=cy+(i-(k-1)/2)*rowGap, dx=cellL+12;
+        if(prox){
+          inner+=`<g class="csite cprox" data-prox="${d.pid||l.id}" data-label="${esc(d.label)}">`+
+                 `<circle cx="${dx}" cy="${dy}" r="11" fill="transparent"/>`+
+                 `<circle class="chalo" cx="${dx}" cy="${dy}" r="8.5" fill="#fff"/>`+
+                 `<circle class="cdot" cx="${dx}" cy="${dy}" r="5.5" fill="#475569"/>`+
+                 `<text class="clbl" x="${dx+10}" y="${dy}" dominant-baseline="central">${esc(d.label)}</text>`+
+                 `<title>${esc(l.name)} n. — click for the clinical summary</title></g>`;
+        } else {
+          inner+=`<g class="csite" data-card="${d.card||l.id}" data-key="${esc(d.key)}" data-label="${esc(d.label)}">`+
+                 `<circle cx="${dx}" cy="${dy}" r="11" fill="transparent"/>`+
+                 `<circle class="chalo" cx="${dx}" cy="${dy}" r="8.5" fill="#fff"/>`+
+                 `<circle class="cdot" cx="${dx}" cy="${dy}" r="5.5" fill="#2c8a5f"/>`+
+                 `<text class="clbl" x="${dx+10}" y="${dy}" dominant-baseline="central">${esc(d.label)}</text>`+
+                 `<title>${esc(d.label)} — click to locate in the ${esc(l.name)} card</title></g>`;
+        }
+      });
+    });
+    y+=l.rowH;
+  }
+  CMAP.forEach(l=>lane(l,false));
+  // separator + proximal sub-header
+  const sy=y+sepH/2;
+  inner+=`<line x1="${labelX}" y1="${sy}" x2="${x0+6*colW}" y2="${sy}" stroke="#d6dce4" stroke-dasharray="3 3"/>`;
+  inner+=`<text x="${labelX}" y="${sy-6}" style="text-anchor:start;font:600 9.5px ui-sans-serif,system-ui,sans-serif;fill:#9aa4b1;letter-spacing:.07em">PROXIMAL · SHOULDER-GIRDLE NERVES</text>`;
+  y+=sepH;
+  PROX.forEach(l=>lane(l,true));
+  svg.setAttribute("viewBox",`0 0 ${W} ${H}`);
+  svg.innerHTML=inner;
+})();
+
+/* =====================================================================
+   LESION EXPLORER — expected exam pattern (weak vs spared)
+   Curated per classic lesion site; reviewable single source of truth.
+   ===================================================================== */
+const LESIONS=[
+ // ---- Median (blue) ----
+ {id:"m1",nerve:"Median",col:"#2566a8",label:"Proximal (Struthers / lacertus)",
+   affected:["Pronator teres","FCR","Palmaris longus","FDS","FPL","FDP2 (index)","Pron. quadratus","APB","Opponens","FPB-superf.","Lumbricals 1–2"],
+   spared:["—"],
+   sensory:"Lost — thenar palm (palmar cutaneous) + lateral 3½ digits: the whole median territory.",
+   note:"Everything median is in play; a proximal-arm lesion."},
+ {id:"m2",nerve:"Median",col:"#2566a8",label:"Pronator / FDS arcade",
+   affected:["FCR","Palmaris longus","FDS","FPL","FDP2 (index)","Pron. quadratus","APB","Opponens","FPB-superf.","Lumbricals 1–2"],
+   spared:["Pronator teres"],
+   sensory:"Lost — thenar palm + lateral 3½ digits (palmar cutaneous INVOLVED, unlike CTS).",
+   note:"Pronator teres classically SPARED (its branch is proximal) — sample FPL/FCR to catch it."},
+ {id:"m3",nerve:"Median",col:"#2566a8",label:"AIN",
+   affected:["FPL","FDP2 (index)","Pron. quadratus"],
+   spared:["Pronator teres","FCR","Palmaris longus","FDS","APB","Opponens","FPB-superf.","Lumbricals 1–2"],
+   sensory:"NONE — AIN is pure motor.",
+   note:"Loss of the OK sign. Usually Parsonage–Turner, not a true entrapment."},
+ {id:"m4",nerve:"Median",col:"#2566a8",label:"Carpal tunnel (CTS)",
+   affected:["APB","Opponens","FPB-superf.","Lumbricals 1–2"],
+   spared:["Pronator teres","FCR","Palmaris longus","FDS","FPL","FDP2 (index)","Pron. quadratus"],
+   sensory:"Lost — lateral 3½ digits. Thenar PALM SPARED (palmar cutaneous arises proximal).",
+   note:"Thenar-palm sparing is the tell vs a proximal median lesion."},
+ // ---- Ulnar (gold) ----
+ {id:"u1",nerve:"Ulnar",col:"#c2761a",label:"Elbow (cubital tunnel)",
+   affected:["FCU","FDP3–4","ADM","ODM","FDM","Interossei","Lumbricals 3–4","Add. pollicis","FPB-deep","FDI"],
+   spared:["—"],
+   sensory:"Lost — palmar D5/ulnar D4 AND dorso-ulnar hand (dorsal cutaneous involved → proximal to wrist).",
+   note:"FCU/FDP often look spared on exam (fascicular) — a normal FCU doesn’t exclude the elbow."},
+ {id:"u2",nerve:"Ulnar",col:"#c2761a",label:"Guyon — proximal canal",
+   affected:["ADM","ODM","FDM","Interossei","Lumbricals 3–4","Add. pollicis","FPB-deep","FDI"],
+   spared:["FCU","FDP3–4"],
+   sensory:"Lost — palmar D5/ulnar D4. Dorso-ulnar hand SPARED (DUC arises proximal to wrist).",
+   note:"Dorsal-ulnar sparing localises to the wrist."},
+ {id:"u3",nerve:"Ulnar",col:"#c2761a",label:"Guyon — deep palmar branch",
+   affected:["Interossei","Lumbricals 3–4","Add. pollicis","FPB-deep","FDI"],
+   spared:["FCU","FDP3–4","ADM","ODM","FDM","Palmaris brevis"],
+   sensory:"NONE — pure motor (palmaris brevis & all sensory spared).",
+   note:"Painless intrinsic wasting; mimics MND — but APB (median) is intact."},
+ // ---- Radial (green) ----
+ {id:"r1",nerve:"Radial",col:"#2c8a5f",label:"Axilla (crutch)",
+   affected:["Triceps","Brachioradialis","ECRL","ECRB","Supinator","EDC","EDM","ECU","APL","EPL","EPB","EIP"],
+   spared:["—"],
+   sensory:"Lost — posterior arm + forearm + dorsoradial hand.",
+   note:"Triceps weak = above the groove; deltoid & latissimus stay normal (so not posterior cord)."},
+ {id:"r2",nerve:"Radial",col:"#2c8a5f",label:"Spiral groove",
+   affected:["Brachioradialis","ECRL","ECRB","Supinator","EDC","EDM","ECU","APL","EPL","EPB","EIP"],
+   spared:["Triceps"],
+   sensory:"Lost — dorsoradial hand (superficial radial). Triceps / posterior-arm sensation spared.",
+   note:"Triceps spared (branches leave proximal); brachioradialis is the most proximal reliably-weak muscle."},
+ {id:"r3",nerve:"Radial",col:"#2c8a5f",label:"Arcade of Frohse / PIN",
+   affected:["EDC","EDM","ECU","APL","EPL","EPB","EIP"],
+   spared:["Triceps","Brachioradialis","ECRL","ECRB","Supinator"],
+   sensory:"NONE — superficial radial intact.",
+   note:"Finger/thumb drop; wrist extends but deviates radially (ECRL+ECRB intact, ECU weak). Supinator usually spared at the arcade."},
+ // ---- Axillary (purple) ----
+ {id:"a1",nerve:"Axillary",col:"#7d5ba6",label:"Quadrangular space",
+   affected:["Deltoid","Teres minor"],
+   spared:["—"],
+   sensory:"Lost — “sergeant’s patch” over the deltoid.",
+   note:"Isolated deltoid + teres minor + patch loss; think shoulder dislocation / quadrangular space."},
+];
+const lesionBar=document.getElementById("lesionbar");
+const lesionPanel=document.getElementById("lesionpanel");
+let lesionSel=null;
+(function buildLesions(){
+  if(!lesionBar) return;
+  const order=["Median","Ulnar","Radial","Axillary"], byN={};
+  LESIONS.forEach(L=>{(byN[L.nerve]=byN[L.nerve]||[]).push(L);});
+  order.forEach(nv=>{
+    if(!byN[nv]) return;
+    const wrap=document.createElement("span"); wrap.className="lgroup";
+    const tag=document.createElement("span"); tag.className="lgrp-label";
+    tag.textContent=nv; tag.style.color=byN[nv][0].col; wrap.appendChild(tag);
+    byN[nv].forEach(L=>{
+      const b=document.createElement("button"); b.type="button"; b.className="lpill";
+      b.textContent=L.label; b.style.borderColor=L.col; b.style.color=L.col; b.dataset.lid=L.id;
+      b.onclick=()=>lesionClick(L,b);
+      wrap.appendChild(b);
+    });
+    lesionBar.appendChild(wrap);
+  });
+})();
+function clearLesion(){
+  lesionSel=null;
+  document.querySelectorAll(".lpill").forEach(p=>{p.style.background="#fff";p.style.color=p.style.borderColor;});
+  if(lesionPanel){ lesionPanel.hidden=true; lesionPanel.innerHTML=""; }
+}
+function lesionClick(L,btn){
+  if(lesionSel===L.id){ clearLesion(); return; }
+  clearLesion(); lesionSel=L.id;
+  btn.style.background=L.col; btn.style.color="#fff";
+  const li=arr=>arr.map(x=>`<li>${esc(x)}</li>`).join("");
+  lesionPanel.innerHTML=
+    `<div class="lphead" style="color:${L.col}">${esc(L.nerve)} — ${esc(L.label)}</div>`+
+    `<div class="lcols">`+
+      `<div class="lcol aff"><h4>Weak / affected</h4><ul>${li(L.affected)}</ul></div>`+
+      `<div class="lcol spd"><h4>Spared</h4><ul>${li(L.spared)}</ul></div>`+
+    `</div>`+
+    `<p class="lsens"><b>Sensory:</b> ${esc(L.sensory)}</p>`+
+    `<p class="lnote">${esc(L.note)}</p>`;
+  lesionPanel.hidden=false;
+}
+
+/* =====================================================================
+   PLEXUS PATTERNS — click a trunk / cord on the braid to see what is
+   innervated distal to it (motor · sensory · SNAP · EMG localisers).
+   Curated from Preston & Shapiro, ch.33–34.
+   ===================================================================== */
+const PLEX={
+ TS:{label:"Superior trunk",kind:"trunk",sub:"C5–C6 · Erb’s palsy / upper plexus",levels:["C5","C6"],nerves:["mcn","ax","med","rad"],
+   motor:"Deltoid, biceps, brachioradialis, supraspinatus & infraspinatus; pronator teres / triceps partial.",
+   spared:"All C8–T1 muscles (hand intrinsics, long finger flexors).",
+   sensory:"Lateral arm + forearm + hand & thumb (LABC, axillary, median- & radial-thumb).",
+   snap:"Abnormal: LABC, median-thumb, radial-thumb. Ulnar & MABC normal.",
+   emg:"Deltoid, biceps, BR, spinati abnormal — but rhomboids, serratus & paraspinals SPARED (that excludes a root lesion).",
+   warn:"Routine median/ulnar motor studies are NORMAL (they record C8–T1 muscles) — upper-trunk lesions are an EMG/SNAP diagnosis."},
+ TM:{label:"Middle trunk",kind:"trunk",sub:"C7 only · very rare in isolation",levels:["C7"],nerves:["med","rad","mcn"],
+   motor:"C7 muscles: triceps, anconeus, FCR, pronator teres.",
+   spared:"C5–C6 and C8–T1 muscles.",
+   sensory:"Middle finger > index/ring (median).",
+   snap:"Median-middle-finger and radial SNAPs can be abnormal.",
+   emg:"C7 muscles across median + radial — mimics a C7 radiculopathy; normal paraspinals separate them.",
+   warn:"Looks like C7 radiculopathy: the discriminator is SNAP (abnormal in plexus) + spared paraspinals."},
+ TI:{label:"Inferior trunk",kind:"trunk",sub:"C8–T1 · Klumpke / true neurogenic TOS",levels:["C8","T1"],nerves:["med","uln","rad"],
+   motor:"ALL ulnar muscles + median C8–T1 (APB, FPL, FDP) + radial C8 (EIP, EPB).",
+   spared:"C5–C7 muscles (deltoid, biceps, BR, ECRL).",
+   sensory:"Medial arm + forearm + hand, D4–5 (ulnar, dorsal-ulnar-cutaneous, MABC).",
+   snap:"Abnormal: ulnar, dorsal-ulnar-cutaneous, MABC. Median SNAP NORMAL (it runs in upper/middle trunks).",
+   emg:"Radial EIP/EPB involvement is the KEY tell vs a medial-cord lesion (those radial C8 fibres run via the posterior cord).",
+   warn:"True neurogenic TOS = this pattern, T1-predominant: thenar (APB) wasting > hypothenar, fibrous band off a rudimentary cervical rib; median CMAP low but median SNAP spared."},
+ CL:{label:"Lateral cord",kind:"cord",sub:"MCN + median C6–C7",levels:["C5","C6","C7"],nerves:["mcn","med"],
+   motor:"Biceps (MCN) + pronator teres & FCR (median C6–7).",
+   spared:"All median HAND muscles (APB) and long finger flexors.",
+   sensory:"Lateral forearm + first 3 fingers (LABC + median).",
+   snap:"Abnormal: LABC, median (thumb/index/middle).",
+   emg:"Biceps + proximal median forearm (PT, FCR); distal median (FPL, APB) is normal.",
+   warn:"Routine median/ulnar motor studies NORMAL — biceps weakness + lateral-forearm numbness with a spared hand is the clue."},
+ CP:{label:"Posterior cord",kind:"cord",sub:"radial + axillary + thoracodorsal",levels:["C5","C6","C7","C8"],nerves:["rad","ax"],
+   motor:"Complete radial palsy (wrist/finger drop, triceps) + deltoid (abduction) + latissimus dorsi (thoracodorsal).",
+   spared:"All median & ulnar muscles.",
+   sensory:"Lateral arm, posterior arm/forearm, dorsoradial hand (radial + axillary).",
+   snap:"Abnormal: radial. (A normal LABC keeps it out of the lateral cord.)",
+   emg:"Radial motor recording EIP may be abnormal; EIP, ECR, BR, triceps + deltoid, teres minor, latissimus all in play.",
+   warn:"Deltoid + radial weakness together = posterior cord (an isolated radial palsy spares the deltoid)."},
+ CM:{label:"Medial cord",kind:"cord",sub:"ulnar + median C8–T1",levels:["C8","T1"],nerves:["med","uln"],
+   motor:"All ulnar muscles + median C8–T1 (APB, FPL, FDP).",
+   spared:"Radial C8 (EIP) is SPARED — the one difference from a lower-trunk lesion.",
+   sensory:"Medial arm + forearm + hand, D4–5 (ulnar, dorsal-ulnar-cutaneous, MABC).",
+   snap:"Abnormal: ulnar, dorsal-ulnar-cutaneous, MABC. Median SNAP normal.",
+   emg:"Identical to lower trunk EXCEPT radial EIP is normal — sample EIP to separate the two.",
+   warn:"Medial cord vs lower trunk turns on one muscle: EIP (radial C8). Spared → medial cord; involved → lower trunk."},
+};
+const plexPanel=document.getElementById("plexpanel");
+let plexSel=null;
+function clearPlex(){
+  plexSel=null; body.classList.remove("plexmode");
+  document.querySelectorAll(".item.hit").forEach(n=>n.classList.remove("hit"));
+  document.querySelectorAll(".lvl.match").forEach(n=>n.classList.remove("match"));
+  clearBraidHL();
+  if(plexPanel){ plexPanel.hidden=true; plexPanel.innerHTML=""; }
+}
+function braidByPlex(E){
+  clearBraidHL();
+  const b=document.getElementById("braid"); if(b) b.classList.add("rootlit");
+  document.querySelectorAll(".braid .seg,.braid .node.small,.braid .node.term,.braid .branchbox,.braid .bconn").forEach(n=>{
+    const els=(n.dataset.el||"").split(" "), self=n.dataset.elself||"";
+    n.classList.add((els.includes(E)||self===E)?"lvhit":"lvdim");
+  });
+  document.querySelectorAll(".braid .node.root").forEach(n=>n.classList.add("lvdim"));
+}
+function plexClick(E){
+  clearRoot(); clearFocus(); clearTree(); clearSite();
+  if(plexSel===E){ clearPlex(); defaultStatus(); return; }
+  clearPlex(); plexSel=E;
+  const P=PLEX[E]; if(!P) return;
+  braidByPlex(E);
+  body.classList.add("plexmode");
+  let n=0;
+  document.querySelectorAll('#grid .item[data-levels]').forEach(it=>{
+    const card=it.closest(".card"); const nv=card?card.dataset.nerve:"";
+    if(!P.nerves.includes(nv)) return;
+    const myo=(it.dataset.levels||"").split(" ");
+    if(myo.some(l=>P.levels.includes(l))){ it.classList.add("hit"); n++;
+      P.levels.forEach(L=>it.querySelectorAll(`.lvl[data-lvl="${L}"]`).forEach(c=>c.classList.add("match")));
+    }
+  });
+  const row=(k,v,warn)=>`<div class="pprow${warn?' warn':''}"><div class="ppk">${k}</div><div class="ppv">${v}</div></div>`;
+  plexPanel.innerHTML=
+    `<div class="pphead">${esc(P.label)}</div><div class="ppsub">${esc(P.sub)} · ${n} muscle${n===1?"":"s"} lit below</div>`+
+    row("Weak",`<b>${esc(P.motor)}</b>`)+
+    row("Spared",esc(P.spared))+
+    row("Sensory",esc(P.sensory))+
+    row("SNAPs",esc(P.snap))+
+    row("EMG",esc(P.emg))+
+    row("Key point",esc(P.warn),true);
+  plexPanel.hidden=false;
+  setStatus(`<b>${esc(P.label)}</b> lit on the plexus — everything distal is highlighted. <span style="color:var(--ink-soft)">Click it again to clear.</span>`);
+  const reduce=(typeof matchMedia==="function")&&matchMedia("(prefers-reduced-motion:reduce)").matches;
+  try{ plexPanel.scrollIntoView({behavior:reduce?"auto":"smooth",block:"nearest"}); }catch(e){}
+}
+
+/* =====================================================================
+   ANOMALOUS INNERVATION + EPONYM / PROXIMAL-SITE GLOSSARY
+   ===================================================================== */
+const ANOM=[
+ {id:"mga",name:"Martin–Gruber",col:"#2566a8",
+   what:"Median→ulnar crossover in the FOREARM — motor axons (often via the AIN) leave the median, cross to the ulnar, and supply ulnar hand intrinsics (FDI, ADM, AdP). Present in ~15–30%.",
+   signs:[
+     "Recording a thenar/ulnar-supplied muscle, the median CMAP is LARGER stimulating at the elbow than at the wrist (extra proximal amplitude, often an initial positive dip).",
+     "Fakes an ulnar forearm “conduction block”: ulnar CMAP drops wrist→below-elbow — but it’s crossover, not a lesion.",
+     "In CTS can distort the median DML and the median–ulnar comparison.",
+   ],
+   pitfall:"Before calling a forearm ulnar conduction block, stimulate the median at the wrist AND antecubital fossa while recording the ulnar muscle — a Martin–Gruber pattern collapses the apparent block."},
+ {id:"rc",name:"Riche–Cannieu",col:"#c2761a",
+   what:"Ulnar→median anastomosis in the HAND — ulnar deep-branch fibres take over normally-median thenar muscles (APB/FPB). Common, variable extent.",
+   signs:[
+     "An “all-ulnar hand”: thenar muscles still contract in a complete median lesion because they’re ulnar-driven.",
+     "Masks median severity — APB looks preserved despite a clearly abnormal median study.",
+   ],
+   pitfall:"Don’t be reassured by a strong APB when the median study is bad — suspect Riche–Cannieu and lean on the SNAP/needle findings."},
+ {id:"mar",name:"Marinacci",col:"#7d5ba6",
+   what:"The REVERSE of Martin–Gruber: ulnar→median crossover in the forearm (rare).",
+   signs:[
+     "Stimulating the ulnar at the elbow while recording a median muscle gives an unexpectedly large/early response.",
+     "Confounds localisation of forearm lesions when present.",
+   ],
+   pitfall:"Rare — consider only when forearm median/ulnar CMAPs behave paradoxically and Martin–Gruber has been excluded."},
+];
+const EPONYMS=[
+ {t:"Erb’s palsy",d:"Upper trunk (C5–C6) traction — “waiter’s-tip” arm; commonest obstetric plexus injury (shoulder dystocia)."},
+ {t:"Klumpke’s palsy",d:"Lower trunk (C8–T1) traction (arm pulled up) — intrinsic-hand wasting, ± Horner."},
+ {t:"Parsonage–Turner (neuralgic amyotrophy)",d:"Acute shoulder pain → patchy weakness; favours suprascapular, long thoracic, AIN, axillary. Lesion sits in fascicles of the PARENT nerve; US shows hourglass constriction / torsion."},
+ {t:"True neurogenic TOS",d:"Lower trunk over a fibrous band from a rudimentary cervical rib; T1>C8 → thenar>hypothenar wasting; ulnar + MABC SNAP low, median SNAP spared."},
+ {t:"Suprascapular notch",d:"Suprascapular n. — supraspinatus + infraspinatus weak, deep shoulder pain (volleyball, traction, ganglion)."},
+ {t:"Spinoglenoid notch",d:"Distal suprascapular n. — infraspinatus ONLY, usually painless (paralabral ganglion cyst)."},
+ {t:"Quadrilateral space",d:"Axillary n. (+ posterior circumflex humeral a.) — deltoid + teres minor weak, oval patch over deltoid; shoulder dislocation / humeral fracture."},
+ {t:"Saturday-night palsy",d:"Radial n. at the spiral groove — wrist/finger drop, triceps spared."},
+ {t:"Crutch palsy",d:"Radial n. in the axilla — adds triceps weakness + posterior arm/forearm sensory loss."},
+ {t:"Cheiralgia paraesthetica (Wartenberg)",d:"Superficial radial n. at the distal forearm — pure sensory (tight watch-strap / handcuffs)."},
+ {t:"Tardy ulnar palsy",d:"Delayed ulnar neuropathy at the elbow years after a cubitus valgus / old supracondylar fracture."},
+ {t:"Cyclist’s / handlebar palsy",d:"Ulnar deep palmar branch at Guyon’s canal — painless intrinsic wasting, sensation spared."},
+ {t:"Pancoast",d:"Apical lung tumour invading the lower trunk / T1 — C8–T1 pattern + Horner; pain prominent."},
+ {t:"Breathing arm",d:"Aberrant phrenic→upper-trunk reinnervation after a C5-root injury — upper-arm muscles fire with inspiration."},
+];
+const anomBar=document.getElementById("anombar"), anomPanel=document.getElementById("anompanel");
+let anomSel=null;
+(function buildAnom(){
+  if(!anomBar) return;
+  ANOM.forEach(A=>{ const b=document.createElement("button"); b.type="button"; b.className="lpill";
+    b.textContent=A.name; b.style.borderColor=A.col; b.style.color=A.col; b.onclick=()=>anomClick(A,b);
+    anomBar.appendChild(b);
+  });
+})();
+function clearAnom(){
+  anomSel=null;
+  document.querySelectorAll("#anombar .lpill").forEach(p=>{p.style.background="#fff";p.style.color=p.style.borderColor;});
+  if(anomPanel){ anomPanel.hidden=true; anomPanel.innerHTML=""; }
+}
+function anomClick(A,btn){
+  if(anomSel===A.id){ clearAnom(); return; }
+  clearAnom(); anomSel=A.id; btn.style.background=A.col; btn.style.color="#fff";
+  anomPanel.innerHTML=
+    `<div class="lphead" style="color:${A.col}">${esc(A.name)} anastomosis</div>`+
+    `<p class="lsens">${esc(A.what)}</p>`+
+    `<ul class="anomsigns">${A.signs.map(s=>`<li>${esc(s)}</li>`).join("")}</ul>`+
+    `<p class="lnote"><b>Pitfall —</b> ${esc(A.pitfall)}</p>`;
+  anomPanel.hidden=false;
+}
+(function buildEponyms(){
+  const el=document.getElementById("eponyms"); if(!el) return;
+  el.innerHTML=EPONYMS.map(e=>`<div class="epi"><b>${esc(e.t)}</b> — ${esc(e.d)}</div>`).join("");
+})();
+
+/* proximal-nerve summary panel (driven by the slate dots on the map) */
+const proxPanel=document.getElementById("proxpanel");
+let proxSel=null;
+function clearProx(){
+  proxSel=null;
+  document.querySelectorAll("#cmap .csite.proxon").forEach(n=>n.classList.remove("proxon","sel"));
+  if(proxPanel){ proxPanel.hidden=true; proxPanel.innerHTML=""; }
+}
+function proxClick(id,g){
+  if(proxSel===g){ clearProx(); defaultStatus(); return; }
+  clearProx(); clearSite();
+  proxSel=g; if(g) g.classList.add("proxon","sel");
+  const P=PROXINFO[id]; if(!P) return;
+  const row=(k,v)=>`<div class="pprow"><div class="ppk">${k}</div><div class="ppv">${v}</div></div>`;
+  proxPanel.innerHTML=
+    `<div class="pphead" style="color:${P.col}">${esc(P.name)}</div><div class="ppsub">${esc(P.origin)}</div>`+
+    row("Site(s)",esc(P.sites))+
+    row("Motor",`<b>${esc(P.motor)}</b>`)+
+    row("Sensory",esc(P.sensory))+
+    row("EDX",esc(P.edx))+
+    row("Pearl",esc(P.pearl));
+  proxPanel.hidden=false;
+  setStatus(`<b>${esc(P.name)}</b> — proximal-nerve summary. <span style="color:var(--ink-soft)">Click the dot again to clear.</span>`);
+  const reduce=(typeof matchMedia==="function")&&matchMedia("(prefers-reduced-motion:reduce)").matches;
+  try{ proxPanel.scrollIntoView({behavior:reduce?"auto":"smooth",block:"nearest"}); }catch(e){}
+}
+
+/* =====================================================================
+   INTERACTION
+   ===================================================================== */
+const body=document.body, statusEl=document.getElementById("status");
+let activeRoot=null, focusNerve=null, typeOff=new Set(), query="";
+
+function setStatus(html){statusEl.innerHTML=html;}
+
+function applyTypeFilters(){
+  ["motor","sensory","pass","pearl"].forEach(t=>{
+    const hide=typeOff.has(t);
+    document.querySelectorAll(`[data-type="${t}"]`).forEach(n=>n.style.display=hide?"none":"");
+  });
+}
+
+let treeSel=null;
+function clearTree(){
+  treeSel=null;
+  document.querySelectorAll(".cbody.treemode").forEach(c=>c.classList.remove("treemode"));
+  document.querySelectorAll(".thit").forEach(n=>n.classList.remove("thit"));
+  document.querySelectorAll(".tnode.sel").forEach(n=>n.classList.remove("sel"));
+}
+function treeClick(g){
+  const card=document.getElementById("card-"+g.dataset.card);
+  const cbody=card&&card.querySelector(".cbody"); if(!cbody) return;
+  if(treeSel===g){ clearTree(); defaultStatus(); return; }
+  clearRoot(); clearFocus(); clearTree(); clearSite(); clearPlex();
+  treeSel=g; g.classList.add("sel"); cbody.classList.add("treemode");
+  const keys=(g.dataset.keys||"").split("|").filter(Boolean);
+  let n=0;
+  cbody.querySelectorAll("[data-search]").forEach(it=>{
+    const t=it.dataset.search||"";
+    if(keys.some(k=>t.includes(k))){ it.classList.add("thit"); n++; }
+  });
+  setStatus(`<b>${g.dataset.label}</b> → <b>${n}</b> structure${n===1?"":"s"} highlighted in this card. <span style="color:var(--ink-soft)">Click it again to clear.</span>`);
+}
+let siteSel=null;
+function clearSite(){ siteSel=null;
+  document.querySelectorAll(".csite.sel").forEach(n=>n.classList.remove("sel"));
+  document.querySelectorAll(".sitehit").forEach(n=>n.classList.remove("sitehit"));
+}
+function siteClick(g){
+  const card=document.getElementById("card-"+g.dataset.card);
+  const cbody=card&&card.querySelector(".cbody"); if(!cbody) return;
+  if(siteSel===g){ clearSite(); defaultStatus(); return; }
+  clearRoot(); clearFocus(); clearTree(); clearSite(); clearPlex(); clearProx();
+  siteSel=g; g.classList.add("sel");
+  card.classList.remove("collapsed");
+  const key=(g.dataset.key||"").toLowerCase(); let n=0, first=null;
+  cbody.querySelectorAll('[data-type="pass"]').forEach(el=>{
+    if((el.dataset.search||"").includes(key)){ el.classList.add("sitehit"); if(!first)first=el; n++; }
+  });
+  const nm=card.querySelector(".nm")?card.querySelector(".nm").textContent:"card";
+  setStatus(`<b>${g.dataset.label}</b> — highlighted in the <b>${nm}</b> course/entrapment text (rest of the card kept for context). <span style="color:var(--ink-soft)">Click the dot again to clear.</span>`);
+  const reduce=(typeof matchMedia==="function")&&matchMedia("(prefers-reduced-motion:reduce)").matches;
+  try{ (first||card).scrollIntoView({behavior:reduce?"auto":"smooth",block:"center"}); }catch(e){}
+}
+function clearBraidHL(){
+  const b=document.getElementById("braid"); if(b) b.classList.remove("rootlit");
+  document.querySelectorAll(".braid .seg,.braid .node,.braid .branchbox,.braid .bconn")
+    .forEach(n=>n.classList.remove("lvhit","lvdim"));
+}
+function braidByRoot(r){
+  clearBraidHL();
+  const b=document.getElementById("braid"); if(b) b.classList.add("rootlit");
+  document.querySelectorAll(".braid .seg,.braid .node.small,.braid .node.term,.braid .branchbox,.braid .bconn").forEach(n=>{
+    const lv=(n.dataset.lv||"").split(" ");
+    n.classList.add(lv.includes(r)?"lvhit":"lvdim");
+  });
+  document.querySelectorAll(".braid .node.root").forEach(n=>{
+    n.classList.add(n.dataset.root===r?"lvhit":"lvdim");
+  });
+}
+function clearRoot(){
+  activeRoot=null; body.classList.remove("rootmode");
+  document.querySelectorAll(".rootchip,.rootcard").forEach(n=>n.classList.remove("on"));
+  document.querySelectorAll(".item.hit").forEach(n=>n.classList.remove("hit"));
+  document.querySelectorAll(".lvl.match").forEach(n=>n.classList.remove("match"));
+  clearBraidHL();
+}
+function selectRoot(r){
+  clearFocus(); clearTree(); clearSite(); clearPlex();
+  if(activeRoot===r){clearRoot(); defaultStatus(); return;}
+  clearRoot(); activeRoot=r; body.classList.add("rootmode");
+  document.querySelectorAll(`.rootchip[data-root="${r}"],.rootcard[data-root="${r}"]`).forEach(n=>n.classList.add("on"));
+  braidByRoot(r);
+  let muscles=0; const nerves=new Set();
+  document.querySelectorAll('#grid .item[data-levels]').forEach(it=>{
+    const has=(it.dataset.levels||"").split(" ").includes(r);
+    if(has){ it.classList.add("hit"); muscles++;
+      it.querySelectorAll(`.lvl[data-lvl="${r}"]`).forEach(c=>c.classList.add("match"));
+      const card=it.closest(".card"); if(card) nerves.add(card.querySelector(".nm").textContent);
+    }
+  });
+  setStatus(`<b class="key">${r}</b> pathway lit on the plexus · <b>${muscles}</b> muscles across <b>${nerves.size}</b> nerves highlighted below. <span style="color:var(--ink-soft)">Click ${r} again to clear.</span>`);
+}
+
+function clearFocus(){
+  focusNerve=null;
+  document.querySelectorAll(".card").forEach(c=>c.classList.remove("focus","dimcard"));
+  document.querySelectorAll(".braid .node,.braid .seg,.braid .branchbox,.braid .bconn").forEach(n=>n.classList.remove("dim","lit","sweep"));
+}
+function focusNerveFn(id){
+  clearRoot(); clearTree(); clearSite(); clearPlex();
+  if(focusNerve===id){clearFocus(); defaultStatus(); return;}
+  clearFocus(); focusNerve=id;
+  // cards
+  document.querySelectorAll(".card").forEach(c=>{
+    if(c.dataset.nerve===id) c.classList.add("focus"); else c.classList.add("dimcard");
+  });
+  // braid: light this nerve's FULL upstream path (root→trunk→division→cord→nerve), dim the rest
+  document.querySelectorAll(".braid .node").forEach(n=>{
+    const pn=(n.dataset.path||"").split(" ");
+    if(!(n.dataset.path && pn.includes(id))) n.classList.add("dim");
+  });
+  document.querySelectorAll(".braid .branchbox,.braid .bconn").forEach(b=>b.classList.add("dim"));
+  document.querySelectorAll(".braid .seg").forEach(seg=>{
+    const pn=(seg.dataset.path||"").split(" ");
+    if(seg.dataset.path && pn.includes(id)){
+      seg.classList.add("lit");
+      try{ const L=seg.getTotalLength(); seg.style.setProperty("--len",L); seg.classList.add("sweep"); }catch(e){}
+    } else { seg.classList.add("dim"); }
+  });
+  const card=document.getElementById("card-"+id);
+  const reduce = (typeof matchMedia==="function") && matchMedia("(prefers-reduced-motion:reduce)").matches;
+  if(card){ card.classList.remove("collapsed");
+    if(typeof card.scrollIntoView==="function"){ try{ card.scrollIntoView({behavior:reduce?"auto":"smooth",block:"start"}); }catch(e){} } }
+  setStatus(`Focused <b>${NAME[id]||id}</b>. <span style="color:var(--ink-soft)">Click it again to clear.</span>`);
+}
+
+function runSearch(qv){
+  query=qv.trim().toLowerCase();
+  document.getElementById("qx").style.display=query?"block":"none";
+  const items=document.querySelectorAll("[data-search]");
+  if(!query){ items.forEach(i=>{i.style.display="";unmark(i);}); applyTypeFilters(); defaultStatus(); return;}
+  clearRoot(); clearFocus(); clearTree(); clearSite(); clearPlex();
+  let hits=0;
+  items.forEach(i=>{
+    const match=i.dataset.search.includes(query);
+    i.style.display=match?"":"none";
+    if(match){hits++; mark(i);} else unmark(i);
+  });
+  // show/hide whole cards depending on whether they have visible items
+  document.querySelectorAll(".card").forEach(c=>{
+    const vis=c.querySelectorAll('[data-search]:not([style*="display: none"])').length;
+    c.style.display=vis?"":"none";
+  });
+  applyTypeFilters();
+  setStatus(`Search “<b>${qv}</b>” — <b>${hits}</b> matches.`);
+}
+function mark(i){ const nm=i.querySelector(".mn")||i; if(nm.dataset.orig===undefined)nm.dataset.orig=nm.innerHTML;
+  const re=new RegExp("("+query.replace(/[.*+?^${}()|[\]\\]/g,"\\$&")+")","ig");
+  nm.innerHTML=nm.dataset.orig.replace(re,"<mark>$1</mark>"); }
+function unmark(i){ const nm=i.querySelector(".mn")||i; if(nm&&nm.dataset.orig!==undefined){nm.innerHTML=nm.dataset.orig;} }
+
+function defaultStatus(){ setStatus(`Tip: click a root level, a nerve in the plexus, or search a muscle. <span style="color:var(--ink-soft)">Nothing selected.</span>`); }
+
+/* wire events */
+document.querySelectorAll(".rootchip").forEach(b=>b.onclick=()=>selectRoot(b.dataset.root));
+document.querySelectorAll(".rootcard").forEach(b=>b.onclick=()=>selectRoot(b.dataset.root));
+document.querySelectorAll(".braid .node.term").forEach(n=>n.onclick=()=>focusNerveFn(n.dataset.nerve));
+document.querySelectorAll(".braid .node.root").forEach(n=>n.onclick=()=>selectRoot(n.dataset.root));
+document.querySelectorAll(".braid .plexel").forEach(g=>g.onclick=()=>plexClick(g.dataset.elself));
+document.querySelectorAll(".chead").forEach(h=>h.onclick=()=>h.closest(".card").classList.toggle("collapsed"));
+document.querySelectorAll(".tnode.tn-on").forEach(g=>g.addEventListener("click",()=>treeClick(g)));
+document.querySelectorAll("#cmap .csite").forEach(g=>g.addEventListener("click",()=>{ if(g.dataset.prox) proxClick(g.dataset.prox,g); else siteClick(g); }));
+document.querySelectorAll(".tg").forEach(t=>t.onclick=()=>{
+  const k=t.dataset.t; if(typeOff.has(k)){typeOff.delete(k);t.classList.remove("off");}else{typeOff.add(k);t.classList.add("off");}
+  applyTypeFilters();
+});
+const q=document.getElementById("q");
+q.addEventListener("input",e=>runSearch(e.target.value));
+document.getElementById("qx").onclick=()=>{q.value="";runSearch("");q.focus();};
+document.getElementById("printbtn").onclick=()=>{ clearRoot();clearFocus();clearTree();clearSite();clearPlex();
+  document.querySelectorAll(".card").forEach(c=>c.classList.remove("collapsed"));
+  setTimeout(()=>{ try{window.print();}catch(e){} },60); };
+if(typeof window!=="undefined") window.addEventListener("beforeprint",()=>{ clearRoot();clearFocus();clearTree();clearSite();clearPlex(); });
+document.getElementById("reset").onclick=()=>{
+  clearRoot();clearFocus();clearTree();clearSite();clearLesion();clearPlex();clearAnom();clearProx();typeOff.clear();
+  document.querySelectorAll(".tg").forEach(t=>t.classList.remove("off"));
+  q.value="";runSearch("");
+  document.querySelectorAll(".card").forEach(c=>{c.style.display="";c.classList.remove("collapsed");});
+  defaultStatus();
+};
+document.addEventListener("keydown",e=>{ if(e.key==="Escape"){document.getElementById("reset").click();q.blur();}
+  if(e.key==="/"&&document.activeElement!==q){e.preventDefault();q.focus();} });
+defaultStatus();
+</script>
+</body>
+</html>

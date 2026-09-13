@@ -1,0 +1,2089 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lower-Limb Nerve Explorer — lumbosacral plexus to foot</title>
+<style>
+  :root{
+    --ink:#161b22; --ink-soft:#445; --line:#e3e7ee; --line-soft:#eef1f6;
+    --paper:#f6f7f9; --card:#ffffff;
+    --nerve:#b8332a; --motor:#2566a8; --sensory:#c2761a; --pass:#2c8a5f; --pearl:#9a7a16; --root:#475569;
+    --nerve-bg:#fbecea; --motor-bg:#eaf1f9; --sensory-bg:#fbf1e3; --pass-bg:#e7f4ec; --pearl-bg:#f7f1dc; --root-bg:#eef1f5;
+    --focus:#161b22;
+    --r:10px; --r-sm:6px;
+    --mono:ui-monospace,"SF Mono",Menlo,Consolas,"Liberation Mono",monospace;
+    --sans:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{font-family:var(--sans);color:var(--ink);background:var(--paper);line-height:1.45;
+       -webkit-font-smoothing:antialiased;font-size:14px}
+  a{color:inherit}
+
+  /* ---------- top bar ---------- */
+  header.bar{position:sticky;top:0;z-index:40;background:rgba(246,247,249,.92);
+    backdrop-filter:saturate(140%) blur(8px);border-bottom:1px solid var(--line);padding:10px 18px}
+  .bar-row{display:flex;gap:14px;align-items:center;flex-wrap:wrap;max-width:1500px;margin:0 auto}
+  .title{display:flex;flex-direction:column;line-height:1.1;margin-right:6px}
+  .title b{font-size:15px;letter-spacing:-.01em}
+  .title span{font-size:11px;color:var(--ink-soft);font-family:var(--mono);letter-spacing:.02em}
+  .search{flex:1 1 220px;min-width:170px;position:relative}
+  .search input{width:100%;padding:8px 30px 8px 12px;border:1px solid var(--line);border-radius:var(--r-sm);
+    background:var(--card);font:inherit;color:var(--ink)}
+  .search input:focus{outline:2px solid var(--focus);outline-offset:0;border-color:transparent}
+  .search .x{position:absolute;right:8px;top:50%;transform:translateY(-50%);cursor:pointer;color:var(--ink-soft);
+    border:0;background:none;font-size:15px;display:none}
+  .chips{display:flex;gap:5px;align-items:center;flex-wrap:wrap}
+  .chips .lab{font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-soft);margin-right:2px}
+  .rootchip{font-family:var(--mono);font-size:12px;padding:6px 8px;border:1px solid var(--line);
+    border-radius:var(--r-sm);background:var(--card);cursor:pointer;color:var(--root);font-weight:600;
+    transition:.12s}
+  .rootchip:hover{border-color:var(--root)}
+  .rootchip.on{background:var(--root);color:#fff;border-color:var(--root)}
+  .toggles{display:flex;gap:5px}
+  .tg{font-size:11px;padding:6px 9px;border:1px solid var(--line);border-radius:var(--r-sm);
+    background:var(--card);cursor:pointer;display:flex;gap:6px;align-items:center;color:var(--ink-soft)}
+  .tg .dot{width:9px;height:9px;border-radius:2px}
+  .tg.off{opacity:.4;text-decoration:line-through}
+  .tg[data-t=motor] .dot{background:var(--motor)} .tg[data-t=sensory] .dot{background:var(--sensory)}
+  .tg[data-t=pass] .dot{background:var(--pass)} .tg[data-t=pearl] .dot{background:var(--pearl)}
+  .ghost{font-size:11px;color:var(--ink-soft);border:1px solid var(--line);background:var(--card);
+    border-radius:var(--r-sm);padding:6px 9px;cursor:pointer}
+  .ghost:hover{border-color:var(--ink-soft)}
+  .ghost.langon{border-color:var(--root);color:var(--root);font-weight:600}
+
+  .status{max-width:1500px;margin:8px auto 0;font-size:12px;color:var(--ink-soft);min-height:16px}
+  .status b{color:var(--ink)} .status .key{font-family:var(--mono)}
+
+  main{max-width:1500px;margin:0 auto;padding:16px 18px 60px}
+
+  /* ---------- plexus navigator ---------- */
+  .nav-wrap{background:var(--card);border:1px solid var(--line);border-radius:var(--r);
+    padding:6px 10px 2px;margin-bottom:18px;position:relative;overflow:hidden}
+  .nav-wrap .hint{display:block;text-align:right;font-size:11px;color:var(--ink-soft);
+    font-family:var(--mono);margin:0 2px 4px;line-height:1.4}
+  svg.braid{width:100%;height:auto;display:block;touch-action:manipulation}
+  .cmap-wrap{background:var(--card);border:1px solid var(--line);border-radius:var(--r);
+    padding:8px 12px;margin:2px 0 18px;overflow-x:auto}
+  svg.cmap{width:100%;min-width:820px;height:auto;display:block;font-family:var(--sans)}
+  .cmap .creg{fill:#9aa4b1;font-size:11px;font-weight:600;text-anchor:middle;text-transform:uppercase;letter-spacing:.05em}
+  .cmap .cdiv{stroke:#eef1f5;stroke-width:1}
+  .cmap .clane{font-size:12.5px;font-weight:700}
+  .cmap .claneln{stroke-width:2.6;opacity:.30;stroke-linecap:round}
+  .cmap .clbl{fill:#3a4654;font-size:10px;paint-order:stroke;stroke:#fff;stroke-width:3px;stroke-linejoin:round}
+  .csite{cursor:pointer}
+  .csite .cdot,.csite .chalo{transition:.12s}
+  .csite:hover .cdot{r:6.5}
+  .csite:hover .chalo{stroke:#1f2a37;stroke-width:1.6}
+  .csite.sel .cdot{fill:#0b6b3a}
+  .csite.sel .chalo{stroke:#0b3b22;stroke-width:2}
+  .csite.sel .clbl{font-weight:700;fill:#0b3b22}
+  .sitehit{background:#e7f6ee;box-shadow:inset 0 0 0 1.5px #97d3b1;border-radius:7px}
+  .braid .seg{fill:none;stroke:#c4ccd6;stroke-width:2.4;stroke-linecap:round}
+  .braid .seg.post{stroke-dasharray:none}
+  .braid .node{cursor:pointer}
+  .braid .node circle,.braid .node rect{stroke:#fff;stroke-width:1.5}
+  .braid .nodetext{font-family:var(--mono);font-size:11px;fill:#fff;font-weight:600;
+    text-anchor:middle;dominant-baseline:central;pointer-events:none}
+  .braid .chiplbl{font-family:var(--sans);font-size:11.5px;font-weight:600;fill:#33404f;
+    text-anchor:middle;dominant-baseline:central;pointer-events:none}
+  .braid .nlabel{font-family:var(--sans);font-size:10.5px;fill:var(--ink-soft);text-anchor:middle}
+  .braid .structlbl{font-family:var(--sans);font-size:12px;font-weight:600;fill:#2a3340;text-anchor:middle}
+  .braid .lvdim{opacity:.12}
+  .braid .seg.lvhit{stroke:#475569;stroke-width:3.4;opacity:1}
+  .braid .node.lvhit,.braid .branchbox.lvhit{opacity:1}
+  .braid .node.root.lvhit circle{stroke:#111827;stroke-width:3}
+  .braid.rootlit .seglabel{opacity:.12}
+  .braid .colhdr{font-family:var(--sans);font-size:10px;fill:#9aa4b1;text-anchor:middle;
+    text-transform:uppercase;letter-spacing:.1em}
+  .braid .seglabel{font-family:var(--sans);font-size:9.5px;font-style:italic;fill:#7a8694;
+    text-anchor:middle;paint-order:stroke;stroke:#fff;stroke-width:2.8px;stroke-linejoin:round}
+  .braid .node.dim{opacity:.28}
+  .braid .seg.dim{opacity:.12}
+  .braid .branchbox{cursor:pointer}
+  .treewrap{margin:8px 0 6px;overflow-x:auto;border:1px solid var(--line-soft);border-radius:8px;
+    background:#fcfdfe;padding:8px 10px}
+  .treelabel{font-size:9.5px;text-transform:uppercase;letter-spacing:.1em;color:var(--ink-soft);
+    font-weight:600;margin:0 2px 6px}
+  .tnode.tn-on{cursor:pointer}
+  .tnode.tn-on .tnbox{transition:.12s}
+  .tnode.tn-on:hover .tnbox{stroke-opacity:1}
+  .tnode.sel .tnbox{stroke-width:2.4;stroke-opacity:1}
+  .cbody.treemode [data-search]:not(.thit){opacity:.25}
+  .cbody.treemode .thit{background:#eaf3ff;box-shadow:inset 0 0 0 1px #c5dcf5;border-radius:6px}
+  .braid .node.small.lvhit rect{stroke:#475569;stroke-width:1.6}
+  .braid .node.small.small-on{cursor:pointer}
+  .braid .node.tap.tap-on{cursor:pointer}
+  .braid .node.tap.tap-on:hover circle{stroke:#475569;stroke-width:2}
+  .braid .node.small.small-on:hover circle{stroke:#475569;stroke-width:2}
+  .braid .node.small.small-on:hover .nlabel{fill:#111827;font-weight:600}
+  .braid .branchbox .bbg{transition:.12s}
+  .braid .branchbox:hover .bbg{stroke-opacity:.9;filter:brightness(.985)}
+  .braid .branchbox.dim{opacity:.3}
+  .braid .bconn.dim{opacity:.3}
+  .braid .bconn.lvhit{opacity:1}
+  .braid .seg.sciasplit{stroke-dasharray:5 4;opacity:.75}
+
+  @keyframes sweep{to{stroke-dashoffset:0}}
+  .braid .seg.sweep{stroke-dasharray:var(--len);stroke-dashoffset:var(--len);
+    animation:sweep .75s ease forwards}
+
+  /* ---------- section labels ---------- */
+  .eyebrow{font-size:10px;text-transform:uppercase;letter-spacing:.12em;color:var(--ink-soft);
+    font-weight:600;margin:0 2px 8px;display:flex;align-items:center;gap:8px}
+  .eyebrow::after{content:"";flex:1;height:1px;background:var(--line)}
+
+  /* ---------- lesion explorer ---------- */
+  .lesionbar{display:flex;flex-wrap:wrap;gap:10px 14px;margin:0 2px 12px}
+  .lgroup{display:flex;flex-wrap:wrap;gap:5px;align-items:center}
+  .lgrp-label{font-size:11px;font-weight:700;margin-right:1px}
+  .lpill{border:1.4px solid;border-radius:999px;padding:4px 11px;font-size:12px;font-weight:600;
+    background:#fff;cursor:pointer;line-height:1.25;transition:.12s;font-family:var(--sans)}
+  .lpill:hover{filter:brightness(.96)}
+  .lesionpanel{border:1px solid var(--line);border-radius:var(--r);padding:13px 15px;margin:0 0 16px;background:var(--card)}
+  .lesionpanel .lphead{font-weight:700;font-size:14px;margin:0 0 9px}
+  .lcols{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  @media(max-width:560px){.lcols{grid-template-columns:1fr}}
+  .lcol h4{margin:0 0 6px;font-size:10.5px;text-transform:uppercase;letter-spacing:.07em}
+  .lcol.aff h4{color:#b8332a}
+  .lcol.spd h4{color:#2c8a5f}
+  .lcol ul{margin:0;padding:0;list-style:none;display:flex;flex-wrap:wrap;gap:4px}
+  .lcol li{font-size:12px;padding:2px 8px;border-radius:6px}
+  .lcol.aff li{background:#fceeec;color:#9a2a22}
+  .lcol.spd li{background:#eaf6ef;color:#1f6d49}
+  .lsens{margin:11px 0 0;font-size:12.5px;color:#33404f;line-height:1.5}
+  .lsens b{color:#1f2937}
+  .lnote{margin:7px 0 0;font-size:12px;color:var(--ink-soft);font-style:italic;line-height:1.5}
+
+  /* ---------- plexus / proximal pattern panels ---------- */
+  .braid .plexel rect{cursor:pointer}
+  .braid .plexel:hover rect{stroke:#475569;stroke-width:2}
+  body.plexmode .item:not(.hit){opacity:.3}
+  body.plexmode .item.hit{background:#eaf2fb;box-shadow:inset 0 0 0 1px #c2d8f0}
+  body.plexmode .item.hit .lvl.match{background:#2566a8;color:#fff;opacity:1}
+  .plexpanel{border:1px solid var(--line);border-left:4px solid #475569;border-radius:var(--r);
+    padding:13px 15px;margin:0 0 14px;background:var(--card)}
+  .plexpanel .pphead{font-weight:700;font-size:14.5px;margin:0 0 3px;color:#2a3340}
+  .plexpanel .ppsub{font-size:11px;color:var(--ink-soft);margin:0 0 10px}
+  .pprow{display:grid;grid-template-columns:120px 1fr;gap:4px 12px;font-size:12.5px;line-height:1.5;
+    padding:5px 0;border-top:1px solid var(--line-soft)}
+  .pprow:first-of-type{border-top:0}
+  .pprow .ppk{font-weight:700;color:#475569;font-size:10.5px;text-transform:uppercase;letter-spacing:.04em;padding-top:1px}
+  .pprow.warn .ppk{color:#b8332a}
+  .pprow .ppv b{color:#1f2937}
+  @media(max-width:560px){.pprow{grid-template-columns:1fr;gap:1px}}
+
+  /* ---------- foot-drop matrix ---------- */
+  .fdwrap{border:1px solid var(--line);border-radius:var(--r);background:var(--card);
+    padding:10px 12px 14px;margin:0 0 18px;overflow-x:auto}
+  table.fd{border-collapse:collapse;width:100%;min-width:640px;font-size:12px}
+  table.fd th,table.fd td{border:1px solid var(--line-soft);padding:5px 8px;text-align:center}
+  table.fd thead th{background:#f3f5f8;font-size:10.5px;text-transform:uppercase;letter-spacing:.04em;
+    color:#3a4654;cursor:pointer;transition:.12s}
+  table.fd thead th.rowh{text-align:left;cursor:default}
+  table.fd thead th.colon{background:#475569;color:#fff}
+  table.fd tbody th{text-align:left;font-weight:600;color:#33404f;background:#fbfcfd;white-space:nowrap}
+  table.fd td.mk{color:#b8332a;font-weight:700}
+  table.fd td.colon{background:#eef4fb}
+  table.fd tbody tr.sechd th{background:#eef1f5;color:#5b6573;font-size:10px;text-transform:uppercase;
+    letter-spacing:.05em;font-weight:700}
+  .fdcap{font-size:11px;color:var(--ink-soft);margin:8px 2px 0;line-height:1.5}
+
+  /* ---------- roots strip ---------- */
+  .roots{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px;margin-bottom:22px}
+  .rootcard{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:11px 12px;
+    border-top:3px solid var(--root);transition:.12s;cursor:pointer}
+  .rootcard.on{box-shadow:0 0 0 2px var(--root) inset;border-top-color:var(--root)}
+  .rootcard h3{margin:0 0 6px;font-family:var(--mono);font-size:15px;color:var(--root);display:flex;
+    justify-content:space-between;align-items:baseline;gap:6px}
+  .rootcard h3 em{font-style:normal;font-size:9.5px;color:var(--ink-soft);font-family:var(--sans);text-align:right}
+  .rootcard .blk{margin:6px 0}
+  .rootcard .blk .t{font-size:9.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-soft);
+    margin-bottom:2px}
+  .rootcard .blk .v{font-size:12px}
+  .rootcard .item{padding:2px 0}
+  .derm{color:var(--sensory)}
+
+  /* ---------- nerve cards ---------- */
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));
+    gap:14px;align-items:start}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);overflow:hidden;
+    transition:.15s;scroll-margin-top:130px}
+  .card.span2{grid-column:span 2}
+  .card.focus{box-shadow:0 0 0 2px var(--focus);}
+  .card.dimcard{opacity:.5}
+  .chead{padding:12px 14px;border-bottom:1px solid var(--line-soft);cursor:pointer;
+    display:flex;align-items:center;gap:10px;border-left:4px solid var(--nerve)}
+  .chead .nm{font-size:15px;font-weight:650;letter-spacing:-.01em}
+  .chead .lv{font-family:var(--mono);font-size:11px;color:#fff;background:var(--nerve);
+    padding:2px 7px;border-radius:20px;margin-left:auto;white-space:nowrap}
+  .chead .car{color:var(--ink-soft);font-size:11px;transition:.15s}
+  .card.collapsed .car{transform:rotate(-90deg)}
+  .card.collapsed .cbody{display:none}
+  .cbody{padding:4px 14px 14px}
+  .cbody .divnote{color:var(--ink-soft);font-size:11px;margin-top:8px;font-style:italic}
+
+  .sec{margin-top:12px}
+  .sec .sh{font-size:10px;text-transform:uppercase;letter-spacing:.08em;font-weight:700;
+    display:flex;align-items:center;gap:6px;margin-bottom:6px}
+  .sec .sh .sq{width:9px;height:9px;border-radius:2px}
+  .sh.motor{color:var(--motor)} .sh.motor .sq{background:var(--motor)}
+  .sh.sensory{color:var(--sensory)} .sh.sensory .sq{background:var(--sensory)}
+  .sh.pass{color:var(--pass)} .sh.pass .sq{background:var(--pass)}
+  .sh.pearl{color:var(--pearl)} .sh.pearl .sq{background:var(--pearl)}
+
+  .item{display:flex;align-items:flex-start;gap:8px;padding:4px 6px;border-radius:var(--r-sm);
+    font-size:13px;transition:.1s}
+  .item .mn{flex:1}
+  .item .mn .note{color:var(--ink-soft);font-size:11.5px}
+  .lvls{display:flex;gap:3px;flex-wrap:wrap;justify-content:flex-end}
+  .lvl{font-family:var(--mono);font-size:10px;padding:1px 5px;border-radius:10px;
+    background:var(--root-bg);color:var(--root);white-space:nowrap}
+  .lvl.minor{opacity:.5}
+  .pass-item{background:var(--pass-bg)} .pass-item .nm2{color:var(--pass);font-weight:600}
+  .pearl-item{font-size:12.5px;color:#5b4d10;background:var(--pearl-bg);display:block;padding:6px 8px;
+    border-radius:var(--r-sm);margin-bottom:4px}
+
+  .sub{margin:8px 0;border:1px dashed var(--line);border-radius:var(--r-sm);padding:8px 10px;background:#fafbfc}
+  .sub .subh{font-family:var(--mono);font-size:12px;font-weight:700;color:var(--nerve);margin-bottom:4px;
+    display:flex;gap:8px;align-items:center}
+  .sub .subh .tag{font-size:9px;background:var(--nerve);color:#fff;padding:1px 6px;border-radius:10px;
+    text-transform:uppercase;letter-spacing:.05em}
+
+  ol.sites{margin:4px 0 0;padding-left:20px;font-size:12.5px}
+  ol.sites li{margin:2px 0}
+  ol.sites li.key{font-weight:600;color:var(--pass)}
+
+  body.rootmode .item:not(.hit){opacity:.32}
+  body.rootmode .item.hit{background:#fff6cc;box-shadow:inset 0 0 0 1px #efe09a}
+  body.rootmode .item.hit .lvl.match{background:var(--root);color:#fff;opacity:1}
+
+  mark{background:#fde68a;color:inherit;border-radius:2px;padding:0 1px}
+
+  footer{max-width:1500px;margin:0 auto;padding:0 18px 40px;font-size:11px;color:var(--ink-soft)}
+  footer code{font-family:var(--mono);background:#eef1f5;padding:1px 4px;border-radius:3px}
+
+  .eponyms{display:grid;grid-template-columns:1fr 1fr;gap:11px;margin:0 2px 10px}
+  @media(max-width:620px){.eponyms{grid-template-columns:1fr}}
+  .epsub{grid-column:1/-1;font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;
+    color:var(--ink-soft);margin:10px 0 1px;display:flex;align-items:baseline}
+  .epsub:first-child{margin-top:0}
+  .epsub-src{font-weight:600;text-transform:none;letter-spacing:0;font-style:italic;opacity:.75;font-size:10.5px;margin-left:9px}
+  .epi{border:1px solid var(--line);border-radius:12px;padding:11px 13px 12px 16px;background:var(--card);
+    font-size:12.5px;line-height:1.5;color:#33404f;position:relative;overflow:hidden}
+  .epi::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px}
+  .epi.rule::before{background:#475569}
+  .epi.syn::before{background:var(--pearl)}
+  .epi .epihead{font-weight:700;font-size:13px;margin:0 0 4px;color:#2a3340}
+  .epi .epibody{color:#33404f}
+  .epi b{color:#1f2937}
+  .epi.hit{box-shadow:0 0 0 2px var(--pearl) inset;border-color:var(--pearl)}
+
+  @media (max-width:760px){
+    .card.span2{grid-column:span 1}
+  }
+  @media (prefers-reduced-motion:reduce){
+    .braid .seg.sweep{animation:none;stroke-dashoffset:0}
+    *{transition:none!important}
+  }
+  @media print{
+    header.bar,.nav-wrap .hint,.toggles,.search,.chips,.ghost{display:none!important}
+    .card.collapsed .cbody{display:block!important}
+    body{background:#fff}
+    .grid{display:block} .card{break-inside:avoid;margin-bottom:10px}
+    .card.dimcard,.item{opacity:1!important}
+    .braid .dim,.braid .lvdim,.braid .lvhit,.braid .lit,.braid .sweep{opacity:1!important}
+    .cbody.treemode [data-search]{opacity:1!important;background:none!important;box-shadow:none!important}
+    body.rootmode .item,body.plexmode .item,.item.hit,.lvl.match{opacity:1!important}
+    .nav-wrap,.cmap-wrap,.fdwrap{break-inside:avoid;overflow:visible}
+    svg.cmap{min-width:0}
+    .eyebrow{break-after:avoid}
+  }
+  /* ---- CHUNK7 render additions ---- */
+  .item .note,.item .nm2 .note{color:var(--ink-soft);font-size:11.5px;font-weight:400}
+  .braid .tap .mk{font-family:var(--sans);font-size:9.5px;font-weight:600;fill:#5b4670}
+  .braid .tap .mk2{font-family:var(--sans);font-size:8.5px;font-weight:500;fill:#8a7ba0}
+  .braid .tap.lvdim,.braid .tap.dim{opacity:.14}
+  .braid .tap.lvhit .mk,.braid .tap.lit .mk,.braid .tap.lvhit .mk2,.braid .tap.lit .mk2{fill:#3a2550}
+  .braid .seg.feeder{stroke:#c4ccd6}
+  .braid .seg.muscle{stroke:#d3c1e0;stroke-width:1.6}
+  .braid .seg.muscle.lit{stroke-width:2.2}
+  .braid .node.small.lit circle,.braid .plexel.sel rect{stroke:#475569;stroke-width:2}
+  /* nerve-focus: make the lit chain pop */
+  .braid .seg.lit:not(.muscle){stroke:#475569;stroke-width:3.2}
+  .braid .seg.muscle.lit{stroke:#8f2f8f}
+  .braid .node.root.lit circle{stroke:#1f2937;stroke-width:2.6}
+  .braid .node.term.lit rect{stroke:#1f2937;stroke-width:2}
+  .braid .plexel.lit rect{stroke:#475569;stroke-width:2;fill:#e3ebf5}
+  .braid .plexel.sel rect{fill:#e3ebf5}
+  .braid .plexel:hover rect,.braid .node.term:hover rect{filter:brightness(.95);cursor:pointer}
+  .braid .node.root,.braid .node.term,.braid .plexel{cursor:pointer}
+  table.fd td.fx{color:#2c8a5f;font-weight:700}
+  table.fd td.fxs{color:#c2761a;font-weight:700}
+  table.fd td.rlab{text-align:left;font-weight:600;color:#33404f;background:#fbfcfd;white-space:nowrap;max-width:230px;white-space:normal}
+  .lphead{font-weight:700;font-size:14px;margin:0 0 9px}
+  .lgrp-label.weak{color:#b8332a} .lgrp-label.spared{color:#2c8a5f} .lgrp-label.sens{color:#c2761a}
+  .lcol .lv{font-size:12.5px;line-height:1.5}
+  .lcols{grid-template-columns:1fr 1fr 1fr}
+  @media(max-width:640px){.lcols{grid-template-columns:1fr}}
+  .cbody .cdiv{margin:2px 0 6px}
+
+  /* ---------- study planner ---------- */
+  .planbar,.quizbar{display:flex;flex-wrap:wrap;gap:8px;margin:0 2px 12px}
+  .planpill{border:1.4px solid var(--line);border-radius:999px;padding:6px 13px;font-size:12.5px;font-weight:600;
+    background:#fff;cursor:pointer;line-height:1.25;transition:.12s;font-family:var(--sans);color:#2a3340}
+  .planpill:hover{border-color:var(--motor);color:var(--motor)}
+  .planpill.on{background:var(--motor);border-color:var(--motor);color:#fff}
+  .planpanel{border:1px solid var(--line);border-radius:var(--r);padding:14px 16px;margin:0 0 18px;background:var(--card)}
+  .planpanel .plhead{font-weight:800;font-size:15px;margin:0 0 3px;color:#1f2937}
+  .planpanel .plvig{font-size:12.5px;color:var(--ink-soft);line-height:1.5;margin:0 0 12px;font-style:italic}
+  .plcols{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  @media(max-width:680px){.plcols{grid-template-columns:1fr}.plcols2{grid-template-columns:1fr!important}}
+  .plcol h4{margin:0 0 7px;font-size:10.5px;text-transform:uppercase;letter-spacing:.08em}
+  .plcol.ncs h4{color:var(--motor)} .plcol.ndl h4{color:var(--nerve)}
+  .plitem{margin:0 0 8px;padding:0 0 8px;border-bottom:1px solid var(--line-soft)}
+  .plitem:last-child{border-bottom:none;margin-bottom:0;padding-bottom:0}
+  .plitem .pln{font-size:12.5px;font-weight:700;color:#2a3340}
+  .plitem .plw{font-size:12px;color:var(--ink-soft);line-height:1.45;margin-top:1px}
+  .plbottom{margin-top:13px;padding:11px 13px;border-radius:9px;background:var(--pearl-bg);
+    border-left:3px solid var(--pearl);font-size:12.5px;line-height:1.5;color:#3a2f10}
+  .plbottom b{color:#1f2937}
+
+  /* ---------- NCS reference ---------- */
+  .ncswrap{overflow-x:auto;margin:0 2px 10px;border:1px solid var(--line);border-radius:var(--r)}
+  table.ncs{border-collapse:collapse;width:100%;font-size:12px;min-width:640px}
+  table.ncs th,table.ncs td{padding:7px 10px;text-align:left;border-bottom:1px solid var(--line-soft);vertical-align:top}
+  table.ncs thead th{background:#f4f6f9;font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-soft);
+    position:sticky;top:0}
+  table.ncs tbody tr:hover{background:#f9fafc}
+  table.ncs .nnm{font-weight:700;color:#2a3340;white-space:nowrap}
+  table.ncs .ntag{display:inline-block;font-size:9.5px;font-weight:700;padding:1px 6px;border-radius:5px;margin-left:6px;vertical-align:middle}
+  table.ncs .ntag.mot{background:var(--motor-bg);color:var(--motor)}
+  table.ncs .ntag.sen{background:var(--sensory-bg);color:var(--sensory)}
+  table.ncs .ntag.mix{background:var(--pass-bg);color:var(--pass)}
+  table.ncs .nnorm{font-family:var(--mono);font-size:11px;color:#33404f;white-space:nowrap}
+  .ncsnotes{display:grid;grid-template-columns:1fr 1fr;gap:11px;margin:0 2px 18px}
+  @media(max-width:680px){.ncsnotes{grid-template-columns:1fr}}
+  .ncsnote{border:1px solid var(--line);border-radius:11px;padding:11px 13px 12px 16px;background:var(--card);
+    font-size:12.5px;line-height:1.5;color:#33404f;position:relative;overflow:hidden}
+  .ncsnote::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--nerve)}
+  .ncsnote .nnh{font-weight:700;font-size:13px;margin:0 0 4px;color:#2a3340}
+  .ncsnote b{color:#1f2937}
+
+  /* ---------- ultrasound note ---------- */
+  .usnote{margin:0 2px 14px;padding:10px 13px;border-radius:9px;background:#eef4fb;border-left:3px solid var(--motor);
+    font-size:12.5px;line-height:1.5;color:#22303f}
+  .usnote b{color:#123}
+  .usnote .ustag{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--motor);margin-right:7px}
+
+  /* ---------- quiz ---------- */
+  .quizbar{align-items:center}
+  .quizscore{margin-left:auto;font-size:12.5px;font-weight:700;color:var(--ink-soft)}
+  .quiz{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:0 2px 12px}
+  @media(max-width:720px){.quiz{grid-template-columns:1fr}}
+  .qcard{border:1px solid var(--line);border-radius:12px;padding:13px 15px;background:var(--card)}
+  .qcard .qstem{font-size:12.5px;line-height:1.55;color:#2a3340;margin:0 0 10px}
+  .qcard .qstem b{color:#1f2937}
+  .qopts{display:flex;flex-direction:column;gap:6px}
+  .qopt{border:1.3px solid var(--line);border-radius:8px;padding:7px 11px;font-size:12.5px;cursor:pointer;
+    background:#fff;transition:.12s;color:#2a3340;text-align:left;font-family:var(--sans);line-height:1.35}
+  .qopt:hover{border-color:#b9c2cd;background:#f9fafc}
+  .qopt.correct{background:#eaf6ef;border-color:var(--pass);color:#1f6d49;font-weight:600}
+  .qopt.wrong{background:#fceeec;border-color:var(--nerve);color:#9a2a22}
+  .qopt.locked{cursor:default}
+  .qexplain{margin-top:10px;padding:10px 12px;border-radius:8px;background:var(--pass-bg);
+    font-size:12px;line-height:1.5;color:#1f4f39;display:none}
+  .qexplain.show{display:block}
+  .qexplain b{color:#0d3b22}
+</style>
+</head>
+<body>
+<header class="bar">
+  <div class="bar-row">
+    <div class="title"><b id="ttlA">Lower-Limb Nerve Explorer</b><span id="ttlB">lumbosacral plexus → foot · electrodiagnostic reference</span></div>
+    <div class="search">
+      <input id="q" type="search" placeholder="Search a muscle, nerve, or site" autocomplete="off">
+      <button class="x" id="qx" aria-label="clear">×</button>
+    </div>
+    <div class="chips" id="rootchips"><span class="lab" id="rootlab">Root</span></div>
+    <div class="toggles">
+      <button class="tg" data-t="motor"><span class="dot"></span><span class="tgl" data-k="tMotor">Motor</span></button>
+      <button class="tg" data-t="sensory"><span class="dot"></span><span class="tgl" data-k="tSens">Sensory</span></button>
+      <button class="tg" data-t="pass"><span class="dot"></span><span class="tgl" data-k="tPass">Passage</span></button>
+      <button class="tg" data-t="pearl"><span class="dot"></span><span class="tgl" data-k="tPearl">Pearls</span></button>
+    </div>
+    <button class="ghost langon" id="langBtn">Français</button>
+    <button class="ghost" id="reset">Reset</button>
+    <button class="ghost" id="printbtn" title="Print / save as PDF">Print / PDF</button>
+  </div>
+  <div class="status" id="status"></div>
+</header>
+
+<main>
+  <!-- ============ PLEXUS NAVIGATOR ============ -->
+  <div class="nav-wrap">
+    <span class="hint" id="hint"></span>
+    <svg class="braid" id="braid" viewBox="0 0 1080 760" role="img" aria-label="Lumbosacral plexus navigator">
+      <g id="segs"></g><g id="branches"></g><g id="nodes"></g>
+    </svg>
+  </div>
+  <div class="plexpanel" id="plexpanel" hidden></div>
+
+  <!-- ============ STUDY PLANNER ============ -->
+  <div class="eyebrow" id="ebPlan"></div>
+  <div class="planbar" id="planbar"></div>
+  <div class="planpanel" id="planpanel" hidden></div>
+
+  <!-- ============ COMPRESSION / ENTRAPMENT MAP ============ -->
+  <div class="eyebrow" id="ebCmap"></div>
+  <div class="cmap-wrap"><svg class="cmap" id="cmap" role="img" aria-label="Lower-limb entrapment map"></svg></div>
+  <div class="usnote" id="usnote" hidden></div>
+  <div class="plexpanel" id="proxpanel" hidden></div>
+
+  <!-- ============ LESION EXPLORER ============ -->
+  <div class="eyebrow" id="ebLesion"></div>
+  <div class="lesionbar" id="lesionbar"></div>
+  <div class="lesionpanel" id="lesionpanel" hidden></div>
+
+  <!-- ============ FOOT-DROP DIFFERENTIAL MATRIX ============ -->
+  <div class="eyebrow" id="ebFd"></div>
+  <div class="fdwrap"><table class="fd" id="fdtable"></table><div class="fdcap" id="fdcap"></div></div>
+
+  <!-- ============ ROOTS ============ -->
+  <div class="eyebrow" id="ebRoots"></div>
+  <div class="roots" id="roots"></div>
+
+  <!-- ============ NERVE CARDS ============ -->
+  <div class="eyebrow" id="ebNerves"></div>
+  <div class="grid" id="grid"></div>
+
+  <!-- ============ NCS REFERENCE ============ -->
+  <div class="eyebrow" id="ebNcs"></div>
+  <div class="ncswrap"><table class="ncs" id="ncstable"></table></div>
+  <div class="ncsnotes" id="ncsnotes"></div>
+
+  <!-- ============ EPONYMS / NAMED SYNDROMES ============ -->
+  <div class="eyebrow" id="ebEpon"></div>
+  <div class="eponyms" id="eponyms"></div>
+
+  <!-- ============ QUIZ / SELF-TEST ============ -->
+  <div class="eyebrow" id="ebQuiz"></div>
+  <div class="quizbar" id="quizbar"></div>
+  <div class="quiz" id="quiz"></div>
+</main>
+
+<footer id="foot"></footer>
+
+<script>
+/* ===================================================================
+   LOWER-LIMB NERVE EXPLORER — single-file, offline, bilingual EN/FR.
+   Sources: Preston & Shapiro, Electromyography & Neuromuscular Disorders
+   (ch. 32 Radiculopathy · ch. 35 Lumbosacral plexopathy · ch. 36 Sciatic).
+   Data model: every user-facing string is an [EN, FR] pair via tx().
+   =================================================================== */
+
+/* ---------------- UI strings ---------------- */
+const STR={
+ en:{ttlA:"Lower-Limb Nerve Explorer",ttlB:"lumbosacral plexus → foot · electrodiagnostic reference",
+  search:"Search a muscle, nerve, or site — e.g. tib. post., fibular, tarsal, Baxter",
+  rootlab:"Root",tMotor:"Motor",tSens:"Sensory",tPass:"Passage",tPearl:"Pearls",reset:"Reset",print:"Print / PDF",
+  hint:"click a root, a plexus/division or a nerve to trace its pathway — or search a muscle →",
+  ebCmap:"Compression / entrapment sites — anatomical course (● distal site → opens its card · ● proximal/plexus → clinical summary)",
+  ebLesion:"Lesion explorer — pick a site to see the expected exam pattern (weak vs spared)",
+  ebFd:"Foot-drop / weak-plantarflexion localizer (Preston & Shapiro, Table 36.1) — click a column to light its pattern",
+  ebRoots:"Roots — marker muscles (myotome), reflex, dermatome (PNS · ASIA)",
+  ebNerves:"Nerves — course, motor (proximal → distal), sensory, pearls",
+  ebEpon:"Named syndromes & localizers",
+  ebPlan:"Study planner — pick a clinical scenario for the recommended NCS + needle screen, each with its reasoning",
+  ebNcs:"Nerve-conduction reference (adult) — routine lower-limb studies, recording sites, normal limits",
+  ebQuiz:"Localize-it — quick self-test cases · click an answer to check",
+  tip:"Click a root level, a plexus/division or a nerve, or search a muscle. Nothing selected.",
+  colRoots:"Roots",colPlex:"Plexus / divisions",colNerves:"Terminal nerves",
+  reflex:"Reflex",derm:"Dermatome",dermP:"PNS",dermA:"ASIA",myotome:"Marker muscles",
+  course:"Course",motor:"Motor",sensory:"Sensory",passage:"Course / entrapment",pearls:"Pearls",
+  branching:"Branching · proximal → distal · click a branch to highlight its muscles",
+  weak:"Weak / affected",spared:"Spared",sensoryL:"Sensory",
+  litRoot:(r,n,nv)=>`<b class="key">${r}</b> pathway lit on the plexus · <b>${n}</b> muscle${n===1?"":"s"} across <b>${nv}</b> nerve${nv===1?"":"s"} highlighted. <span style="color:var(--ink-soft)">Click ${r} again to clear.</span>`,
+  litEl:(nm)=>`Focused <b>${nm}</b> — traced to its roots (upstream) and its muscles/skin (downstream). <span style="color:var(--ink-soft)">Click again to clear.</span>`,
+  litPlex:(nm,n)=>`<b>${nm}</b> lit on the plexus — everything distal is highlighted · <b>${n}</b> muscle${n===1?"":"s"} below. <span style="color:var(--ink-soft)">Click again to clear.</span>`,
+  litTree:(l,n)=>`<b>${l}</b> → <b>${n}</b> structure${n===1?"":"s"} highlighted in this card. <span style="color:var(--ink-soft)">Click again to clear.</span>`,
+  searchRes:(q,n)=>`Search “<b>${q}</b>” — <b>${n}</b> matches.`,
+  foot:"Levels are each muscle's myotome (the root it tests on EMG), not always the parent nerve's full span; faded chips = lesser contribution. Curated from Preston & Shapiro (ch. 32, 35, 36) and standard PNS anatomy. Works offline, no dependencies."},
+ fr:{ttlA:"Explorateur des nerfs du membre inférieur",ttlB:"plexus lombo-sacré → pied · référence électrodiagnostique",
+  search:"Rechercher un muscle, un nerf ou un site — p. ex. tib. post., fibulaire, tarsien, Baxter",
+  rootlab:"Racine",tMotor:"Moteur",tSens:"Sensitif",tPass:"Passage",tPearl:"Perles",reset:"Réinitialiser",print:"Imprimer / PDF",
+  hint:"cliquez une racine, un plexus/division ou un nerf pour tracer son trajet — ou cherchez un muscle →",
+  ebCmap:"Sites de compression / entrapment — trajet anatomique (● site distal → ouvre la fiche · ● proximal/plexus → résumé clinique)",
+  ebLesion:"Explorateur de lésions — choisissez un site pour voir le patron attendu (faible vs épargné)",
+  ebFd:"Localisateur du pied tombant / flexion plantaire faible (Preston & Shapiro, tableau 36.1) — cliquez une colonne",
+  ebRoots:"Racines — muscles repères (myotome), réflexe, dermatome (PNS · ASIA)",
+  ebNerves:"Nerfs — trajet, moteur (proximal → distal), sensitif, perles",
+  ebEpon:"Syndromes nommés & localisateurs",
+  ebPlan:"Planificateur d'étude — choisissez un scénario clinique pour l'ENMG recommandé (conductions + aiguille), chacun avec son raisonnement",
+  ebNcs:"Référence des conductions (adulte) — études de routine du membre inférieur, sites de recueil, limites normales",
+  ebQuiz:"Localise — cas d'auto-évaluation · cliquez une réponse pour vérifier",
+  tip:"Cliquez un niveau radiculaire, un plexus/division ou un nerf, ou cherchez un muscle. Rien de sélectionné.",
+  colRoots:"Racines",colPlex:"Plexus / divisions",colNerves:"Nerfs terminaux",
+  reflex:"Réflexe",derm:"Dermatome",dermP:"PNS",dermA:"ASIA",myotome:"Muscles repères",
+  course:"Trajet",motor:"Moteur",sensory:"Sensitif",passage:"Trajet / compression",pearls:"Perles",
+  branching:"Ramification · proximal → distal · cliquez une branche pour surligner ses muscles",
+  weak:"Faible / atteint",spared:"Épargné",sensoryL:"Sensitif",
+  litRoot:(r,n,nv)=>`<b class="key">${r}</b> allumé sur le plexus · <b>${n}</b> muscle${n===1?"":"s"} sur <b>${nv}</b> nerf${nv===1?"":"s"} surligné${n===1?"":"s"}. <span style="color:var(--ink-soft)">Recliquez ${r} pour effacer.</span>`,
+  litEl:(nm)=>`<b>${nm}</b> — tracé jusqu'à ses racines (amont) et ses muscles/territoires cutanés (aval). <span style="color:var(--ink-soft)">Recliquez pour effacer.</span>`,
+  litPlex:(nm,n)=>`<b>${nm}</b> allumé sur le plexus — tout l'aval est surligné · <b>${n}</b> muscle${n===1?"":"s"}. <span style="color:var(--ink-soft)">Recliquez pour effacer.</span>`,
+  litTree:(l,n)=>`<b>${l}</b> → <b>${n}</b> structure${n===1?"":"s"} surlignée${n===1?"":"s"} dans cette fiche. <span style="color:var(--ink-soft)">Recliquez pour effacer.</span>`,
+  searchRes:(q,n)=>`Recherche « <b>${q}</b> » — <b>${n}</b> résultats.`,
+  foot:"Les niveaux correspondent au myotome de chaque muscle (la racine testée à l'EMG), pas toujours à toute l'étendue du nerf parent ; puces atténuées = contribution moindre. Tiré de Preston & Shapiro (ch. 32, 35, 36) et de l'anatomie standard du SNP. Fonctionne hors ligne."}
+};
+let lang="en"; const T=k=>STR[lang][k]; const isf=()=>lang==="fr";
+const tx=(en,fr)=>isf()?(fr||en):en;
+function esc(s){return (s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");}
+
+/* ---------------- ROOTS (L1–S4) ----------------
+   myo entry: [muscle_en, muscle_fr, nerve_en, nerve_fr]
+   marker muscles per Preston & Shapiro Table 32.7 (most useful to sample) */
+const ROOTS=[
+ {id:"L1",rot:["Cremasteric (L1–2)","Crémastérien (L1–2)"],
+  myo:[["Cremaster","Crémaster","Genitofemoral","Génito-fémoral"],["Ab-wall (obliques/TrA)","Paroi abdo (obliques/TrA)","Iliohypogastric/ilioinguinal","Ilio-hypog./ilio-ing."]],
+  pns:["Under inguinal ligament","Sous le ligament inguinal"],asia:["Midway T12 → L2","Mi-chemin T12 → L2"]},
+ {id:"L2",rot:["— (adductor L2–4)","— (adducteurs L2–4)"],
+  myo:[["Iliopsoas","Ilio-psoas","Femoral","Fémoral"],["Adductors","Adducteurs","Obturator","Obturateur"]],
+  pns:["Antero-medial-superior thigh","Cuisse antéro-médiale sup."],asia:["Mid-anterior thigh","Cuisse antérieure moy."]},
+ {id:"L3",rot:["Patellar (L2–4)","Rotulien (L2–4)"],
+  myo:[["Quadriceps","Quadriceps","Femoral","Fémoral"],["Adductors","Adducteurs","Obturator","Obturateur"],["Iliopsoas","Ilio-psoas","Femoral","Fémoral"]],
+  pns:["Medial femoral condyle","Condyle fémoral médial"],asia:["Medial femoral condyle","Condyle fémoral médial"]},
+ {id:"L4",rot:["Patellar (L2–4)","Rotulien (L2–4)"],
+  myo:[["Quadriceps (vastus med.)","Quadriceps (vaste méd.)","Femoral","Fémoral"],["Tibialis anterior","Tibial antérieur","Deep fibular","Fibulaire prof."]],
+  pns:["Medial malleolus (saphenous)","Malléole médiale (saphène)"],asia:["Medial malleolus","Malléole médiale"]},
+ {id:"L5",rot:["Med. hamstring / tib. post.","Ischio-j. méd. / tib. post."],
+  myo:[["Tibialis anterior","Tibial antérieur","Deep fibular","Fibulaire prof."],["EHL","LEH","Deep fibular","Fibulaire prof."],["Tibialis posterior","Tibial postérieur","Tibial","Tibial"],["Peroneus longus","Long fibulaire","Sup. fibular","Fibulaire sup."],["Gluteus medius","Moyen glutéal","Sup. gluteal","Glutéal sup."]],
+  pns:["1st web space (deep fibular)","1er espace interdig. (fibulaire prof.)"],asia:["Dorsum of 3rd MTP","Dos de la 3e MTP"]},
+ {id:"S1",rot:["Achilles (S1)","Achilléen (S1)"],
+  myo:[["Medial gastrocnemius","Gastrocnémien méd.","Tibial","Tibial"],["Soleus","Soléaire","Tibial","Tibial"],["Gluteus maximus","Grand glutéal","Inf. gluteal","Glutéal inf."],["Biceps femoris","Biceps fémoral","Sciatic","Sciatique"],["Abd. digiti minimi pedis","Abd. du petit orteil","Lat. plantar","Plant. lat."]],
+  pns:["Lateral malleolus & foot (sural)","Malléole latérale & pied (sural)"],asia:["Lateral calcaneus","Calcanéum latéral"]},
+ {id:"S2",rot:["— ","— "],
+  myo:[["Gastroc / soleus","Gastroc / soléaire","Tibial","Tibial"],["Intrinsic foot","Intrinsèques du pied","Plantar nn.","Nn. plantaires"]],
+  pns:["Popliteal fossa (PCNT)","Fosse poplitée (NCPC)"],asia:["Popliteal fossa","Fosse poplitée"]},
+ {id:"S3",rot:["— ","— "],myo:[["Pelvic floor","Plancher pelvien","Pudendal","Pudendal"]],
+  pns:["Ischial / gluteal fold","Ischion / pli fessier"],asia:["Ischial tuberosity","Tubérosité ischiatique"]},
+ {id:"S4",rot:["Anal wink (S2–4)","Réflexe anal (S2–4)"],myo:[["Ext. anal sphincter","Sphincter anal ext.","Pudendal","Pudendal"]],
+  pns:["Perianal (inner ring)","Péri-anal (anneau interne)"],asia:["Perianal","Péri-anal"]},
+];
+/* ---------------- NERVE CARDS ----------------
+   m([name_en, name_fr, "L4,L5,(S1)", note_en, note_fr])  (parenthesised level = lesser)
+   pass: [name_en, name_fr, note_en, note_fr]
+   pearls: [[en, fr], ...] */
+const m=(a)=>({n:a[0],nf:a[1],l:a[2],note:a[3]||"",notef:a[4]||""});
+const DATA=[
+ /* 1 — abdominal/genital nerves */
+ {id:"abdgen",name:"Iliohypogastric · ilioinguinal · genitofemoral",namef:"Ilio-hypog. · ilio-ing. · génito-fém.",level:"L1–L2",
+  div:["Proximal lumbar plexus (L1–L2)","Plexus lombaire proximal (L1–L2)"],
+  motor:[m(["Internal oblique / transv. abdominis","Oblique interne / transv. abdo.","L1","iliohypogastric + ilioinguinal","ilio-hypog. + ilio-ing."]),
+         m(["Cremaster","Crémaster","L1,L2","genitofemoral (genital br.)","génito-fém. (rameau génital)"])],
+  sensory:[m(["Suprapubic / lateral hip","Sus-pubien / hanche lat.","L1","iliohypogastric","ilio-hypogastrique"]),
+           m(["Groin / upper scrotum or labia","Aine / scrotum ou lèvres sup.","L1","ilioinguinal","ilio-inguinal"]),
+           m(["Anteromedial-superior thigh","Cuisse antéro-médiale sup.","L1,L2","genitofemoral (femoral br.)","génito-fém. (rameau fémoral)"])],
+  pearls:[["Post-herniorrhaphy or Pfannenstiel groin pain/numbness is usually ilioinguinal or genitofemoral. A genitofemoral genital-branch lesion abolishes the cremasteric reflex.",
+           "Douleur/engourdissement inguinal post-herniorraphie ou Pfannenstiel = souvent ilio-inguinal ou génito-fémoral. Une atteinte du rameau génital du génito-fémoral abolit le réflexe crémastérien."]]},
+
+ /* 2 — lateral femoral cutaneous */
+ {id:"lfcn",name:"Lateral femoral cutaneous n.",namef:"N. cutané latéral de la cuisse",level:"L2–L3",
+  div:["Lumbar plexus — posterior division","Plexus lombaire — div. postérieure"],
+  pass:[["Under inguinal ligament, ~1–2 cm medial to ASIS","Sous le lig. inguinal, ~1–2 cm médial à l'EIAS","tight belts, obesity, pregnancy, seatbelt, iliac bone-graft","ceintures serrées, obésité, grossesse, ceinture de sécurité, greffe iliaque"]],
+  sensory:[m(["Lateral & anterolateral thigh","Cuisse latérale & antéro-latérale","L2,L3","pure sensory — no muscle","purement sensitif — aucun muscle"])],
+  pearls:[["Pure sensory. Burning, numb lateral-thigh patch worse on standing / hip extension = meralgia paresthetica; needle EMG is NORMAL, the LFCN SNAP is abnormal (technically hard — compare sides; absent in ~8% of normals).",
+           "Purement sensitif. Plaque brûlante/engourdie de la cuisse latérale, pire debout / en extension de hanche = méralgie paresthésique ; l'EMG à l'aiguille est NORMAL, le potentiel sensitif du NCLC est anormal (difficile — comparer les côtés ; absent chez ~8 % des sujets normaux)."],
+          ["The nerve lies within 2 cm medial to the ASIS in >80%. Rarely a pelvic mass or high lumbar-plexus lesion mimics it — check the iliacus/adductors are normal.",
+           "Le nerf est à ≤2 cm médial à l'EIAS chez >80 %. Rarement une masse pelvienne ou une lésion haute du plexus lombaire le mime — vérifier iliaque/adducteurs normaux."]]},
+
+ /* 3 — femoral */
+ {id:"femoral",name:"Femoral n.",namef:"N. fémoral",level:"L2–L4",
+  div:["Lumbar plexus — posterior divisions (L2–L4)","Plexus lombaire — div. postérieures (L2–L4)"],
+  motor:[m(["Iliacus","Iliaque","L2,L3","branches ABOVE the inguinal ligament","rameaux AU-DESSUS du lig. inguinal"])],
+  pass:[["Under the inguinal ligament","Sous le ligament inguinal","retroperitoneal / psoas haematoma (anticoag., haemophilia), lithotomy, hip/pelvic surgery","hématome rétro-péritonéal / du psoas (anticoag., hémophilie), lithotomie, chirurgie hanche/pelvienne"]],
+  sub:[{tag:"ant. div.",name:"Anterior division",namef:"Division antérieure",level:"L2–L4",
+        motor:[m(["Sartorius","Sartorius","L2,L3","",""]),m(["Pectineus","Pectiné","L2,L3","",""])],
+        sensory:[m(["Medial & intermediate cutaneous nn. of thigh","Nn. cutanés méd. & interméd. de la cuisse","L2,L3,(L4)","anterior/medial thigh","cuisse antérieure/médiale"])]},
+       {tag:"post. div.",name:"Posterior division",namef:"Division postérieure",level:"L2–L4",
+        motor:[m(["Rectus femoris","Droit fémoral","L2,L3,L4","",""]),m(["Vastus lateralis","Vaste latéral","L3,L4","",""]),m(["Vastus intermedius","Vaste intermédiaire","L3,L4","",""]),m(["Vastus medialis","Vaste médial","L3,L4","",""])],
+        sensory:[m(["Saphenous n. → medial leg","N. saphène → jambe médiale","L3,L4","exits the adductor (Hunter) canal — pure sensory","sort du canal des adducteurs (Hunter) — purement sensitif"])]}],
+  pearls:[["Buckling knee + absent patellar reflex + quadriceps wasting. If the iliacus and hip flexion are SPARED, the lesion is below the inguinal ligament; if iliopsoas is weak too, it is proximal (plexus / root).",
+           "Dérobement du genou + réflexe rotulien aboli + fonte du quadriceps. Si l'iliaque et la flexion de hanche sont ÉPARGNÉS, la lésion est sous le lig. inguinal ; si l'ilio-psoas est faible, elle est proximale (plexus / racine)."],
+          ["Saphenous is pure-sensory (medial leg/calf). An isolated saphenous SNAP loss with normal strength = distal saphenous / adductor-canal lesion, often post knee surgery.",
+           "Le saphène est purement sensitif (jambe/mollet médial). Une perte isolée du potentiel saphène avec force normale = lésion distale du saphène / canal des adducteurs, souvent post-chirurgie du genou."],
+          ["Diabetic amyotrophy (Bruns–Garland) mimics a femoral neuropathy but is a lumbosacral radiculoplexopathy — check adductors (obturator) and paraspinals too. Retroperitoneal/psoas haematoma gives an acute painful femoral > obturator/LFCN palsy, hip held flexed & externally rotated.",
+           "L'amyotrophie diabétique (Bruns–Garland) mime une neuropathie fémorale mais est une radiculoplexopathie lombo-sacrée — vérifier aussi adducteurs (obturateur) et paraspinaux. L'hématome rétro-péritonéal/du psoas donne une atteinte fémorale > obturatrice/NCLC aiguë et douloureuse, hanche fléchie & en rotation externe."]]},
+
+ /* 3b — saphenous (dedicated sensory box + braid bubble) */
+ {id:"saphenous",name:"Saphenous n.",namef:"N. saphène",level:"L3–L4",
+  div:["Femoral — terminal SENSORY branch (posterior division)","Fémoral — branche SENSITIVE terminale (division postérieure)"],
+  pass:[["Adductor (Hunter) canal → pierces the fascia at the medial knee","Canal des adducteurs (Hunter) → perce le fascia au genou médial","knee surgery / arthroscopy, saphenous-vein harvest, entrapment at the canal","chirurgie / arthroscopie du genou, prélèvement de la veine saphène, compression au canal"]],
+  sensory:[m(["Medial leg → medial ankle / foot","Jambe médiale → cheville / pied médial","L3,L4","the distal continuation of the femoral — pure sensory","prolongement distal du fémoral — purement sensitif"]),
+           m(["Infrapatellar branch → medial knee","Rameau infrapatellaire → genou médial","L3,L4","often injured in knee surgery","souvent lésé en chirurgie du genou"])],
+  pearls:[["Pure sensory, medial leg / calf. An isolated saphenous SNAP loss with NORMAL strength and a normal quadriceps = distal saphenous / adductor-canal lesion — commonly post knee surgery or vein harvest, NOT a femoral neuropathy or an L4 root.","Purement sensitif, jambe / mollet médial. Une perte isolée du potentiel saphène avec force NORMALE et quadriceps normal = lésion distale du saphène / canal des adducteurs — souvent post-chirurgie du genou ou prélèvement veineux, PAS une neuropathie fémorale ni une racine L4."],
+          ["It is the ONLY below-knee cutaneous territory on the medial side that is not sciatic — the key to separate a saphenous lesion from an L4 radiculopathy (check the vastus medialis and adductors, which are spared in a pure saphenous lesion).","C'est le SEUL territoire cutané sous le genou du côté médial qui n'est pas sciatique — la clé pour séparer une lésion du saphène d'une radiculopathie L4 (vérifier vaste médial et adducteurs, épargnés dans une atteinte purement saphène)."]]},
+ /* 4 — obturator */
+ {id:"obturator",name:"Obturator n.",namef:"N. obturateur",level:"L2–L4",
+  div:["Lumbar plexus — anterior divisions (L2–L4)","Plexus lombaire — div. antérieures (L2–L4)"],
+  pass:[["Obturator canal","Canal obturateur","pelvic mass, obturator hernia, hip surgery, labour","masse pelvienne, hernie obturatrice, chirurgie de hanche, accouchement"]],
+  motor:[m(["Adductor longus","Long adducteur","L2,L3,L4","",""]),m(["Adductor brevis","Court adducteur","L2,L3,L4","",""]),m(["Gracilis","Gracile","L2,L3,L4","",""]),m(["Adductor magnus (deep)","Grand adducteur (prof.)","L2,L3,L4","dual — also sciatic/tibial","double — aussi sciatique/tibial"]),m(["Obturator externus","Obturateur externe","L3,L4","",""])],
+  sensory:[m(["Small medial-thigh patch","Petite zone cuisse médiale","L2,L3,L4","often absent","souvent absent"])],
+  pearls:[["Adductor weakness (legs cross poorly) + medial-thigh pain with a NORMAL quadriceps and preserved patellar reflex → obturator, not femoral or an L3–L4 root.",
+           "Faiblesse des adducteurs (jambes se croisent mal) + douleur cuisse médiale avec quadriceps NORMAL et réflexe rotulien préservé → obturateur, pas fémoral ni racine L3–L4."],
+          ["Abnormal adductors put a lumbar-plexus lesion at/proximal to the plexus and exclude an isolated femoral neuropathy. Adductor magnus is dual-innervated (obturator + sciatic-tibial).",
+           "Des adducteurs anormaux placent la lésion au/proximal au plexus lombaire et excluent une neuropathie fémorale isolée. Le grand adducteur a une double innervation (obturateur + sciatique-tibial)."]]},
+
+ /* 5 — superior gluteal */
+ {id:"supglut",name:"Superior gluteal n.",namef:"N. glutéal supérieur",level:"L4–S1",
+  div:["Sacral plexus — posterior division","Plexus sacré — div. postérieure"],
+  pass:[["Suprapiriform foramen","Foramen suprapiriforme","posterior hip approach, deep IM injection","abord postérieur de hanche, injection IM profonde"]],
+  motor:[m(["Gluteus medius","Moyen glutéal","(L4),L5,(S1)","",""]),m(["Gluteus minimus","Petit glutéal","(L4),L5,(S1)","",""]),m(["Tensor fasciae latae","Tenseur du fascia lata","(L4),L5,(S1)","",""])],
+  pearls:[["Trendelenburg gait / pelvic drop on the swing side = hip-abductor (gluteus medius) weakness → superior gluteal (or L5). Purely motor — no sensory loss. Gluteal denervation puts a lesion at/proximal to the plexus (excludes an isolated sciatic).",
+           "Démarche de Trendelenburg / chute pelvienne du côté oscillant = faiblesse des abducteurs (moyen glutéal) → glutéal sup. (ou L5). Purement moteur — aucun déficit sensitif. Une dénervation glutéale place la lésion au/proximal au plexus (exclut un sciatique isolé)."]]},
+
+ /* 6 — inferior gluteal */
+ {id:"infglut",name:"Inferior gluteal n.",namef:"N. glutéal inférieur",level:"L5–S2",
+  div:["Sacral plexus — posterior division","Plexus sacré — div. postérieure"],
+  motor:[m(["Gluteus maximus","Grand glutéal","(L5),S1,(S2)","",""])],
+  pearls:[["Difficulty rising from a chair / climbing stairs + weak hip extension → gluteus maximus (inferior gluteal, S1). Purely motor. Like the superior gluteal, its involvement localises at/proximal to the sacral plexus.",
+           "Difficulté à se lever d'une chaise / monter les escaliers + extension de hanche faible → grand glutéal (glutéal inf., S1). Purement moteur. Comme le glutéal sup., son atteinte localise au/proximal au plexus sacré."]]},
+
+ /* 6b — sacral-plexus short-rotator (collateral) muscular branches */
+ {id:"npiri",name:"Nerve to piriformis",namef:"Nerf du piriforme",level:"S1–S2",
+  div:["Sacral plexus — direct muscular (collateral) branch","Plexus sacré — rameau musculaire direct (collatéral)"],
+  motor:[m(["Piriformis","Piriforme","S1,S2","hip external rotator; the sciatic exits just below it","rotateur externe de hanche ; le sciatique sort juste en dessous"])],
+  pearls:[["The sciatic nerve emerges just below piriformis (variant: through / above it). 'Piriformis syndrome' is over-diagnosed — most 'sciatica' is lumbosacral radiculopathy, not sciatic neuropathy. No routine EDX confirms it (proposed: FAIR-position H-reflex delay).","Le sciatique émerge juste sous le piriforme (variante : à travers / au-dessus). Le « syndrome du piriforme » est sur-diagnostiqué — la plupart des « sciatiques » sont des radiculopathies lombo-sacrées, pas des neuropathies sciatiques. Aucun EDX de routine ne le confirme (proposé : retard du réflexe H en position FAIR)."]]},
+ {id:"nqf",name:"N. to quadratus femoris & inf. gemellus",namef:"Nerf du carré fémoral & jumeau inf.",level:"L4–S1",
+  div:["Sacral plexus — direct muscular (collateral) branch","Plexus sacré — rameau musculaire direct (collatéral)"],
+  motor:[m(["Quadratus femoris","Carré fémoral","L4,L5,S1","hip external rotator","rotateur externe de hanche"]),m(["Inferior gemellus","Jumeau inférieur","L4,L5,S1","",""])],
+  pearls:[["Short external rotator supplied DIRECTLY by the sacral plexus (L4–S1), deep to the sciatic — not by the sciatic itself. Rarely tested in EDX; useful anatomically to complete the sacral-plexus map.","Court rotateur externe innervé DIRECTEMENT par le plexus sacré (L4–S1), profond au sciatique — pas par le sciatique lui-même. Rarement testé en EDX ; utile pour compléter la carte du plexus sacré."]]},
+ {id:"nobti",name:"N. to obturator internus & sup. gemellus",namef:"Nerf de l'obturateur interne & jumeau sup.",level:"L5–S2",
+  div:["Sacral plexus — direct muscular (collateral) branch","Plexus sacré — rameau musculaire direct (collatéral)"],
+  motor:[m(["Obturator internus","Obturateur interne","L5,S1,S2","hip external rotator","rotateur externe de hanche"]),m(["Superior gemellus","Jumeau supérieur","L5,S1,S2","",""])],
+  pearls:[["Completes the trio of short-rotator nerves (piriformis; quadratus femoris / inf. gemellus; obturator internus / sup. gemellus), all direct sacral-plexus branches. Despite the name it is NOT the obturator nerve (which is lumbar, to the adductors).","Complète le trio des nerfs des courts rotateurs (piriforme ; carré fémoral / jumeau inf. ; obturateur interne / jumeau sup.), tous rameaux directs du plexus sacré. Malgré le nom, ce n'est PAS le nerf obturateur (lombaire, pour les adducteurs)."]]},
+ /* 7 — sciatic (parent) */
+ {id:"sciatic",name:"Sciatic n.",namef:"N. sciatique",level:"L4–S3",span:true,
+  div:["Sacral plexus — two divisions: peroneal (posterior) + tibial (anterior)","Plexus sacré — deux divisions : fibulaire (post.) + tibiale (ant.)"],
+  pass:[["Greater sciatic foramen, under piriformis","Grand foramen sciatique, sous le piriforme","hip fracture/dislocation & arthroplasty (retraction, cement), IM injection, prolonged sitting/coma, mass (schwannoma, lymphoma), vasculitis","fracture/luxation de hanche & arthroplastie (rétraction, ciment), injection IM, position assise prolongée/coma, masse (schwannome, lymphome), vascularite"]],
+  motor:[m(["Semitendinosus","Semi-tendineux","L5,S1","tibial division","division tibiale"]),m(["Semimembranosus","Semi-membraneux","L5,S1","tibial division","division tibiale"]),m(["Biceps femoris — long head","Biceps fém. — chef long","(L5),S1,(S2)","tibial division","division tibiale"]),m(["Biceps femoris — SHORT head","Biceps fém. — chef COURT","(L5),S1,(S2)","peroneal div. — the ONLY thigh muscle in the peroneal division","div. fibulaire — le SEUL muscle de cuisse de la div. fibulaire"]),m(["Adductor magnus (½)","Grand adducteur (½)","L4,L5","tibial div. (also obturator)","div. tibiale (aussi obturateur)"])],
+  pearls:[["A sciatic lesion mimics a peroneal palsy (foot drop) but ALSO weakens tibial-innervated muscles + hamstrings, and the ankle reflex may be lost. Peroneal fibres lie laterally/posteriorly and are more vulnerable — so foot drop usually dominates.",
+           "Une lésion sciatique mime une paralysie fibulaire (pied tombant) mais atteint AUSSI les muscles tibiaux + ischio-jambiers, et le réflexe achilléen peut être aboli. Les fibres fibulaires (latérales/postérieures) sont plus vulnérables — d'où la prédominance du pied tombant."],
+          ["The SHORT head of biceps femoris is the key localiser: the only peroneal-division muscle above the fibular neck. Involved short head → sciatic / plexus; spared short head with a foot drop → common fibular at the neck. Sample tibialis posterior/FDL (tibial L5) and the glutei to complete the localisation.",
+           "Le chef COURT du biceps fémoral est le localisateur clé : seul muscle de la div. fibulaire au-dessus du col fibulaire. Chef court atteint → sciatique / plexus ; chef court épargné avec pied tombant → fibulaire commun au col. Échantillonner tib. postérieur/LFO (tibial L5) et les glutéaux pour compléter."],
+          ["Piriformis syndrome is over-diagnosed: most 'sciatica' is lumbosacral radiculopathy, not sciatic neuropathy. The FAIR-position H-reflex delay is the only proposed test.",
+           "Le syndrome du piriforme est sur-diagnostiqué : la plupart des « sciatiques » sont des radiculopathies lombo-sacrées, pas des neuropathies sciatiques. Le retard du réflexe H en position FAIR est le seul test proposé."]]},
+
+ /* 8 — common fibular (peroneal) */
+ {id:"peroneal",name:"Common fibular (peroneal) n.",namef:"N. fibulaire (péronier) commun",level:"L4–S2",
+  div:["Sciatic — peroneal (posterior) division","Sciatique — division fibulaire (postérieure)"],
+  pass:[["Fibular neck","Col de la fibula","crossed legs, casts/braces, rapid weight loss ('slimmer's palsy'), prolonged squatting","jambes croisées, plâtres/orthèses, amaigrissement rapide (« paralysie des amaigris »), accroupissement prolongé"]],
+  motor:[m(["Biceps femoris — short head","Biceps fém. — chef court","(L5),S1","above the neck — spared at the fibular neck","au-dessus du col — épargné au col fibulaire"])],
+  sub:[{tag:"deep",name:"Deep fibular n.",namef:"N. fibulaire profond",level:"L4–S1",
+        motor:[m(["Tibialis anterior","Tibial antérieur","L4,L5","dorsiflexion","dorsiflexion"]),m(["EDL","LEO","L4,L5","",""]),m(["EHL","LEH","L5,(S1)","",""]),m(["Peroneus tertius","3e fibulaire","L5,S1","",""]),m(["EDB / EHB","CEO / CEH","L5,S1","",""])],
+        sensory:[m(["1st web space","1er espace interdigital","L5","only cutaneous territory","seul territoire cutané"])]},
+       {tag:"superf.",name:"Superficial fibular n.",namef:"N. fibulaire superficiel",level:"L4–S1",
+        motor:[m(["Peroneus longus","Long fibulaire","L5,(S1)","eversion","éversion"]),m(["Peroneus brevis","Court fibulaire","L5,(S1)","eversion","éversion"])],
+        sensory:[m(["Anterolateral leg + dorsum of foot","Jambe antéro-lat. + dos du pied","L5","","",""])]}],
+  pearls:[["Foot drop that SPARES inversion (tibialis posterior = tibial) and the ankle reflex = common fibular at the neck. If inversion is also weak, think L5 or sciatic — not fibular.",
+           "Pied tombant qui ÉPARGNE l'inversion (tib. postérieur = tibial) et le réflexe achilléen = fibulaire commun au col. Si l'inversion est faible aussi, penser L5 ou sciatique — pas fibulaire."],
+          ["Record tibialis anterior (not only EDB) when stimulating across the fibular neck — conduction block / focal slowing there is often missed on EDB alone.",
+           "Enregistrer le tibial antérieur (pas seulement le CEO) en stimulant au col fibulaire — le bloc de conduction / ralentissement focal y est souvent manqué sur le seul CEO."],
+          ["Deep = dorsiflexors + 1st web space; superficial = evertors + anterolateral leg/dorsum. Weak eversion with preserved dorsiflexion points to the superficial branch (or a peroneus-sparing L5).",
+           "Profond = dorsifléchisseurs + 1er espace ; superficiel = éverseurs + jambe antéro-lat./dos. Éversion faible avec dorsiflexion préservée → rameau superficiel (ou L5 épargnant les fibulaires)."]]},
+
+ /* 9 — tibial */
+ {id:"tibial",name:"Tibial n.",namef:"N. tibial",level:"L4–S3",span:true,
+  div:["Sciatic — tibial (anterior) division","Sciatique — division tibiale (antérieure)"],
+  pass:[["Popliteal fossa / soleal arch","Fosse poplitée / arcade du soléaire","Baker's cyst, trauma — proximal tibial lesions are uncommon","kyste de Baker, trauma — les lésions tibiales proximales sont rares"]],
+  motor:[m(["Gastrocnemius","Gastrocnémien","S1,S2","plantarflexion (S1 reflex)","flexion plantaire (réflexe S1)"]),m(["Soleus","Soléaire","S1,S2","H-reflex muscle","muscle du réflexe H"]),m(["Tibialis posterior","Tibial postérieur","L5,S1","inversion — the key non-peroneal L5","inversion — L5 non fibulaire clé"]),m(["FDL","LFO","L5,S1","",""]),m(["FHL","LFH","S1,S2","",""]),m(["Popliteus","Poplité","L5,S1","",""])],
+  sub:[{tag:"br.",name:"Sural n.",namef:"N. sural",level:"S1–S2",
+        sensory:[m(["Posterolateral leg + lateral foot","Jambe post-lat. + bord lat. du pied","S1,S2","the S1 SNAP to check in radiculopathy","le potentiel S1 à vérifier en radiculopathie"])]},
+       {tag:"br.",name:"Medial calcaneal n.",namef:"N. calcanéen médial",level:"S1–S2",
+        sensory:[m(["Heel","Talon","S1,S2","separate branch — often SPARED in tarsal tunnel","rameau séparé — souvent ÉPARGNÉ dans le tunnel tarsien"])]},
+       {tag:"br.",name:"Medial plantar n. — 'median of the foot'",namef:"N. plantaire médial — « médian du pied »",level:"L5–S2",
+        motor:[m(["Abductor hallucis","Abd. de l'hallux","S1,S2","",""]),m(["FDB","CFO","S1,S2","",""]),m(["FHB","CFH","S1,S2","",""]),m(["Lumbrical 1","1er lombrical","S1,S2","",""])],
+        sensory:[m(["Medial 3½ toes (sole)","3½ orteils médiaux (plante)","L5,S1","",""])]},
+       {tag:"br.",name:"Lateral plantar n. — 'ulnar of the foot'",namef:"N. plantaire latéral — « ulnaire du pied »",level:"S1–S2",
+        motor:[m(["Abductor digiti minimi","Abd. du petit orteil","S1,S2","Baxter's 1st branch","1er rameau de Baxter"]),m(["Interossei","Interosseux","S1,S2","",""]),m(["Adductor hallucis","Add. de l'hallux","S1,S2","",""]),m(["Quadratus plantae","Carré plantaire","S1,S2","",""]),m(["Lumbricals 2–4","Lombricaux 2–4","S1,S2","",""])],
+        sensory:[m(["Lateral 1½ toes (sole)","1½ orteil latéral (plante)","S1,S2","",""])]}],
+  passTarsal:[["Tarsal tunnel (behind medial malleolus)","Tunnel tarsien (arrière malléole médiale)","burning sole, +Tinel; splits into medial & lateral plantar nn.","brûlure plantaire, Tinel + ; se divise en nn. plantaires médial & latéral"],["Baxter (1st br. of lateral plantar)","Baxter (1er rameau du plant. lat.)","chronic heel pain mimicking plantar fasciitis; may denervate ADM","talalgie chronique mimant une fasciite ; peut dénerver l'ADM"]],
+  pearls:[["Tarsal tunnel = distal tibial entrapment: burning/tingling sole worse on standing, +Tinel behind the medial malleolus. The medial calcaneal branch (separate) is often spared, so the heel can feel normal.",
+           "Tunnel tarsien = entrapment tibial distal : brûlure/picotement de la plante, pire debout, Tinel + derrière la malléole médiale. Le rameau calcanéen médial (séparé) est souvent épargné, d'où un talon normal."],
+          ["Baxter's neuropathy (1st branch of the lateral plantar) → chronic heel pain resistant to plantar-fasciitis care; look for isolated ADM denervation on EMG.",
+           "Neuropathie de Baxter (1er rameau du plantaire latéral) → talalgie chronique résistant au traitement de la fasciite ; chercher une dénervation isolée de l'ADM à l'EMG."],
+          ["The ankle jerk / H-reflex (gastroc-soleus, S1) tracks tibial & S1 integrity. Proximal tibial lesions are uncommon; think sciatic or S1 root when calf + foot are both involved.",
+           "Le réflexe achilléen / réflexe H (gastroc-soléaire, S1) suit l'intégrité tibiale & S1. Les lésions tibiales proximales sont rares ; penser sciatique ou racine S1 si mollet + pied atteints."]]},
+
+ /* 9b — sural (dedicated sensory box) */
+ {id:"sural",name:"Sural n.",namef:"N. sural",level:"S1–S2",
+  div:["Sensory only — medial sural cutaneous (tibial) + lateral sural cutaneous / peroneal communicating (common fibular)","Sensitif seulement — cutané sural médial (tibial) + cutané sural latéral / communicant fibulaire (fibulaire commun)"],
+  sensory:[m(["Posterolateral distal leg + lateral foot / 5th toe","Jambe distale postéro-lat. + bord latéral du pied / 5e orteil","S1,S2","the sural proper, after the two roots join","le sural proprement dit, après union des deux racines"]),
+           m(["Medial sural cutaneous → posterior (central) calf","Cutané sural médial → mollet postérieur (central)","S1,S2","from the TIBIAL nerve in the popliteal fossa","du nerf TIBIAL dans la fosse poplitée"]),
+           m(["Lateral sural cutaneous → superolateral leg","Cutané sural latéral → jambe supéro-latérale","S1,S2","from the COMMON FIBULAR nerve","du nerf FIBULAIRE COMMUN"])],
+  pearls:[["Pure sensory. The sural SNAP is the workhorse S1 sensory study and the denominator of the sural/radial ratio in a distal polyneuropathy. In an S1-pattern deficit: a NORMAL sural SNAP → S1 radiculopathy (proximal to the DRG); an abnormal one → plexus or peripheral.","Purement sensitif. Le potentiel sural est l'étude sensitive S1 de référence et le dénominateur du rapport sural/radial dans une polyneuropathie distale. Dans un déficit de type S1 : potentiel sural NORMAL → radiculopathie S1 (proximal au ganglion) ; anormal → plexus ou périphérique."],
+          ["Formed by the medial sural cutaneous (tibial) joining the lateral sural cutaneous / peroneal communicating branch (common fibular) — so it samples BOTH divisions of the sciatic. Superficial and easily biopsied / harvested for nerve grafts.","Formé par l'union du cutané sural médial (tibial) et du cutané sural latéral / rameau communicant fibulaire (fibulaire commun) — il échantillonne donc les DEUX divisions du sciatique. Superficiel, facile à biopsier / prélever pour greffe nerveuse."]]},
+ /* 10 — posterior cutaneous n. of thigh */
+ {id:"pcnt",name:"Posterior cutaneous n. of thigh",namef:"N. cutané postérieur de la cuisse",level:"S1–S3",
+  div:["Sacral plexus — anterior division","Plexus sacré — div. antérieure"],
+  sensory:[m(["Posterior thigh + lower buttock","Cuisse postérieure + fesse inf.","S1,S2,S3","runs with the sciatic below piriformis","chemine avec le sciatique sous le piriforme"])],
+  pearls:[["Posterior-thigh numbness with normal motor and a normal sural SNAP = PCNT, a separate nerve — not a sciatic lesion. Commonly co-injured with the sciatic in trauma.",
+           "Engourdissement de la cuisse postérieure avec moteur normal et sural normal = NCPC, un nerf distinct — pas une lésion sciatique. Souvent co-lésé avec le sciatique en trauma."]]},
+
+ /* 11 — pudendal */
+ {id:"pudendal",name:"Pudendal n.",namef:"N. pudendal",level:"S2–S4",
+  div:["Sacral plexus — anterior division","Plexus sacré — div. antérieure"],
+  pass:[["Alcock (pudendal) canal","Canal d'Alcock (pudendal)","cycling, childbirth; pain worse sitting, relieved on a toilet seat","cyclisme, accouchement ; douleur pire assis, soulagée sur la lunette"]],
+  motor:[m(["External anal sphincter","Sphincter anal externe","S2,S3,S4","rectal branch","rameau rectal"]),m(["Perineal / pelvic-floor muscles","Périnée / plancher pelvien","S2,S3,S4","perineal branch","rameau périnéal"])],
+  sensory:[m(["Perineum / external genitalia","Périnée / organes génitaux ext.","S2,S3,S4","rectal, perineal & dorsal branches","rameaux rectal, périnéal & dorsal"])],
+  pearls:[["Saddle sensory loss + sphincter / pelvic-floor signs → S2–S4 / pudendal. Bilateral saddle anaesthesia with retention is a cauda-equina red flag — image urgently.",
+           "Anesthésie en selle + atteinte sphinctérienne / plancher pelvien → S2–S4 / pudendal. Une anesthésie en selle bilatérale avec rétention est un drapeau rouge de queue de cheval — imagerie urgente."]]},
+];
+/* ---------------- LOCALIZATION RULES (cross-cutting) ---------------- */
+const LOCALIZE=[
+ ["SNAP normal in numb skin → lesion at/proximal to the DRG (root, demyelinating block, or <7–10-day axonal). SNAP abnormal → at/distal to the DRG (plexus or peripheral nerve). This one rule separates radiculopathy from plexopathy.",
+  "Potentiel sensitif normal en zone engourdie → lésion au/proximal au ganglion (racine, bloc démyélinisant, ou axonal <7–10 j). Potentiel anormal → au/distal au ganglion (plexus ou nerf périph.). Cette règle sépare radiculopathie et plexopathie."],
+ ["Paraspinal (dorsal-rami) denervation → lesion at/proximal to the root. But paraspinals are abnormal in only ~50% of radiculopathies, and normal paraspinals never exclude one. Multifidus = single level; superficial paraspinals span several.",
+  "Dénervation paraspinale (rameaux dorsaux) → lésion au/proximal à la racine. Mais les paraspinaux sont anormaux dans ~50 % des radiculopathies, et des paraspinaux normaux n'en excluent jamais une. Le multifide = un seul niveau ; les paraspinaux superficiels s'étendent sur plusieurs."],
+ ["To call a radiculopathy: neurogenic change in ≥2 muscles sharing a myotome but supplied by DIFFERENT peripheral nerves — e.g. L5 = tibialis anterior (deep fibular) + tibialis posterior (tibial) + gluteus medius (superior gluteal).",
+  "Pour affirmer une radiculopathie : atteinte neurogène dans ≥2 muscles d'un même myotome mais de nerfs périph. DIFFÉRENTS — p. ex. L5 = tibial ant. (fibulaire prof.) + tibial post. (tibial) + moyen glutéal (glutéal sup.)."],
+ ["Gluteal muscles separate a sciatic neuropathy from a lower-lumbosacral plexopathy (gluteal denervation → at/proximal to the plexus). Thigh adductors (obturator) separate a femoral neuropathy from a lumbar plexopathy.",
+  "Les muscles glutéaux séparent une neuropathie sciatique d'une plexopathie lombo-sacrée basse (dénervation glutéale → au/proximal au plexus). Les adducteurs (obturateur) séparent une neuropathie fémorale d'une plexopathie lombaire."],
+ ["H-reflex (soleus) = S1; F-waves & H only say 'proximal' — they cannot separate root / plexus / sciatic. Acute lesion: only reduced recruitment for 10–14 days; fibrillations reach the distal leg by 3–6 weeks — wait ~3 weeks before EMG.",
+  "Réflexe H (soléaire) = S1 ; ondes F & H disent seulement « proximal » — sans séparer racine / plexus / sciatique. Lésion aiguë : seulement recrutement réduit 10–14 j ; les fibrillations atteignent la jambe distale à 3–6 sem — attendre ~3 sem avant l'EMG."],
+ ["Rare exception: an L5 radiculopathy can give an ABNORMAL superficial peroneal SNAP (L5 DRG lies intraspinal in 10–40%) — add the proviso that a lumbosacral-plexus lesion cannot be fully excluded. Myokymia in the LS plexus → radiation, not tumour recurrence.",
+  "Exception rare : une radiculopathie L5 peut donner un potentiel fibulaire superficiel ANORMAL (ganglion L5 intraspinal chez 10–40 %) — ajouter la réserve qu'une lésion du plexus ne peut être exclue. Myokymie au plexus LS → radiation, pas récidive tumorale."],
+ ["Elderly: a mild chronic distal polyneuropathy vs bilateral L5–S1 radiculopathies — the sural/radial amplitude ratio <0.40 favours a peripheral neuropathy (sens/spec ~90%).",
+  "Sujet âgé : polyneuropathie distale chronique légère vs radiculopathies L5–S1 bilatérales — le rapport sural/radial <0,40 favorise une neuropathie périphérique (sens/spéc ~90 %)."],
+];
+/* short titles for the localiser rules (same order as LOCALIZE) */
+const LOCALIZE_T=[
+ ["SNAP vs the DRG","SNAP vs ganglion (DRG)"],
+ ["Paraspinals (dorsal rami)","Paraspinaux (rameaux dorsaux)"],
+ ["≥2 nerves, one myotome","≥2 nerfs, un myotome"],
+ ["Pivot muscles","Muscles pivots"],
+ ["Late responses & EMG timing","Réponses tardives & délai EMG"],
+ ["L5 SNAP exception + myokymia","Exception SNAP L5 + myokymie"],
+ ["Sural/radial ratio (elderly)","Rapport sural/radial (âgé)"],
+];
+
+/* ---------------- DISTAL BRANCH TREES (bilingual) ----------------
+   node: {label:[en,fr], type, level, note:[en,fr], keys:[...], children:[...]} */
+const TREES={
+ femoral:{label:["Femoral","Fémoral"],type:"nerve",level:"L2–L4",children:[
+   {label:["Iliacus","Iliaque"],type:"motor",level:"L2–3",note:["above inguinal lig.","au-dessus du lig. ing."],keys:["iliacus","iliaque"]},
+   {label:["Inguinal ligament","Ligament inguinal"],type:"pass",keys:["inguinal"],children:[
+     {label:["Ant. division","Div. antérieure"],type:"split",children:[
+       {label:["Sartorius · pectineus","Sartorius · pectiné"],type:"motor",level:"L2–3",keys:["sartorius","pectineus","pectiné"]},
+       {label:["Med/interm. cutaneous","Cut. méd/interméd."],type:"sensory",level:"L2–4",note:["ant/medial thigh","cuisse ant/méd."],keys:["cutaneous","cutané"]},
+     ]},
+     {label:["Post. division","Div. postérieure"],type:"split",children:[
+       {label:["Quadriceps","Quadriceps"],type:"motor",level:"L2–4",note:["rectus + 3 vasti","droit + 3 vastes"],keys:["rectus femoris","vastus","vaste","droit fémoral"]},
+       {label:["Saphenous n.","N. saphène"],type:"sensory",level:"L3–4",note:["adductor canal → medial leg","canal add. → jambe méd."],keys:["saphenous","saphène"]},
+     ]},
+   ]},
+ ]},
+ obturator:{label:["Obturator","Obturateur"],type:"nerve",level:"L2–L4",children:[
+   {label:["Obturator canal","Canal obturateur"],type:"pass",keys:["obturator canal","canal obturateur"],children:[
+     {label:["Ant. branch","Rameau ant."],type:"motor",level:"L2–4",note:["add. longus/brevis · gracilis","long/court add. · gracile"],keys:["adductor longus","adductor brevis","gracilis","gracile","long adducteur","court adducteur"]},
+     {label:["Post. branch","Rameau post."],type:"motor",level:"L3–4",note:["add. magnus · obt. externus","grand add. · obt. externe"],keys:["adductor magnus","obturator externus","grand adducteur","obturateur externe"]},
+     {label:["Medial thigh","Cuisse médiale"],type:"sensory",level:"L2–4",keys:["medial-thigh","medial thigh","cuisse médiale"]},
+   ]},
+ ]},
+ sciatic:{label:["Sciatic","Sciatique"],type:"nerve",level:"L4–S3",children:[
+   {label:["Greater sciatic foramen","Grand foramen sciat."],type:"pass",note:["under piriformis","sous le piriforme"],keys:["greater sciatic","piriformis","piriforme"],children:[
+     {label:["Tibial div. (thigh)","Div. tibiale (cuisse)"],type:"motor",level:"L5–S1",note:["ST · SM · BF long head · add. magnus","ST · SM · BF chef long · grand add."],keys:["semitendinosus","semimembranosus","long head","chef long","adductor magnus","semi-tendineux","semi-membraneux","grand adducteur"]},
+     {label:["Peroneal div. (thigh)","Div. fibulaire (cuisse)"],type:"motor",level:"S1",note:["BF SHORT head — the localiser","BF chef COURT — le localisateur"],keys:["short head","chef court"]},
+     {label:["Splits at popliteal fossa","Se divise à la fosse poplitée"],type:"split",children:[
+       {label:["→ Common fibular","→ Fibulaire commun"],type:"nerve",level:"L4–S2",note:["see fibular card","voir fiche fibulaire"],keys:[]},
+       {label:["→ Tibial","→ Tibial"],type:"nerve",level:"L4–S3",note:["see tibial card","voir fiche tibiale"],keys:[]},
+     ]},
+   ]},
+ ]},
+ peroneal:{label:["Common fibular","Fibulaire commun"],type:"nerve",level:"L4–S2",children:[
+   {label:["BF short head","BF chef court"],type:"motor",level:"S1",note:["above the neck — spared at fibular neck","au-dessus du col — épargné au col"],keys:["short head","chef court"]},
+   {label:["Fibular neck","Col de la fibula"],type:"pass",keys:["fibular neck","col de la fibula"],children:[
+     {label:["Deep fibular","Fibulaire profond"],type:"nerve",level:"L4–S1",note:["dorsiflexors + 1st web","dorsifléch. + 1er espace"],keys:["tibialis anterior","edl","ehl","peroneus tertius","edb","ehb","1st web","tibial antérieur","leo","leh","3e fibulaire","ceo","ceh"]},
+     {label:["Superficial fibular","Fibulaire superficiel"],type:"nerve",level:"L4–S1",note:["evertors + antlat leg/dorsum","éverseurs + jambe antlat/dos"],keys:["peroneus longus","peroneus brevis","anterolateral","long fibulaire","court fibulaire","antéro-lat"]},
+   ]},
+ ]},
+ tibial:{label:["Tibial","Tibial"],type:"nerve",level:"L4–S3",children:[
+   {label:["Popliteal fossa","Fosse poplitée"],type:"pass",keys:["popliteal","poplitée"],children:[
+     {label:["Calf motor","Muscles du mollet"],type:"motor",level:"L5–S2",note:["gastroc · soleus · tib post · FDL · FHL · popliteus","gastroc · soléaire · tib post · LFO · LFH · poplité"],keys:["gastrocnemius","soleus","tibialis posterior","fdl","fhl","popliteus","gastrocnémien","soléaire","tibial postérieur","lfo","lfh","poplité"]},
+     {label:["Sural n.","N. sural"],type:"sensory",level:"S1–2",note:["posterolat. leg + lateral foot","jambe post-lat + bord lat pied"],keys:["sural"]},
+   ]},
+   {label:["Medial calcaneal","Calcanéen médial"],type:"sensory",level:"S1–2",note:["heel — often spared","talon — souvent épargné"],keys:["medial calcaneal","calcanéen médial","heel","talon"]},
+   {label:["Tarsal tunnel","Tunnel tarsien"],type:"pass",keys:["tarsal tunnel","tunnel tarsien"],children:[
+     {label:["Medial plantar","Plantaire médial"],type:"nerve",level:"L5–S2",note:["'median of the foot' — abd. hall., FDB, med 3½ toes","« médian du pied » — abd. hall., CFO, 3½ orteils méd."],keys:["abductor hallucis","fdb","fhb","lumbrical 1","medial 3","abd. de l'hallux","cfo","cfh","1er lombrical","3½ orteils médiaux"]},
+     {label:["Lateral plantar","Plantaire latéral"],type:"nerve",level:"S1–2",note:["'ulnar of the foot' — ADM, interossei, lat 1½ toes","« ulnaire du pied » — ADM, interosseux, 1½ orteil lat."],keys:["abductor digiti minimi","interossei","adductor hallucis","quadratus plantae","lumbricals 2","lateral 1","abd. du petit orteil","interosseux","add. de l'hallux","carré plantaire","lombricaux 2","1½ orteil latéral"],children:[
+       {label:["Baxter (1st br.)","Baxter (1er rameau)"],type:"nerve",level:"S1",note:["ADM — chronic heel pain","ADM — talalgie chronique"],keys:["abductor digiti minimi","baxter","abd. du petit orteil"]},
+     ]},
+   ]},
+ ]},
+};
+const TSTYLE={
+ nerve:{fill:"#fceeec",stroke:"#b8332a",text:"#b8332a"},
+ motor:{fill:"#eaf1f9",stroke:"#2566a8",text:"#2566a8"},
+ sensory:{fill:"#fbf3e8",stroke:"#c2761a",text:"#c2761a"},
+ pass:{fill:"#e9f5ee",stroke:"#2c8a5f",text:"#2c8a5f"},
+ split:{fill:"#eef0f3",stroke:"#9aa3b0",text:"#5b6573"},
+};
+
+/* ---------------- PLEXUS PATTERNS ---------------- */
+const PLEX={
+ LUMB:{label:["Lumbar plexus (L1–L4)","Plexus lombaire (L1–L4)"],sub:["behind psoas · femoral + obturator + LFCN","derrière le psoas · fémoral + obturateur + NCLC"],
+   levels:["L2","L3","L4"],nerves:["femoral","obturator","lfcn","abdgen"],
+   motor:["Iliopsoas & quadriceps (femoral) + thigh adductors (obturator).","Ilio-psoas & quadriceps (fémoral) + adducteurs (obturateur)."],
+   spared:["All below the knee; glutei & hamstrings.","Tout sous le genou ; glutéaux & ischio-jambiers."],
+   sensory:["Anterior/medial/lateral thigh + medial leg (saphenous).","Cuisse ant/méd/lat + jambe médiale (saphène)."],
+   snap:["Saphenous ± LFCN reduced; sural & superficial peroneal NORMAL.","Saphène ± NCLC réduits ; sural & fibulaire superficiel NORMAUX."],
+   emg:["Femoral + obturator muscles denervate; lumbar paraspinals SPARED in a pure plexopathy (involved in diabetic amyotrophy = radiculoplexus).","Muscles fémoraux + obturateurs dénervés ; paraspinaux lombaires ÉPARGNÉS en plexopathie pure (atteints dans l'amyotrophie diabétique = radiculoplexus)."],
+   warn:["Abnormal saphenous SNAP + adductor involvement + spared paraspinals = lumbar plexopathy, not a femoral neuropathy or L2–L4 root.","Potentiel saphène anormal + adducteurs atteints + paraspinaux épargnés = plexopathie lombaire, pas neuropathie fémorale ni racine L2–L4."]},
+ LST:{label:["Lumbosacral trunk (L4–L5)","Tronc lombo-sacré (L4–L5)"],sub:["links lumbar → sacral plexus · postpartum lesion","relie plexus lombaire → sacré · lésion postpartum"],
+   levels:["L4","L5"],nerves:["peroneal","tibial","supglut"],
+   motor:["Peroneal-predominant foot drop + tibialis posterior + hip abductors; hamstrings mild.","Pied tombant à prédominance fibulaire + tibial post. + abducteurs de hanche ; ischio-j. légers."],
+   spared:["High-lumbar (quadriceps/adductors) and S1–S2 (gastroc-soleus, glut. max).","Haut-lombaire (quadriceps/adducteurs) et S1–S2 (gastroc-soléaire, grand glutéal)."],
+   sensory:["Dorsum of foot + anterolateral calf (L4–L5); the sural (S1) is SPARED.","Dos du pied + mollet antéro-lat. (L4–L5) ; le sural (S1) est ÉPARGNÉ."],
+   snap:["Superficial peroneal ABNORMAL, sural (S1) SPARED.","Fibulaire superficiel ANORMAL, sural (S1) ÉPARGNÉ."],
+   emg:["L4–L5 across peroneal/tibial/gluteal nerves, sparing paraspinals and S1 muscles.","L4–L5 à travers nerfs fibulaire/tibial/glutéal, épargnant paraspinaux et muscles S1."],
+   warn:["An L4–L5 pattern sparing high-lumbar and S1–S2 = lumbosacral trunk — the postpartum foot drop misdiagnosed as a fibular-neck palsy.","Un patron L4–L5 épargnant haut-lombaire et S1–S2 = tronc lombo-sacré — le pied tombant postpartum pris pour une paralysie au col fibulaire."]},
+ SACR:{label:["Sacral plexus (L4–S3)","Plexus sacré (L4–S3)"],sub:["sciatic + glutei + PCNT + pudendal","sciatique + glutéaux + NCPC + pudendal"],
+   levels:["L4","L5","S1","S2"],nerves:["sciatic","peroneal","tibial","supglut","infglut","pcnt","pudendal"],
+   motor:["Glutei + hamstrings + all peroneal & tibial muscles. Peroneal fibres preferentially affected.","Glutéaux + ischio-jambiers + tous muscles fibulaires & tibiaux. Fibres fibulaires atteintes de préférence."],
+   spared:["Lumbar-plexus muscles (quadriceps, adductors, iliopsoas).","Muscles du plexus lombaire (quadriceps, adducteurs, ilio-psoas)."],
+   sensory:["Posterolateral calf + foot (sural, superficial peroneal) + posterior thigh (PCNT).","Mollet post-lat. + pied (sural, fibulaire sup.) + cuisse post. (NCPC)."],
+   snap:["Sural + superficial peroneal REDUCED; saphenous normal.","Sural + fibulaire superficiel RÉDUITS ; saphène normal."],
+   emg:["Peroneal, tibial, sciatic-thigh AND gluteal muscles denervate, sparing paraspinals.","Muscles fibulaires, tibiaux, sciatiques (cuisse) ET glutéaux dénervés, paraspinaux épargnés."],
+   warn:["Reduced sural + superficial peroneal SNAPs with spared paraspinals = plexopathy; gluteal involvement excludes an isolated sciatic neuropathy.","Potentiels sural + fibulaire sup. réduits avec paraspinaux épargnés = plexopathie ; l'atteinte glutéale exclut une neuropathie sciatique isolée."]},
+};
+
+/* ===================================================================
+   CHUNK 6 — LUMBOSACRAL BRAID (SVG navigator) — rich version
+   Columns: Roots · Pelvis/hip · Thigh · Knee · Leg · Ankle · Foot
+   Every segment/tap carries data-path = nerve ids that traverse it, so
+   clicking a nerve lights the FULL chain root → plexus → nerve → muscles.
+   The whole braid rebuilds on language switch (names are localized).
+   =================================================================== */
+const SVGNS="http://www.w3.org/2000/svg";
+const segG=document.getElementById("segs"),
+      nodeG=document.getElementById("nodes"),
+      brG=document.getElementById("branches");
+
+const COLOR={
+  abdgen:"#8a5a2b", lfcn:"#c2761a", femoral:"#2566a8", obturator:"#7d5ba6",
+  supglut:"#2c8a5f", infglut:"#3f8f7a", sciatic:"#b8332a",
+  peroneal:"#b8332a", tibial:"#8f2f8f", pcnt:"#c2761a", pudendal:"#475569",
+  saphenous:"#c2761a", sural:"#c2761a",
+  npiri:"#6b7f74", nqf:"#6b7f74", nobti:"#6b7f74"
+};
+const NERVENAME=id=>{const d=DATA.find(x=>x.id===id);return d?tx(d.name,d.namef):id;};
+/* concise labels for the braid pills (full names still live in the nerve cards) */
+const NBRAID={
+  abdgen:["Iliohyp · ilioing · GF","Ilio-hyp · ilio-ing · GF"],
+  pcnt:["Post. cutaneous n. thigh","Cut. postérieur cuisse"],
+};
+const braidName=id=>{const b=NBRAID[id];return b?tx(b[0],b[1]):NERVENAME(id);};
+
+/* ---- geometry ---- */
+const COL={roots:54, pelvis:262, thigh:422, knee:560, leg:690, ankle:800, foot:872};
+const ROOTY={L1:64,L2:116,L3:170,L4:232,L5:318,S1:408,S2:498,S3:580,S4:660};
+const HUB={lumbar:[164,178], sacral:[164,470]};
+const LSTPOS=[116,392];
+
+/* nerve → roots + parent hub */
+const NROOTS={
+ abdgen:["L1","L2"], lfcn:["L2","L3"], femoral:["L2","L3","L4"], obturator:["L2","L3","L4"],
+ supglut:["L4","L5","S1"], infglut:["L5","S1","S2"], sciatic:["L4","L5","S1","S2","S3"],
+ peroneal:["L4","L5","S1","S2"], tibial:["L4","L5","S1","S2","S3"],
+ pcnt:["S1","S2","S3"], pudendal:["S2","S3","S4"],
+ saphenous:["L3","L4"], sural:["S1","S2"],
+ npiri:["S1","S2"], nqf:["L4","L5","S1"], nobti:["L5","S1","S2"]
+};
+const NHUB={abdgen:"lumbar",lfcn:"lumbar",femoral:"lumbar",obturator:"lumbar",
+ supglut:"sacral",infglut:"sacral",sciatic:"sacral",peroneal:"sacral",tibial:"sacral",pcnt:"sacral",pudendal:"sacral"};
+const ALLN=Object.keys(NROOTS);
+const NLV=id=>NROOTS[id].join(" ");
+const nervesAtRootHub=(r,hub)=>ALLN.filter(n=>NHUB[n]===hub && NROOTS[n].includes(r));
+
+/* ---- terminal-nerve endpoints (col, y, posterior division?) ---- */
+const NEND={
+  abdgen:[COL.pelvis, 64,false],
+  lfcn:  [COL.thigh, 112,true ],
+  femoral:[COL.thigh,170,true ],
+  obturator:[COL.thigh,242,false],
+  supglut:[COL.pelvis,300,true ],
+  infglut:[COL.pelvis,352,true ],
+  sciatic:[COL.thigh,432,false],
+  pcnt:  [COL.thigh, 614,false],
+  pudendal:[COL.pelvis,662,false]
+};
+
+/* ---- drawing helpers (append to the three SVG groups) ---- */
+function seg(x1,y1,x2,y2,cls,path,lv){
+  const mx=(x1+x2)/2;
+  const p=document.createElementNS(SVGNS,"path");
+  p.setAttribute("d",`M${x1},${y1} C${mx},${y1} ${mx},${y2} ${x2},${y2}`);
+  p.setAttribute("class","seg "+(cls||""));
+  if(path)p.dataset.path=path; if(lv)p.dataset.lv=lv;
+  segG.appendChild(p); return p;
+}
+/* custom-routed connector (caller supplies the full path d) — e.g. a vertical drop that
+   threads between labels; still carries path/lv so highlighting works. */
+function segPath(dstr,cls,path,lv){
+  const p=document.createElementNS(SVGNS,"path");
+  p.setAttribute("d",dstr); p.setAttribute("class","seg "+(cls||""));
+  if(path)p.dataset.path=path; if(lv)p.dataset.lv=lv;
+  segG.appendChild(p); return p;
+}
+function colHeaders(){
+  const cols=[[tx("Roots","Racines"),COL.roots],[tx("Pelvis / hip","Bassin / hanche"),COL.pelvis],
+    [tx("Thigh","Cuisse"),COL.thigh],[tx("Knee","Genou"),COL.knee],[tx("Leg","Jambe"),COL.leg],
+    [tx("Ankle","Cheville"),COL.ankle],[tx("Foot","Pied"),COL.foot]];
+  cols.forEach(([t,x])=>{const e=document.createElementNS(SVGNS,"text");
+    e.setAttribute("class","colhdr");e.setAttribute("x",x);e.setAttribute("y",18);
+    e.setAttribute("text-anchor","middle");e.textContent=t;nodeG.appendChild(e);});
+}
+function rootNode(id,y){
+  const g=document.createElementNS(SVGNS,"g");
+  g.setAttribute("class","node root"); g.dataset.root=id;
+  g.innerHTML=`<circle cx="${COL.roots}" cy="${y}" r="14" fill="#475569"></circle>`+
+              `<text class="nodetext" x="${COL.roots}" y="${y}">${id}</text>`;
+  nodeG.appendChild(g);
+}
+function plexChip(x,y,label,elself,lv){
+  const w=label.length*6.6+24,h=25;
+  const g=document.createElementNS(SVGNS,"g");
+  g.setAttribute("class","node small chip plexel"); g.dataset.elself=elself; g.dataset.lv=lv;
+  g.innerHTML=`<rect x="${x-w/2}" y="${y-h/2}" width="${w}" height="${h}" rx="7" fill="#eef2f7" stroke="#c3cdd9"></rect>`+
+              `<text class="chiplbl" x="${x}" y="${y}">${label}</text>`;
+  nodeG.appendChild(g);
+}
+const PILL={};
+function termPill(id){
+  const[nx,ny]=NEND[id];
+  const nm=braidName(id), pw=Math.round(nm.length*7.2+20), x2=nx+pw;
+  PILL[id]={x:nx,y:ny,x2};
+  const g=document.createElementNS(SVGNS,"g");
+  g.setAttribute("class","node term"); g.dataset.nerve=id; g.dataset.lv=NLV(id); g.dataset.path=id;
+  g.innerHTML=`<rect x="${nx}" y="${ny-13}" width="${pw}" height="26" rx="8" fill="${COLOR[id]}"></rect>`+
+    `<text class="nodetext" x="${nx+pw/2}" y="${ny}" font-size="11" text-anchor="middle" dominant-baseline="central">${nm}</text>`;
+  nodeG.appendChild(g); return x2;
+}
+function divPill(id,x,y){
+  const nm=tx(id==="peroneal"?"Common fibular":"Tibial", id==="peroneal"?"Fibulaire commun":"Tibial");
+  const pw=Math.round(nm.length*7.2+18), x2=x+pw;
+  PILL[id]={x,y,x2};
+  const g=document.createElementNS(SVGNS,"g");
+  g.setAttribute("class","node term"); g.dataset.nerve=id; g.dataset.lv=NLV(id); g.dataset.path=id;
+  g.innerHTML=`<rect x="${x}" y="${y-12}" width="${pw}" height="24" rx="7" fill="${COLOR[id]}"></rect>`+
+    `<text class="nodetext" x="${x+pw/2}" y="${y}" font-size="10" text-anchor="middle" dominant-baseline="central">${nm}</text>`;
+  nodeG.appendChild(g); return x2;
+}
+/* labelled muscle tap: a connector from (sx,sy) to a dot at (dx,dy) + 1–2 line label */
+function tap(sx,sy,dx,dy,path,label,sub,anchor,nerve){
+  anchor=anchor||"start";
+  const c=document.createElementNS(SVGNS,"path");
+  const mx=(sx+dx)/2;
+  c.setAttribute("d",`M${sx},${sy} C${mx},${sy} ${mx},${dy} ${dx},${dy}`);
+  c.setAttribute("class","seg muscle"); c.dataset.path=path; c.dataset.lv=path.split(" ").flatMap(p=>NROOTS[p]||[]).join(" ");
+  segG.appendChild(c);
+  const g=document.createElementNS(SVGNS,"g"); g.setAttribute("class","node tap"+(nerve?" tap-on":"")); g.dataset.path=path; g.dataset.lv=c.dataset.lv;
+  if(nerve)g.dataset.nerve=nerve;
+  const tx0=anchor==="end"?dx-8:dx+8;
+  let txt;
+  if(sub){txt=`<text text-anchor="${anchor}"><tspan class="mk" x="${tx0}" y="${dy-4}">${label}</tspan>`+
+             `<tspan class="mk2" x="${tx0}" y="${dy+8}">${sub}</tspan></text>`;}
+  else{txt=`<text class="mk" x="${tx0}" y="${dy}" text-anchor="${anchor}" dominant-baseline="central">${label}</text>`;}
+  g.innerHTML=`<circle cx="${dx}" cy="${dy}" r="3.1" fill="${COLOR[path.split(' ')[0]]||'#8f2f8f'}"></circle>`+txt;
+  nodeG.appendChild(g);
+}
+function markerNode(x,y,label,path,color,nerve){
+  const g=document.createElementNS(SVGNS,"g");
+  g.setAttribute("class","node small"+(nerve?" small-on":"")); g.dataset.path=path;
+  if(nerve){g.dataset.nerve=nerve; g.dataset.lv=(NROOTS[nerve]||[]).join(" ");}
+  g.innerHTML=`<circle cx="${x}" cy="${y}" r="5" fill="${color||'#2c8a5f'}"></circle>`+
+    `<text class="nlabel" x="${x}" y="${y-11}" style="font-size:9px">${label}</text>`;
+  nodeG.appendChild(g);
+}
+
+/* =================== BUILD (rerun on language switch) =================== */
+function buildBraid(){
+  segG.innerHTML=""; nodeG.innerHTML=""; brG.innerHTML="";
+  for(const k in PILL) delete PILL[k];
+
+  colHeaders();
+
+  /* --- FEEDERS: roots → hubs (+ LS trunk) --- */
+  ["L1","L2","L3","L4"].forEach(r=>{
+    const nv=nervesAtRootHub(r,"lumbar");
+    seg(COL.roots,ROOTY[r],HUB.lumbar[0],HUB.lumbar[1],"feeder",nv.join(" "),r);
+  });
+  const lstNv=[...new Set([...nervesAtRootHub("L4","sacral"),...nervesAtRootHub("L5","sacral")])];
+  seg(COL.roots,ROOTY.L4,LSTPOS[0],LSTPOS[1],"feeder",nervesAtRootHub("L4","sacral").join(" "),"L4");
+  seg(COL.roots,ROOTY.L5,LSTPOS[0],LSTPOS[1],"feeder",nervesAtRootHub("L5","sacral").join(" "),"L5");
+  seg(LSTPOS[0],LSTPOS[1],HUB.sacral[0],HUB.sacral[1],"feeder",lstNv.join(" "),"L4 L5");
+  ["S1","S2","S3","S4"].forEach(r=>{
+    const nv=nervesAtRootHub(r,"sacral");
+    seg(COL.roots,ROOTY[r],HUB.sacral[0],HUB.sacral[1],"feeder",nv.join(" "),r);
+  });
+
+  /* --- hub → terminal nerve trunks --- */
+  ["abdgen","lfcn","femoral","obturator","supglut","infglut","sciatic","pcnt","pudendal"].forEach(id=>{
+    const[nx,ny,post]=NEND[id];
+    const hub=NHUB[id]==="lumbar"?HUB.lumbar:HUB.sacral;
+    const path=(id==="sciatic")?"sciatic peroneal tibial":id;
+    seg(hub[0],hub[1],nx,ny,post?"post":"",path,NLV(id));
+  });
+
+  /* --- terminal pills --- */
+  ["abdgen","lfcn","femoral","obturator","supglut","infglut","sciatic","pcnt","pudendal"].forEach(termPill);
+  const perX=COL.knee+16;
+  const tibX2=divPill("tibial",COL.knee,470);        /* TIBIAL is the upper branch */
+  const perX2=divPill("peroneal",perX,540);          /* COMMON FIBULAR sits below the tibial */
+
+  /* --- SCIATIC: split → tibial (upper) + fibular (lower), then division-specific branches --- */
+  const sc=PILL.sciatic;
+  seg(sc.x2,sc.y, COL.knee,470,"","sciatic tibial","L4 L5 S1 S2 S3");      /* upper = tibial */
+  seg(sc.x2,sc.y, perX,540,"post","sciatic peroneal","L4 L5 S1 S2");       /* lower = fibular */
+  /* TIBIAL-division hamstrings, in the band between the two pills */
+  tap(sc.x+34,sc.y+12, 470,514, "sciatic tibial",
+      tx("Hamstrings","Ischio-jambiers"), tx("ST · SM · BF long head","ST · SM · BF long"),"start");
+
+  /* --- ADDUCTOR MAGNUS: dual innervation — obturator (adductor part, L2–4) + tibial division of
+     the sciatic (ischiocondylar part, L4). With the tibial branch on top, its feeder now reaches
+     the shared node straight from behind the tibial box — no crossing behind the fibular. --- */
+  const amX=655, amY=400, ox=PILL.obturator.x2+30;
+  /* drop straight down from the posterior-branch dot first (clears the "obt. externus" label),
+     then curve to the shared node (passing right of the sup. gluteal label) */
+  segPath(`M${ox},262 C${ox},290 ${amX},300 ${amX},${amY}`, "muscle","obturator","L2 L3 L4");
+  seg(595,458, amX,amY, "muscle","sciatic tibial","L4 L5");                /* from the tibial box top */
+  markerNode(amX,amY, tx("Adductor magnus","Grand adducteur"), "obturator sciatic tibial", "#7a8290");
+
+  /* --- TIBIAL (upper): course gently descends → tarsal tunnel → medial/lateral plantar --- */
+  seg(tibX2,470, COL.leg,490,"","tibial","L4 L5 S1 S2");
+  seg(COL.leg,490, COL.ankle,505,"","tibial","L5 S1 S2");
+  seg(COL.ankle,505, COL.foot,484,"","tibial","L5 S1");
+  seg(COL.ankle,505, COL.foot,536,"","tibial","S1 S2");
+  markerNode(COL.ankle,505, tx("tarsal tunnel","tunnel tarsien"), "tibial", "#2c8a5f");
+  tap(COL.leg+4,490, COL.leg+4,466, "tibial",
+      tx("Tibial — calf","Tibial — mollet"), tx("gastroc·sol·tib.post","gastroc·sol·tib.post"),"start");
+  tap(COL.foot,484, COL.foot,484, "tibial",
+      tx("Medial plantar","Plant. médial"), tx("AbdH · FDB","AbdH · CFO"),"start");
+  tap(COL.foot,536, COL.foot,536, "tibial",
+      tx("Lateral plantar","Plant. latéral"), tx("ADM · interossei","ADM · interosseux"),"start");
+
+  /* --- COMMON FIBULAR (lower): deep + superficial exit from the right edge; BF short head off the top --- */
+  tap(perX2,540, COL.leg+50,524, "peroneal",
+      tx("Deep fibular","Fibul. profond"), tx("TA·EDL·EHL·EDB","TA·LEO·LEH·CEO"),"start");
+  tap(perX2,540, COL.leg+50,562, "peroneal",
+      tx("Superficial fibular","Fibul. superficiel"), tx("peroneus long./brevis","long/court fibulaire"),"start");
+  /* PERONEAL-division short head of biceps femoris — off the fibular, proximal to the neck.
+     A longer angled connector (real bezier) so the branch reads as attached in the resting state. */
+  tap(624,552, 646,582, "sciatic peroneal",
+      tx("BF short head","Chef court du biceps"), tx("peroneal division","division fibulaire"),"start");
+
+  /* --- SURAL: confluence fed by BOTH the tibial (from above) and the fibular (from below);
+     sits in the gap between the two divisions, left of the fibular branches --- */
+  const surX=676, surY=512;
+  seg(650,482, surX,surY,"muscle","tibial","S1 S2");
+  seg(685,528, surX,surY,"muscle","peroneal","S1 S2");
+  markerNode(surX,surY, tx("Sural n. (S1)","N. sural (S1)"), "tibial peroneal sural", "#c2761a", "sural");
+
+  /* --- MUSCLE TAPS for the remaining nerves (proximal → distal) --- */
+  /* abdominal/genital — sensory-dominant */
+  tap(PILL.abdgen.x2,64, PILL.abdgen.x2+40,64, "abdgen",
+      tx("Ab-wall · cremaster","Paroi abdo · crémaster"), tx("+ groin sensory","+ sensitif inguinal"),"start");
+  /* LFCN — pure sensory */
+  tap(PILL.lfcn.x2,112, PILL.lfcn.x2+34,112, "lfcn",
+      tx("Lateral thigh","Cuisse latérale"), tx("pure sensory","purement sensitif"),"start");
+  /* FEMORAL: motor above the pill, saphenous exiting distally into the leg */
+  tap(PILL.femoral.x2,170, PILL.femoral.x2+30,148, "femoral",
+      tx("Iliopsoas · quadriceps","Ilio-psoas · quadriceps"), tx("sartorius · pectineus","sartorius · pectiné"),"start");
+  seg(PILL.femoral.x2,170, COL.leg,196,"","femoral","L3 L4");
+  markerNode(COL.leg,196, tx("Saphenous → medial leg","Saphène → jambe méd."), "femoral saphenous", "#c2761a", "saphenous");
+  /* OBTURATOR: anterior + posterior branches */
+  tap(PILL.obturator.x2,242, PILL.obturator.x2+30,224, "obturator",
+      tx("Ant. branch","Rameau ant."), tx("add. longus/brevis · gracilis","long/court add. · gracile"),"start");
+  tap(PILL.obturator.x2,242, PILL.obturator.x2+30,262, "obturator",
+      tx("Post. branch","Rameau post."), tx("obturator externus","obturateur externe"),"start");
+  /* GLUTEALS */
+  tap(PILL.supglut.x2,300, PILL.supglut.x2+30,300, "supglut",
+      tx("Glut. med/min · TFL","Moy/petit glut. · TFL"),null,"start");
+  tap(PILL.infglut.x2,352, PILL.infglut.x2+30,352, "infglut",
+      tx("Gluteus maximus","Grand glutéal"),null,"start");
+  /* SHORT EXTERNAL ROTATORS — direct sacral-plexus muscular branches (clickable → cards) */
+  tap(HUB.sacral[0],HUB.sacral[1], 322,476, "npiri",
+      tx("Piriformis","Piriforme"), tx("n. to piriformis · S1–2","n. du piriforme · S1–2"),"start","npiri");
+  tap(HUB.sacral[0],HUB.sacral[1], 322,508, "nqf",
+      tx("Quadratus femoris","Carré fémoral"), tx("+ inf. gemellus · L4–S1","+ jumeau inf. · L4–S1"),"start","nqf");
+  tap(HUB.sacral[0],HUB.sacral[1], 322,540, "nobti",
+      tx("Obturator internus","Obturateur interne"), tx("+ sup. gemellus · L5–S2","+ jumeau sup. · L5–S2"),"start","nobti");
+  /* PCNT — sensory */
+  tap(PILL.pcnt.x2,614, PILL.pcnt.x2+30,614, "pcnt",
+      tx("Posterior thigh","Cuisse postérieure"), tx("sensory","sensitif"),"start");
+  /* PUDENDAL */
+  tap(PILL.pudendal.x2,662, PILL.pudendal.x2+30,662, "pudendal",
+      tx("Ext. anal sphincter","Sphincter anal ext."), tx("· perineum · pelvic floor","· périnée · plancher"),"start");
+
+  /* --- ROOT nodes --- */
+  Object.entries(ROOTY).forEach(([k,v])=>rootNode(k,v));
+
+  /* --- PLEXUS chips (clickable → PLEX panels) --- */
+  plexChip(HUB.lumbar[0],HUB.lumbar[1],tx("Lumbar plexus","Plexus lombaire"),"LUMB","L1 L2 L3 L4");
+  plexChip(HUB.sacral[0],HUB.sacral[1],tx("Sacral plexus","Plexus sacré"),"SACR","L4 L5 S1 S2 S3");
+  plexChip(LSTPOS[0],LSTPOS[1],tx("LS trunk","Tronc LS"),"LST","L4 L5");
+}
+buildBraid();
+
+/* ===================================================================
+   CHUNK 7 — RENDER + INTERACTIVITY
+   =================================================================== */
+
+/* ---- level chips: "L4,L5,(S1)" → chips; parenthesised = minor ---- */
+const LVORDER=["L1","L2","L3","L4","L5","S1","S2","S3","S4"];
+function parseLevels(str){
+  const out=[]; (str||"").split(",").forEach(t=>{
+    t=t.trim(); if(!t) return;
+    const minor=/^\(.*\)$/.test(t);
+    const bare=t.replace(/[()]/g,"").trim();
+    if(bare) out.push({lv:bare,minor});
+  });
+  return out;
+}
+function lvChips(str){
+  return parseLevels(str).map(o=>`<span class="lvl${o.minor?' minor':''}" data-lvl="${o.lv}">${o.lv}</span>`).join("");
+}
+function normLvl(tok){
+  // "L4","S1" -> as-is; bare "3"/"2" inherits the previous token's letter (handled by caller)
+  return tok.trim();
+}
+function levelsToRoots(str){
+  const s=new Set();
+  parseLevels(str).forEach(o=>{
+    let v=o.lv.replace(/–/g,"-").trim();
+    if(v.includes("-")){
+      let[a,b]=v.split("-").map(x=>x.trim());
+      // abbreviated end token (e.g. "L2-4","S1-2"): if b lacks a letter prefix, inherit a's letter
+      if(/^[0-9]+$/.test(b)) b=a.replace(/[0-9].*$/,"")+b;
+      const i=LVORDER.indexOf(a),j=LVORDER.indexOf(b);
+      if(i>=0&&j>=0)LVORDER.slice(Math.min(i,j),Math.max(i,j)+1).forEach(x=>s.add(x));
+      else{ if(i>=0)s.add(a); if(j>=0)s.add(b); }
+    }
+    else if(v) s.add(v);
+  });
+  return [...s];
+}
+
+/* ---- muscle / sensory / passage rows ---- */
+function mRow(x,type){
+  const nm=tx(x.n,x.nf), note=tx(x.note,x.notef);
+  const search=(nm+" "+note).toLowerCase();
+  return `<div class="item" data-type="${type}" data-search="${esc(search)}" data-levels="${esc(levelsToRoots(x.l).join(' '))}">`+
+    `<span class="mn">${esc(nm)}${note?` <span class="note">— ${esc(note)}</span>`:""}</span>`+
+    `<span class="lvls">${lvChips(x.l)}</span></div>`;
+}
+function secMotor(arr){return arr&&arr.length?`<div class="sec"><div class="sh motor"><span class="sq"></span>${T("motor")}</div>${arr.map(x=>mRow(x,"motor")).join("")}</div>`:"";}
+function secSens(arr){return arr&&arr.length?`<div class="sec"><div class="sh sensory"><span class="sq"></span>${T("sensory")}</div>${arr.map(x=>mRow(x,"sensory")).join("")}</div>`:"";}
+function passRow(p){
+  const nm=tx(p[0],p[1]), note=tx(p[2],p[3]);
+  return `<div class="item pass-item" data-type="pass" data-search="${esc((nm+' '+note).toLowerCase())}" data-key="${esc(nm.toLowerCase())}">`+
+    `<span class="nm2">${esc(nm)}${note?` <span class="note">— ${esc(note)}</span>`:""}</span></div>`;
+}
+function secPass(arr){return arr&&arr.length?`<div class="sec"><div class="sh pass"><span class="sq"></span>${T("passage")}</div>${arr.map(passRow).join("")}</div>`:"";}
+function secPearl(arr){return arr&&arr.length?`<div class="sec"><div class="sh pearl"><span class="sq"></span>${T("pearls")}</div>${arr.map(p=>{const t=tx(p[0],p[1]);return `<div class="item pearl-item" data-type="pearl" data-search="${esc(t.toLowerCase())}">${esc(t)}</div>`;}).join("")}</div>`:"";}
+
+/* ---- sub-nerve block (deep/superficial fibular, plantar nn., sural...) ---- */
+function subBlock(sub){
+  return sub.map(s=>{
+    const nm=tx(s.name,s.namef);
+    return `<div class="sub"><div class="subh" data-search="${esc(nm.toLowerCase())}"><span class="tag">${esc(tx(s.tag||'br.',s.tag||'br.'))}</span>${esc(nm)}`+
+      (s.level?`<span class="lv">${esc(s.level)}</span>`:"")+`</div>`+
+      secMotor(s.motor)+secSens(s.sensory)+`</div>`;
+  }).join("");
+}
+
+/* ---- distal branch TREE (bilingual port of the UE engine) ---- */
+function nlab(n){return tx(n.label[0],n.label[1]);}
+function nnote(n){return n.note?tx(n.note[0],n.note[1]):"";}
+function nodeW(n){
+  const t=nlab(n).length+(n.level?n.level.length+1:0), nl=nnote(n).length;
+  return Math.min(250,Math.max(108,Math.max(t*6.6,nl*5.4)+22));
+}
+function buildTree(root){
+  let leaf=0; const rowH=48; const nodes=[];
+  (function place(n,depth){
+    n._depth=depth; n._w=nodeW(n); nodes.push(n);
+    if(n.children&&n.children.length){n.children.forEach(c=>place(c,depth+1));
+      n._cy=(n.children[0]._cy+n.children[n.children.length-1]._cy)/2;}
+    else{n._cy=leaf*rowH+rowH/2;leaf++;}
+  })(root,0);
+  const maxD=Math.max(...nodes.map(n=>n._depth));
+  const colW=[],colX=[];let acc=6;const gap=28;
+  for(let d=0;d<=maxD;d++)colW[d]=Math.max(...nodes.filter(n=>n._depth===d).map(n=>n._w));
+  for(let d=0;d<=maxD;d++){colX[d]=acc;acc+=colW[d]+gap;}
+  nodes.forEach(n=>n._x=colX[n._depth]);
+  return {nodes,W:acc-gap+6,H:Math.max(1,leaf)*rowH+6};
+}
+function renderTree(root,cardId){
+  const {nodes,W,H}=buildTree(root);
+  let s=`<svg viewBox="0 0 ${Math.round(W)} ${Math.round(H)}" xmlns="http://www.w3.org/2000/svg" style="width:100%;min-width:${Math.round(Math.min(W,560))}px;height:auto;display:block;font-family:var(--sans)">`;
+  nodes.forEach(n=>{if(n.children)n.children.forEach(c=>{
+    const x1=n._x+n._w,y1=n._cy,x2=c._x,y2=c._cy,mx=(x1+x2)/2;
+    s+=`<path d="M${x1},${y1} C${mx},${y1} ${mx},${y2} ${x2},${y2}" fill="none" stroke="#cfd6df" stroke-width="1.7"/>`;
+  });});
+  nodes.forEach(n=>{
+    const st=TSTYLE[n.type]||TSTYLE.split,h=nnote(n)?40:28,y=n._cy-h/2,txx=n._x+10;
+    const clk=n.keys&&n.keys.length;
+    s+=`<g class="tnode${clk?' tn-on':''}"${clk?` data-keys="${esc(n.keys.join('|'))}" data-card="${cardId}" data-label="${esc(nlab(n))}"`:''}>`;
+    s+=`<rect class="tnbox" x="${n._x}" y="${y}" width="${n._w}" height="${h}" rx="7" fill="${st.fill}" stroke="${st.stroke}" stroke-opacity="0.6"/>`+
+       `<rect x="${n._x}" y="${y}" width="3.5" height="${h}" rx="2" fill="${st.stroke}"/>`;
+    const titleY=nnote(n)?n._cy-4:n._cy;
+    s+=`<text x="${txx}" y="${titleY}" font-size="11.5" font-weight="650" fill="${st.text}" dominant-baseline="middle">${esc(nlab(n))}`;
+    if(n.level)s+=`<tspan dx="5" font-family="ui-monospace,Menlo,monospace" font-size="9.5" font-weight="400" fill="#7a8694">${esc(n.level)}</tspan>`;
+    s+=`</text>`;
+    if(nnote(n))s+=`<text x="${txx}" y="${n._cy+10}" font-size="9.5" fill="#8a93a0">${esc(nnote(n))}</text>`;
+    s+=`</g>`;
+  });
+  return s+`</svg>`;
+}
+
+/* ---- nerve card ---- */
+function cardHTML(d){
+  const nm=tx(d.name,d.namef), div=tx(d.div[0],d.div[1]);
+  let body="";
+  const tree=TREES[d.id];
+  if(tree){
+    body+=`<div class="treewrap"><div class="treelabel">${T("branching")}</div>${renderTree(tree,d.id)}</div>`;
+  }
+  body+=`<div class="cdiv"><span class="divnote">${esc(div)}</span></div>`;
+  body+=secMotor(d.motor);
+  if(d.sub)  body+=`<div class="sec"><div class="sh"><span class="sq" style="background:#9aa3b0"></span>${tx('Distal branches','Branches distales')}</div>${subBlock(d.sub)}</div>`;
+  if(d.pass) body+=secPass(d.pass);
+  if(d.passTarsal) body+=secPass(d.passTarsal);
+  body+=secSens(d.sensory);
+  body+=secPearl(d.pearls);
+  return `<div class="card" id="card-${d.id}" data-nerve="${d.id}">`+
+    `<div class="chead"><span class="nm">${esc(nm)}</span><span class="lv">${esc(d.level)}</span></div>`+
+    `<div class="cbody">${body}</div></div>`;
+}
+function renderCards(){
+  document.getElementById("grid").innerHTML=DATA.map(cardHTML).join("");
+}
+
+/* ---- ROOT chips (header) + ROOT cards ---- */
+function renderRootChips(){
+  const box=document.getElementById("rootchips");
+  box.querySelectorAll(".rootchip").forEach(n=>n.remove());
+  ROOTS.forEach(r=>{
+    const b=document.createElement("button");
+    b.className="rootchip"; b.dataset.root=r.id; b.textContent=r.id;
+    b.onclick=()=>selectRoot(r.id);
+    box.appendChild(b);
+  });
+}
+function renderRoots(){
+  const box=document.getElementById("roots");
+  box.innerHTML=ROOTS.map(r=>{
+    const rot=tx(r.rot[0],r.rot[1]);
+    const myo=r.myo.map(mm=>{
+      const mus=tx(mm[0],mm[1]),nrv=tx(mm[2],mm[3]);
+      return `<div class="item" data-search="${esc((mus+' '+nrv).toLowerCase())}" data-levels="${r.id}">`+
+        `<span class="mn">${esc(mus)}</span><span class="lvl" style="opacity:.85">${esc(nrv)}</span></div>`;
+    }).join("");
+    return `<div class="rootcard" data-root="${r.id}">`+
+      `<h3>${r.id}<em>${T("reflex")}: ${esc(rot)}</em></h3>`+
+      `<div class="blk"><div class="t">${T("myotome")}</div><div class="v">${myo}</div></div>`+
+      `<div class="blk"><div class="t">${T("derm")}</div><div class="v derm"><b>${T("dermP")}</b> ${esc(tx(r.pns[0],r.pns[1]))} · <b>${T("dermA")}</b> ${esc(tx(r.asia[0],r.asia[1]))}</div></div>`+
+      `</div>`;
+  }).join("");
+  box.querySelectorAll(".rootcard").forEach(b=>b.onclick=()=>selectRoot(b.dataset.root));
+}
+
+/* ---- ENTRAPMENT MAP (7 anatomical columns) ---- */
+const CREG=()=>[tx("Pelvis/hip","Bassin"),tx("Thigh","Cuisse"),tx("Knee","Genou"),tx("Leg","Jambe"),tx("Ankle","Cheville"),tx("Foot","Pied")];
+/* distal sites (● green → jump to card); r = column index 0..5 */
+const CMAP=[
+ {id:"lfcn",name:()=>NERVENAME("lfcn"),dots:[{r:0,label:()=>tx("Inguinal lig. (ASIS)","Lig. ing. (EIAS)"),key:"inguinal",us:()=>tx("Short-axis 1 cm medial-inferior to the ASIS; the LFCN sits in a fat cleft between sartorius and tensor fasciae latae, superficial to the iliacus fascia.","Petit axe 1 cm en dedans-bas de l'EIAS ; le NCLC est dans un interstice graisseux entre sartorius et TFL, superficiel au fascia iliaque.")}]},
+ {id:"femoral",name:()=>NERVENAME("femoral"),dots:[{r:0,label:()=>tx("Inguinal lig. / psoas","Lig. ing. / psoas"),key:"inguinal",us:()=>tx("Short-axis at the inguinal crease, lateral to the femoral artery (NAVEL); trace proximally over the iliopsoas for a retroperitoneal cause.","Petit axe au pli inguinal, latéral à l'artère fémorale ; remonter sur l'ilio-psoas pour une cause rétropéritonéale.")}]},
+ {id:"obturator",name:()=>NERVENAME("obturator"),dots:[{r:0,label:()=>tx("Obturator canal","Canal obturateur"),key:"obturator",us:()=>tx("Deep medial thigh: identify pectineus, then the anterior branch between adductor longus and brevis, the posterior branch between brevis and magnus.","Cuisse médiale profonde : repérer le pectiné, puis la branche antérieure entre long et court add., la postérieure entre court add. et grand add.")}]},
+ {id:"sciatic",name:()=>NERVENAME("sciatic"),dots:[{r:0,label:()=>tx("Piriformis / sciatic notch","Piriforme / échancrure"),key:"greater sciatic",us:()=>tx("Curvilinear probe, subgluteal: the sciatic nerve lies between the ischial tuberosity and the greater trochanter, deep to gluteus maximus, on the quadratus femoris.","Sonde courbe, sous-fessier : le sciatique est entre la tubérosité ischiatique et le grand trochanter, sous le grand glutéal, sur le carré fémoral.")}]},
+ {id:"peroneal",name:()=>NERVENAME("peroneal"),dots:[{r:2,label:()=>tx("Fibular neck","Col fibulaire"),key:"fibular neck",us:()=>tx("Short-axis at the fibular head, then trace the common fibular nerve as it wraps the neck and splits into deep and superficial branches.","Petit axe à la tête fibulaire, puis suivre le fibulaire commun qui contourne le col et se divise en profond et superficiel.")}]},
+ {id:"tibial",name:()=>NERVENAME("tibial"),dots:[{r:1,label:()=>tx("Popliteal fossa","Fosse poplitée"),key:"popliteal",us:()=>tx("Short-axis in the popliteal fossa: tibial nerve superficial to the vessels; the common fibular nerve peels off laterally toward the fibular head.","Petit axe en fosse poplitée : tibial superficiel aux vaisseaux ; le fibulaire commun part latéralement vers la tête fibulaire.")},{r:4,label:()=>tx("Tarsal tunnel","Tunnel tarsien"),key:"tarsal tunnel",us:()=>tx("Short-axis behind the medial malleolus, posterior to the tibial vessels; follow the split into medial and lateral plantar nerves under the flexor retinaculum.","Petit axe derrière la malléole médiale, en arrière des vaisseaux tibiaux ; suivre la division en plantaires médial et latéral sous le rétinaculum.")},{r:5,label:()=>tx("Baxter","Baxter"),key:"baxter",us:()=>tx("High-frequency probe over the medial/plantar heel: the first branch of the lateral plantar nerve runs deep to abductor hallucis toward the calcaneus.","Sonde haute fréquence sur le talon médial/plantaire : le 1er rameau du plantaire latéral passe sous l'abd. de l'hallux vers le calcanéus.")}]},
+ {id:"pudendal",name:()=>NERVENAME("pudendal"),dots:[{r:0,label:()=>tx("Alcock canal","Canal d'Alcock"),key:"alcock",us:()=>tx("Transgluteal approach at the ischial spine, between the sacrospinous and sacrotuberous ligaments, medial to the internal pudendal artery.","Voie transglutéale à l'épine ischiatique, entre les ligaments sacro-épineux et sacro-tubéral, en dedans de l'artère pudendale interne.")}]},
+];
+/* proximal/plexus rows (● slate → PLEX summary panel) */
+const CPROX=[
+ {id:"LUMB",name:()=>tx("Lumbar plexus","Plexus lombaire"),col:"#475569",dots:[{r:0,label:()=>tx("Retroperitoneal / psoas","Rétropéritoine / psoas"),us:()=>tx("The lumbar plexus is embedded within psoas major; ultrasound is limited — cross-sectional imaging (CT/MRI) is preferred for a retroperitoneal cause.","Le plexus lombaire est dans le psoas ; l'échographie est limitée — préférer la TDM/IRM pour une cause rétropéritonéale.")}]},
+ {id:"LST",name:()=>tx("Lumbosacral trunk","Tronc lombo-sacré"),col:"#475569",dots:[{r:0,label:()=>tx("Pelvic brim (postpartum)","Détroit sup. (postpartum)"),us:()=>tx("The L4–L5 trunk crosses the sacral ala at the pelvic brim — not accessible to ultrasound; suspect it clinically from a peroneal-predominant pattern with sural sparing.","Le tronc L4–L5 franchit l'aile sacrée au détroit sup. — inaccessible à l'échographie ; le suspecter cliniquement (prédominance fibulaire, sural épargné).")}]},
+ {id:"SACR",name:()=>tx("Sacral plexus","Plexus sacré"),col:"#475569",dots:[{r:0,label:()=>tx("Sciatic notch / sacrum","Échancrure / sacrum"),us:()=>tx("Deep pelvic location; MRI is the modality of choice. Ultrasound can reach the sciatic nerve only once it exits below piriformis.","Localisation pelvienne profonde ; l'IRM est l'examen de choix. L'échographie n'atteint le sciatique qu'à sa sortie sous le piriforme.")}]},
+];
+function buildCMap(){
+  const svg=document.getElementById("cmap"); if(!svg) return;
+  const reg=CREG();
+  const x0=150,colW=118,top=30,rowGap=16,pad=18,labelX=6,sepH=30;
+  const xC=r=>x0+r*colW+colW/2;
+  const setRowH=l=>{const per={};l.dots.forEach(d=>per[d.r]=(per[d.r]||0)+1);l.maxc=Math.max(1,...Object.values(per));l.rowH=l.maxc*rowGap+pad;};
+  CMAP.forEach(setRowH); CPROX.forEach(setRowH);
+  const H=top+CMAP.reduce((a,l)=>a+l.rowH,0)+sepH+CPROX.reduce((a,l)=>a+l.rowH,0)+6, W=x0+6*colW+8;
+  let inner="";
+  for(let r=0;r<6;r++)inner+=`<text class="creg" x="${xC(r)}" y="17">${esc(reg[r])}</text>`;
+  for(let r=0;r<=6;r++){const x=x0+r*colW;inner+=`<line class="cdiv" x1="${x}" y1="24" x2="${x}" y2="${H-4}"/>`;}
+  let y=top;
+  function lane(l,prox){
+    const cy=y+l.rowH/2,col=l.col||COLOR[l.id]||"#475569",nm=l.name();
+    inner+=`<line class="claneln" x1="${x0}" y1="${cy}" x2="${x0+6*colW}" y2="${cy}" stroke="${col}"/>`;
+    inner+=`<text class="clane" x="${labelX}" y="${cy}" dominant-baseline="central" fill="${col}">${esc(nm)}</text>`;
+    const byR={};l.dots.forEach(d=>{(byR[d.r]=byR[d.r]||[]).push(d);});
+    Object.keys(byR).forEach(rk=>{
+      const arr=byR[rk],r=+rk,k=arr.length,cellL=x0+r*colW;
+      arr.forEach((d,i)=>{
+        const dy=cy+(i-(k-1)/2)*rowGap,dx=cellL+12,lb=d.label();
+        if(prox){
+          inner+=`<g class="csite cprox" data-prox="${l.id}" data-label="${esc(lb)}" data-us="${esc(d.us?d.us():'')}">`+
+            `<circle cx="${dx}" cy="${dy}" r="11" fill="transparent"/>`+
+            `<circle class="chalo" cx="${dx}" cy="${dy}" r="8.5" fill="#fff"/>`+
+            `<circle class="cdot" cx="${dx}" cy="${dy}" r="5.5" fill="#475569"/>`+
+            `<text class="clbl" x="${dx+10}" y="${dy}" dominant-baseline="central">${esc(lb)}</text></g>`;
+        }else{
+          inner+=`<g class="csite" data-card="${l.id}" data-key="${esc(d.key)}" data-label="${esc(lb)}" data-us="${esc(d.us?d.us():'')}">`+
+            `<circle cx="${dx}" cy="${dy}" r="11" fill="transparent"/>`+
+            `<circle class="chalo" cx="${dx}" cy="${dy}" r="8.5" fill="#fff"/>`+
+            `<circle class="cdot" cx="${dx}" cy="${dy}" r="5.5" fill="#2c8a5f"/>`+
+            `<text class="clbl" x="${dx+10}" y="${dy}" dominant-baseline="central">${esc(lb)}</text></g>`;
+        }
+      });
+    });
+    y+=l.rowH;
+  }
+  CMAP.forEach(l=>lane(l,false));
+  const sy=y+sepH/2;
+  inner+=`<line x1="${labelX}" y1="${sy}" x2="${x0+6*colW}" y2="${sy}" stroke="#d6dce4" stroke-dasharray="3 3"/>`;
+  inner+=`<text x="${labelX}" y="${sy-6}" style="text-anchor:start;font:600 9.5px var(--sans);fill:#9aa4b1;letter-spacing:.07em">${esc(tx('PROXIMAL · PLEXUS','PROXIMAL · PLEXUS'))}</text>`;
+  y+=sepH;
+  CPROX.forEach(l=>lane(l,true));
+  svg.setAttribute("viewBox",`0 0 ${W} ${H}`);
+  svg.innerHTML=inner;
+  svg.querySelectorAll(".csite").forEach(g=>g.addEventListener("click",()=>{
+    if(g.dataset.prox) proxClick(g.dataset.prox); else siteClick(g);
+    showUS(g);
+  }));
+}
+
+/* ---- FOOT-DROP / WEAK-PLANTARFLEXION MATRIX (Preston & Shapiro Table 36.1) ----
+   columns = candidate lesions; rows = clinical / EDX features; ✓ = may be present */
+const FDCOL=[
+ {id:"dpn", name:()=>tx("Deep fibular","Fibul. prof.")},
+ {id:"cpn", name:()=>tx("Common fibular","Fibul. commun")},
+ {id:"sci", name:()=>tx("Sciatic","Sciatique")},
+ {id:"lsp", name:()=>tx("LS plexus","Plexus LS")},
+ {id:"l5",  name:()=>tx("L5 root","Racine L5")},
+];
+const FDROW=[
+ {f:()=>tx("Weak dorsiflexion","Dorsiflexion faible"),v:["dpn","cpn","sci","lsp","l5"]},
+ {f:()=>tx("Weak eversion","Éversion faible"),v:["cpn","sci","lsp","l5"]},
+ {f:()=>tx("Weak inversion (tib. post.)","Inversion faible (tib. post.)"),v:["sci","lsp","l5"]},
+ {f:()=>tx("Weak knee flexion (hamstrings)","Flexion genou faible (ischio-j.)"),v:["sci","lsp","l5"]},
+ {f:()=>tx("Weak glutei","Glutéaux faibles"),v:["lsp","l5"]},
+ {f:()=>tx("↓ ankle reflex (if S1)","↓ réflexe achilléen (si S1)"),v:["sci","lsp","l5"]},
+ {f:()=>tx("Sensory: 1st web space","Sensitif : 1er espace"),v:["dpn","cpn","sci","lsp","l5"]},
+ {f:()=>tx("Sensory: dorsum of foot","Sensitif : dos du pied"),v:["cpn","sci","lsp","l5"]},
+ {f:()=>tx("Sensory: lateral calf","Sensitif : mollet latéral"),v:["cpn","sci","lsp","l5"]},
+ {f:()=>tx("Sensory: sole (if S1)","Sensitif : plante (si S1)"),v:["sci","lsp","l5"]},
+ {f:()=>tx("Back pain / +SLR","Lombalgie / Lasègue +"),v:["l5"]},
+ {f:()=>tx("Abn. superficial fibular SNAP","Fibul. superf. SNAP anormal"),v:["cpn","sci","lsp"],note:()=>tx("(L5: rare exception)","(L5 : exception rare)"),noteCol:"l5"},
+ {f:()=>tx("Abn. sural SNAP","Sural SNAP anormal"),v:["sci","lsp"]},
+ {f:()=>tx("Short-head biceps femoris abn.","Chef court biceps fém. anormal"),v:["sci","lsp","l5"]},
+ {f:()=>tx("Abn. paraspinals","Paraspinaux anormaux"),v:["l5"]},
+ {f:()=>tx("Block/slowing at fibular neck","Bloc/ralent. au col fibulaire"),v:["dpn","cpn"]},
+];
+function renderFootDrop(){
+  const t=document.getElementById("fdtable");
+  let h=`<thead><tr><th></th>`+FDCOL.map(c=>`<th data-col="${c.id}">${esc(c.name())}</th>`).join("")+`</tr></thead><tbody>`;
+  FDROW.forEach(row=>{
+    h+=`<tr><td class="rlab">${esc(row.f())}${row.note?` <span class="lnote">${esc(row.note())}</span>`:""}</td>`;
+    FDCOL.forEach(c=>{
+      const hit=row.v.includes(c.id);
+      const soft=row.noteCol===c.id;
+      h+=`<td data-col="${c.id}" class="${hit?'fx':soft?'fxs':''}">${hit?'✓':soft?'○':''}</td>`;
+    });
+    h+=`</tr>`;
+  });
+  t.innerHTML=h+`</tbody>`;
+  t.querySelectorAll("th[data-col]").forEach(th=>th.onclick=()=>fdCol(th.dataset.col));
+  document.getElementById("fdcap").textContent=tx(
+    "✓ may be present · ○ = the rare L5 exception (abnormal superficial fibular SNAP). The short-head biceps femoris and the glutei/paraspinals are the pivots that walk the lesion proximally.",
+    "✓ possiblement présent · ○ = l'exception rare L5 (fibulaire superficiel anormal). Le chef court du biceps fémoral et les glutéaux/paraspinaux font remonter la lésion.");
+}
+let fdSel=null;
+function fdCol(id){
+  const t=document.getElementById("fdtable");
+  if(fdSel===id){fdSel=null;t.querySelectorAll(".colon").forEach(n=>n.classList.remove("colon"));return;}
+  fdSel=id; t.querySelectorAll(".colon").forEach(n=>n.classList.remove("colon"));
+  t.querySelectorAll(`[data-col="${id}"]`).forEach(n=>n.classList.add("colon"));
+}
+
+/* ---- LESION EXPLORER (weak vs spared) ---- */
+const LESIONS=[
+ {id:"fem1",nerve:()=>NERVENAME("femoral"),col:"#2566a8",label:()=>tx("Femoral — proximal (psoas/retroperitoneal)","Fémoral — proximal (psoas/rétropér.)"),
+  weak:()=>tx("Iliopsoas · quadriceps","Ilio-psoas · quadriceps"),spared:()=>tx("Adductors (obturator) · everything below knee","Adducteurs (obturateur) · tout sous le genou"),
+  sens:()=>tx("Anteromedial thigh + medial leg (saphenous)","Cuisse antéro-méd. + jambe méd. (saphène)")},
+ {id:"fem2",nerve:()=>NERVENAME("femoral"),col:"#2566a8",label:()=>tx("Femoral — below inguinal ligament","Fémoral — sous le lig. inguinal"),
+  weak:()=>tx("Quadriceps only (iliacus SPARED)","Quadriceps seul (iliaque ÉPARGNÉ)"),spared:()=>tx("Iliopsoas · adductors","Ilio-psoas · adducteurs"),
+  sens:()=>tx("Anteromedial thigh + saphenous","Cuisse antéro-méd. + saphène")},
+ {id:"obt",nerve:()=>NERVENAME("obturator"),col:"#7d5ba6",label:()=>tx("Obturator","Obturateur"),
+  weak:()=>tx("Thigh adductors · gracilis","Adducteurs · gracile"),spared:()=>tx("Quadriceps · iliopsoas","Quadriceps · ilio-psoas"),
+  sens:()=>tx("Small medial-thigh patch","Petite zone cuisse médiale")},
+ {id:"lfcn",nerve:()=>NERVENAME("lfcn"),col:"#c2761a",label:()=>tx("LFCN — meralgia paresthetica","NCLC — méralgie paresthésique"),
+  weak:()=>tx("None — pure sensory","Aucun — purement sensitif"),spared:()=>tx("All muscles","Tous les muscles"),
+  sens:()=>tx("Burning lateral-thigh patch; EMG normal, LFCN SNAP abnormal","Plaque brûlante cuisse lat. ; EMG normal, SNAP NCLC anormal")},
+ {id:"sci",nerve:()=>NERVENAME("sciatic"),col:"#b8332a",label:()=>tx("Sciatic (proximal)","Sciatique (proximal)"),
+  weak:()=>tx("Foot drop + tib. post./FDL + hamstrings; peroneal>tibial","Pied tombant + tib. post./LFO + ischio-j. ; fibulaire>tibial"),
+  spared:()=>tx("Glutei · quadriceps · adductors","Glutéaux · quadriceps · adducteurs"),
+  sens:()=>tx("Whole leg below knee except medial calf (saphenous)","Toute la jambe sous le genou sauf mollet méd. (saphène)")},
+ {id:"cpn",nerve:()=>NERVENAME("peroneal"),col:"#b8332a",label:()=>tx("Common fibular — fibular neck","Fibul. commun — col fibulaire"),
+  weak:()=>tx("Dorsiflexion + eversion","Dorsiflexion + éversion"),spared:()=>tx("Inversion (tib. post.) · ankle reflex · short-head biceps","Inversion (tib. post.) · réflexe achill. · chef court biceps"),
+  sens:()=>tx("Dorsum of foot + anterolateral leg","Dos du pied + jambe antéro-lat.")},
+ {id:"dpn",nerve:()=>tx("Deep fibular","Fibul. profond"),col:"#b8332a",label:()=>tx("Deep fibular","Fibulaire profond"),
+  weak:()=>tx("Dorsiflexors (TA·EHL·EDL·EDB)","Dorsifléch. (TA·LEH·LEO·CEO)"),spared:()=>tx("Eversion (superficial) · inversion","Éversion (superficiel) · inversion"),
+  sens:()=>tx("1st web space only","1er espace interdigital seul")},
+ {id:"spn",nerve:()=>tx("Superficial fibular","Fibul. superficiel"),col:"#b8332a",label:()=>tx("Superficial fibular","Fibulaire superficiel"),
+  weak:()=>tx("Eversion (peronei)","Éversion (fibulaires)"),spared:()=>tx("Dorsiflexion · inversion","Dorsiflexion · inversion"),
+  sens:()=>tx("Anterolateral leg + dorsum of foot","Jambe antéro-lat. + dos du pied")},
+ {id:"tib",nerve:()=>NERVENAME("tibial"),col:"#8f2f8f",label:()=>tx("Tibial — proximal (popliteal)","Tibial — proximal (poplité)"),
+  weak:()=>tx("Plantarflexion + inversion + toe flexion + intrinsics","Flexion plant. + inversion + fléch. orteils + intrinsèques"),
+  spared:()=>tx("Dorsiflexion · eversion","Dorsiflexion · éversion"),
+  sens:()=>tx("Sole + posterolateral leg (sural)","Plante + jambe post-lat. (sural)")},
+ {id:"tarsal",nerve:()=>NERVENAME("tibial"),col:"#8f2f8f",label:()=>tx("Tarsal tunnel (distal)","Tunnel tarsien (distal)"),
+  weak:()=>tx("Foot intrinsics (plantar nn.)","Intrinsèques du pied (nn. plant.)"),spared:()=>tx("Calf muscles · ankle reflex","Muscles du mollet · réflexe achill."),
+  sens:()=>tx("Sole; heel often spared (medial calcaneal)","Plante ; talon souvent épargné (calcanéen méd.)")},
+ {id:"baxter",nerve:()=>tx("Baxter","Baxter"),col:"#8f2f8f",label:()=>tx("Baxter (1st br. lateral plantar)","Baxter (1er rameau plant. lat.)"),
+  weak:()=>tx("Abductor digiti minimi (isolated)","Abd. du petit orteil (isolé)"),spared:()=>tx("Other intrinsics · sensation","Autres intrinsèques · sensation"),
+  sens:()=>tx("None — pure motor; chronic heel pain","Aucun — moteur pur ; talalgie chronique")},
+];
+function buildLesions(){
+  const bar=document.getElementById("lesionbar");
+  bar.innerHTML=LESIONS.map(L=>`<button class="lpill" data-l="${L.id}" style="--lc:${L.col}">${esc(L.label())}</button>`).join("");
+  bar.querySelectorAll(".lpill").forEach(b=>b.onclick=()=>lesionClick(b.dataset.l,b));
+}
+let lesionSel=null;
+function clearLesion(){lesionSel=null;
+  document.querySelectorAll(".lpill.on").forEach(n=>n.classList.remove("on"));
+  const p=document.getElementById("lesionpanel");p.hidden=true;p.innerHTML="";}
+function lesionClick(id,btn){
+  if(lesionSel===id){clearLesion();return;}
+  clearLesion(); lesionSel=id; btn.classList.add("on");
+  const L=LESIONS.find(x=>x.id===id);
+  const p=document.getElementById("lesionpanel");
+  p.hidden=false;
+  p.innerHTML=`<div class="lphead" style="color:${L.col}">${esc(L.label())} <span style="color:var(--ink-soft);font-weight:500">· ${esc(L.nerve())}</span></div>`+
+    `<div class="lcols">`+
+    `<div class="lcol"><div class="lgrp-label weak">${T("weak")}</div><div class="lv">${esc(L.weak())}</div></div>`+
+    `<div class="lcol"><div class="lgrp-label spared">${T("spared")}</div><div class="lv">${esc(L.spared())}</div></div>`+
+    `<div class="lcol"><div class="lgrp-label sens">${T("sensoryL")}</div><div class="lv">${esc(L.sens())}</div></div>`+
+    `</div>`;
+}
+
+/* ---- EPONYMS / named syndromes + LOCALIZE rules ---- */
+const EPONYMS=[
+ [["Meralgia paresthetica","Méralgie paresthésique"],["LFCN under the inguinal ligament: burning lateral-thigh patch, worse standing/hip extension. Pure sensory — needle EMG normal, LFCN SNAP abnormal.","NCLC sous le lig. inguinal : plaque brûlante cuisse lat., pire debout/extension. Purement sensitif — EMG normal, SNAP NCLC anormal."]],
+ [["Piriformis syndrome / FAIR","Syndrome du piriforme / FAIR"],["Controversial. Buttock pain worse sitting; the FAIR-position H-reflex delay is the only proposed test. Most 'sciatica' is radiculopathy, not sciatic neuropathy.","Controversé. Douleur fessière pire assis ; le retard du réflexe H en position FAIR est le seul test proposé. La plupart des « sciatiques » sont radiculaires."]],
+ [["Postpartum foot drop (LS trunk)","Pied tombant postpartum (tronc LS)"],["Fetal head compresses the L4–L5 lumbosacral trunk at the pelvic brim → peroneal-predominant foot drop with sural (S1) SPARED. Misdiagnosed as a fibular-neck palsy.","La tête fœtale comprime le tronc L4–L5 au détroit sup. → pied tombant fibulaire avec sural (S1) ÉPARGNÉ. Pris pour une paralysie au col fibulaire."]],
+ [["Bruns-Garland (diabetic amyotrophy)","Bruns-Garland (amyotrophie diab.)"],["Diabetic lumbosacral radiculoplexus neuropathy: severe pain then proximal wasting (femoral/obturator), weight loss. Paraspinals CAN be abnormal (it's a radiculoplexus).","Neuropathie radiculo-plexique diabétique : douleur intense puis fonte proximale (fémoral/obturateur), perte de poids. Paraspinaux PEUVENT être anormaux (radiculoplexus)."]],
+ [["Slimmer's palsy","Paralysie des amaigris"],["Common fibular at the fibular neck from rapid weight loss / habitual leg-crossing → foot drop sparing inversion and the ankle reflex.","Fibulaire commun au col par amaigrissement rapide / jambes croisées → pied tombant épargnant inversion et réflexe achilléen."]],
+ [["Tarsal tunnel","Tunnel tarsien"],["Distal tibial entrapment behind the medial malleolus: burning sole, +Tinel. Medial calcaneal branch (separate) often spared → heel feels normal.","Entrapment tibial distal derrière la malléole médiale : brûlure plantaire, Tinel +. Rameau calcanéen médial (séparé) souvent épargné → talon normal."]],
+ [["Baxter's neuropathy","Neuropathie de Baxter"],["1st branch of the lateral plantar n. → chronic heel pain resistant to plantar-fasciitis care; isolated ADM denervation on EMG.","1er rameau du plantaire latéral → talalgie chronique résistant au traitement de la fasciite ; dénervation isolée de l'ADM à l'EMG."]],
+ [["Psoas / retroperitoneal haematoma","Hématome psoas / rétropér."],["Anticoagulation or haemophilia → acute groin pain, hip flexed & externally rotated, lost knee jerk. Femoral-predominant but often obturator/LFCN too (a lumbar plexopathy).","Anticoagulation ou hémophilie → douleur inguinale aiguë, hanche fléchie & rotée ext., réflexe rotulien aboli. Prédominance fémorale mais souvent obturateur/NCLC aussi (plexopathie lombaire)."]],
+ [["Radiation plexopathy","Plexopathie radique"],["Painless, slowly progressive; MYOKYMIA on EMG is the marker (absent in tumour recurrence). Distinguishes radiation from neoplastic infiltration.","Indolore, lentement progressive ; la MYOKYMIE à l'EMG est le marqueur (absente dans la récidive tumorale). Sépare radique et infiltration néoplasique."]],
+ [["Cauda equina — red flag","Queue de cheval — drapeau rouge"],["Bilateral saddle anaesthesia + retention/incontinence + bilateral leg signs → image the lumbosacral spine urgently.","Anesthésie en selle bilatérale + rétention/incontinence + signes bilatéraux → imagerie lombo-sacrée urgente."]],
+ [["L5 superficial-fibular SNAP exception","Exception SNAP fibul. superf. L5"],["The L5 DRG lies intraspinal in 10–40%, so an L5 radiculopathy can rarely give an ABNORMAL superficial fibular SNAP — add a plexus proviso. Sural (S1) is never abnormal in radiculopathy.","Le ganglion L5 est intraspinal chez 10–40 %, donc une radiculopathie L5 peut rarement donner un SNAP fibulaire superf. ANORMAL — ajouter une réserve plexique. Le sural (S1) n'est jamais anormal en radiculopathie."]],
+ [["Sural/radial ratio","Rapport sural/radial"],["In the elderly, a sural/radial amplitude ratio <0.40 favours a peripheral neuropathy over bilateral L5–S1 radiculopathies (sens/spec ~90%).","Chez le sujet âgé, un rapport d'amplitude sural/radial <0,40 favorise une neuropathie périph. plutôt que des radiculopathies L5–S1 bilat. (sens/spéc ~90 %)."]],
+];
+function renderEponyms(){
+  const box=document.getElementById("eponyms");
+  const bubble=(cls,nm,tt)=>`<div class="epi ${cls}" data-search="${esc((nm+' '+tt).toLowerCase())}">`+
+    `<div class="epihead">${esc(nm)}</div><div class="epibody">${esc(tt)}</div></div>`;
+  let h=`<div class="epsub">${esc(tx("Cross-cutting localiser rules","Règles de localisation transversales"))}`+
+        `<span class="epsub-src">Preston &amp; Shapiro</span></div>`;
+  h+=LOCALIZE.map((p,i)=>bubble("rule",tx(LOCALIZE_T[i][0],LOCALIZE_T[i][1]),tx(p[0],p[1]))).join("");
+  h+=`<div class="epsub">${esc(tx("Named syndromes & entrapments","Syndromes nommés & entrapments"))}</div>`;
+  h+=EPONYMS.map(e=>bubble("syn",tx(e[0][0],e[0][1]),tx(e[1][0],e[1][1]))).join("");
+  box.innerHTML=h;
+}
+
+
+/* ===================================================================
+   CHUNK 6C — CLINICAL TOOLS (legend · study planner · NCS ref · quiz)
+   =================================================================== */
+
+
+/* ---- STUDY PLANNER ----
+   each item = [name_en, name_fr, why_en, why_fr] */
+const PLANNER=[
+ {id:"foot",label:["Foot drop","Pied tombant"],
+  vig:["Painless foot drop, no back pain — separate a fibular-neck palsy from sciatic, LS-plexus and L5.",
+       "Pied tombant indolore, sans lombalgie — séparer une paralysie au col fibulaire du sciatique, du plexus LS et de L5."],
+  ncs:[
+   ["Fibular motor — record EDB","Fibulaire moteur — recueil CEDB","Stim ankle, below & above the fibular head → focal block/slowing across the neck.","Stim. cheville, sous et au-dessus du col → bloc/ralentissement focal au col."],
+   ["Fibular motor — record tibialis anterior","Fibulaire moteur — recueil tibial ant.","More sensitive when EDB is unrecordable; still localizes the neck block.","Plus sensible si le CEDB est inexcitable ; localise quand même le bloc au col."],
+   ["Superficial fibular sensory","Fibulaire superficiel sensitif","Abnormal in fibular/sciatic/plexus; spared in L5 (rare intraspinal-DRG exception).","Anormal si fibulaire/sciatique/plexus ; épargné en L5 (exception rare)."],
+   ["Sural sensory","Sural sensitif","Abnormal → sciatic or plexus; normal → fibular-neck palsy or L5.","Anormal → sciatique/plexus ; normal → col fibulaire ou L5."],
+   ["Tibial motor + H-reflex","Tibial moteur + réflexe H","Screens the S1/tibial side to exclude a broader sciatic lesion.","Dépiste S1/tibial pour exclure une lésion sciatique plus étendue."]],
+  ndl:[
+   ["Tibialis anterior (deep fibular, L4–5)","Tibial ant. (fibul. profond, L4–5)","Weak in every candidate — the anchor muscle.","Faible dans tous les cas — muscle d'ancrage."],
+   ["Peroneus longus (superficial fibular, L5–S1)","Long fibulaire (fibul. superf., L5–S1)","Involved above a deep-fibular-only lesion.","Atteint au-dessus d'une lésion du seul fibulaire profond."],
+   ["Short head biceps femoris (peroneal division)","Chef court biceps fém. (div. fibulaire)","THE pivot: abnormal = at/above sciatic; normal = at/below the fibular neck.","LE pivot : anormal = au/au-dessus du sciatique ; normal = au/sous le col."],
+   ["Tibialis posterior + FDL (tibial, L5)","Tibial post. + LFO (tibial, L5)","Abnormal points to L5 or sciatic — not a fibular palsy.","Anormal → L5 ou sciatique — pas une paralysie fibulaire."],
+   ["Gluteus medius (superior gluteal, L5)","Moyen glutéal (glutéal sup., L5)","Abnormal = plexus/root; spared in sciatic & fibular lesions.","Anormal = plexus/racine ; épargné si sciatique ou fibulaire."],
+   ["L5 paraspinals (multifidus)","Paraspinaux L5 (multifide)","Abnormal = root level (but normal in ~50%).","Anormal = niveau radiculaire (mais normal dans ~50 %)."]],
+  bottom:["Short-head biceps femoris and tibialis posterior are the pivots — both normal = fibular-neck palsy; SH-BF abnormal = sciatic; tib. post. + glut. med. + paraspinals abnormal = L5.",
+          "Le chef court du biceps et le tibial post. sont les pivots — les deux normaux = col fibulaire ; CCB anormal = sciatique ; tib. post. + moyen glutéal + paraspinaux anormaux = L5."]},
+
+ {id:"l5",label:["L5 radiculopathy","Radiculopathie L5"],
+  vig:["Back/leg pain, weak great-toe extension — confirm L5 with ≥2 muscles of the L5 myotome from DIFFERENT nerves.",
+       "Lombalgie/douleur de jambe, extension du gros orteil faible — confirmer L5 avec ≥2 muscles du myotome L5 de nerfs DIFFÉRENTS."],
+  ncs:[
+   ["Superficial fibular + sural sensory","Fibul. superf. + sural sensitif","Both NORMAL in radiculopathy (lesion proximal to the DRG); an abnormal sural argues against a pure root.","Les deux NORMAUX en radiculopathie (lésion proximale au ganglion) ; un sural anormal va contre une racine pure."],
+   ["Fibular & tibial motor","Fibulaire & tibial moteur","Usually normal amplitudes unless severe/chronic axon loss.","Amplitudes en général normales sauf perte axonale sévère/chronique."]],
+  ndl:[
+   ["Tibialis anterior (deep fibular)","Tibial ant. (fibul. profond)","L5 via the deep fibular nerve.","L5 via le fibulaire profond."],
+   ["Tibialis posterior (tibial)","Tibial post. (tibial)","L5 via a DIFFERENT nerve — the key second muscle.","L5 via un nerf DIFFÉRENT — le 2e muscle clé."],
+   ["Gluteus medius (superior gluteal)","Moyen glutéal (glutéal sup.)","L5 via a third nerve — pushes above a sciatic lesion.","L5 via un 3e nerf — remonte au-dessus du sciatique."],
+   ["Extensor hallucis / EDB (deep fibular)","LEH / CEDB (fibul. profond)","Sensitive early L5 marker.","Marqueur L5 précoce sensible."],
+   ["L5 paraspinals (multifidus)","Paraspinaux L5 (multifide)","Level confirmation (normal in ~50%, never excludes).","Confirme le niveau (normal dans ~50 %, n'exclut jamais)."]],
+  bottom:["L5 = neurogenic change in ≥2 of tibialis anterior (deep fibular) + tibialis posterior (tibial) + gluteus medius (superior gluteal) — one myotome, different nerves — with normal sensory SNAPs.",
+          "L5 = atteinte neurogène dans ≥2 de tibial ant. (fibul. prof.) + tibial post. (tibial) + moyen glutéal (glutéal sup.) — un myotome, nerfs différents — avec SNAP sensitifs normaux."]},
+
+ {id:"diab",label:["Diabetic proximal (Bruns-Garland)","Proximal diabétique (Bruns-Garland)"],
+  vig:["Diabetic: severe thigh pain then quadriceps wasting & weight loss — a radiculoplexus, not a femoral mononeuropathy.",
+       "Diabétique : douleur intense de cuisse puis fonte du quadriceps & perte de poids — radiculoplexus, pas une mononeuropathie fémorale."],
+  ncs:[
+   ["Saphenous sensory","Saphène sensitif","Often abnormal (plexus level) — unlike a pure root lesion.","Souvent anormal (niveau plexique) — contrairement à une racine pure."],
+   ["Femoral motor (record rectus/vastus)","Fémoral moteur (recueil droit/vaste)","Side-to-side amplitude drop with proximal axon loss.","Chute d'amplitude comparée avec perte axonale proximale."]],
+  ndl:[
+   ["Vastus medialis / rectus femoris (femoral)","Vaste médial / droit fém. (fémoral)","Core of the femoral territory.","Cœur du territoire fémoral."],
+   ["Adductor longus (obturator)","Long adducteur (obturateur)","Involvement BEYOND femoral = plexus/root, not a femoral mononeuropathy.","Atteinte AU-DELÀ du fémoral = plexus/racine, pas une mononeuropathie."],
+   ["Iliopsoas (femoral, L2–3)","Ilio-psoas (fémoral, L2–3)","Proximal femoral / upper-lumbar marker.","Marqueur fémoral proximal / lombaire haut."],
+   ["Lumbar paraspinals","Paraspinaux lombaires","CAN be abnormal — it is a radiculoplexus.","PEUVENT être anormaux — c'est un radiculoplexus."],
+   ["Tibialis anterior / gluteus medius","Tibial ant. / moyen glutéal","Check distal spread (often multilevel).","Cherche l'extension distale (souvent multi-niveaux)."]],
+  bottom:["Adductor (obturator) + paraspinal involvement takes it beyond a femoral mononeuropathy — a lumbosacral radiculoplexus; an abnormal saphenous SNAP supports the plexus level.",
+          "L'atteinte de l'adducteur (obturateur) + des paraspinaux dépasse la mononeuropathie fémorale — radiculoplexus lombo-sacré ; un SNAP saphène anormal soutient le niveau plexique."]},
+
+ {id:"psoas",label:["Groin weakness on anticoagulation","Faiblesse inguinale sous anticoagulant"],
+  vig:["Anticoagulated: acute groin pain, hip flexed & externally rotated, lost knee jerk — compressive femoral ± lumbar plexus (psoas haematoma).",
+       "Sous anticoagulant : douleur inguinale aiguë, hanche fléchie & rotée ext., réflexe rotulien aboli — fémoral compressif ± plexus lombaire (hématome du psoas)."],
+  ncs:[
+   ["Saphenous sensory","Saphène sensitif","Abnormal in a femoral/plexus lesion (distal to the DRG).","Anormal si lésion fémorale/plexique (distal au ganglion)."],
+   ["Femoral motor","Fémoral moteur","Amplitude drop across the inguinal segment.","Chute d'amplitude sur le segment inguinal."]],
+  ndl:[
+   ["Iliopsoas + vastus medialis (femoral)","Ilio-psoas + vaste médial (fémoral)","Femoral core — iliopsoas may be spared if compression is below the inguinal ligament.","Cœur fémoral — l'ilio-psoas peut être épargné si la compression est sous le lig. inguinal."],
+   ["Adductor longus (obturator)","Long adducteur (obturateur)","Obturator involvement widens it to a lumbar plexopathy.","Une atteinte obturatrice élargit à une plexopathie lombaire."],
+   ["Thoracolumbar paraspinals","Paraspinaux thoraco-lombaires","NORMAL in a compressive plexopathy — helps exclude a root.","NORMAUX en plexopathie compressive — aide à exclure une racine."]],
+  bottom:["Femoral-predominant + abnormal saphenous SNAP + normal paraspinals = retroperitoneal/psoas plexopathy; obturator/LFCN involvement confirms the lumbar plexus — image the retroperitoneum.",
+          "Prédominance fémorale + SNAP saphène anormal + paraspinaux normaux = plexopathie rétropéritonéale/psoas ; l'atteinte obturateur/NCLC confirme le plexus lombaire — imager le rétropéritoine."]},
+
+ {id:"sole",label:["Burning sole / heel","Brûlure plantaire / talon"],
+  vig:["Burning sole ± heel pain — separate tarsal tunnel, Baxter, S1 radiculopathy and a distal polyneuropathy.",
+       "Brûlure plantaire ± talalgie — séparer tunnel tarsien, Baxter, radiculopathie S1 et polyneuropathie distale."],
+  ncs:[
+   ["Medial & lateral plantar (mixed)","Plantaire médial & latéral (mixte)","Abnormal in tarsal tunnel; often absent >40 y — always compare side-to-side.","Anormaux en tunnel tarsien ; souvent absents >40 ans — toujours comparer les côtés."],
+   ["Sural + superficial fibular sensory","Sural + fibul. superf. sensitif","Abnormal favours polyneuropathy; normal favours a focal tarsal lesion.","Anormaux → polyneuropathie ; normaux → lésion tarsienne focale."],
+   ["Tibial motor → AbdH & → ADM","Tibial moteur → AbdH & → ADM","Prolonged distal latency to the plantar muscles in tarsal tunnel.","Latence distale allongée vers les muscles plantaires en tunnel tarsien."]],
+  ndl:[
+   ["Abductor hallucis (medial plantar)","Abd. hallux (plantaire médial)","Both plantar muscles abnormal = tarsal tunnel.","Deux muscles plantaires anormaux = tunnel tarsien."],
+   ["Abductor digiti minimi (lateral plantar)","Abd. du 5e (plantaire latéral)","Isolated ADM denervation = Baxter neuropathy.","Dénervation isolée de l'ADM = neuropathie de Baxter."],
+   ["Gastrocnemius/soleus, tib. posterior (proximal tibial)","Gastroc/soléaire, tib. post. (tibial prox.)","NORMAL in tarsal tunnel; abnormal in proximal tibial or S1.","NORMAUX en tunnel tarsien ; anormaux si tibial proximal ou S1."],
+   ["S1 paraspinals + gluteus maximus","Paraspinaux S1 + grand glutéal","For a radicular (S1) pattern.","Pour un patron radiculaire (S1)."]],
+  bottom:["Isolated ADM with normal proximal tibial muscles = Baxter; both plantar muscles + prolonged plantar latencies = tarsal tunnel; abnormal sural/superficial fibular = look for a polyneuropathy instead.",
+          "ADM isolé avec muscles tibiaux proximaux normaux = Baxter ; deux muscles plantaires + latences plantaires allongées = tunnel tarsien ; sural/fibul. superf. anormaux = chercher plutôt une polyneuropathie."]},
+
+ {id:"s1",label:["S1 radiculopathy","Radiculopathie S1"],
+  vig:["Calf/sole pain, reduced ankle jerk — confirm S1 across different nerves plus a delayed H-reflex.",
+       "Douleur mollet/plante, réflexe achilléen diminué — confirmer S1 sur des nerfs différents plus un réflexe H retardé."],
+  ncs:[
+   ["H-reflex (soleus)","Réflexe H (soléaire)","Side-to-side latency difference >1.5 ms supports S1.","Différence de latence >1,5 ms entre côtés → S1."],
+   ["Sural sensory","Sural sensitif","NORMAL in radiculopathy (proximal to the DRG).","NORMAL en radiculopathie (proximal au ganglion)."]],
+  ndl:[
+   ["Medial gastrocnemius (tibial)","Gastroc. médial (tibial)","S1 marker via the tibial nerve.","Marqueur S1 via le tibial."],
+   ["Abductor hallucis (medial plantar)","Abd. hallux (plantaire médial)","Distal S1/tibial marker.","Marqueur S1/tibial distal."],
+   ["Gluteus maximus (inferior gluteal)","Grand glutéal (glutéal inf.)","S1 via a different nerve.","S1 via un nerf différent."],
+   ["Biceps femoris long head (sciatic)","Biceps fém., chef long (sciatique)","S1/S2 hamstring marker.","Marqueur ischio-jambier S1/S2."],
+   ["S1 paraspinals","Paraspinaux S1","Level confirmation.","Confirme le niveau."]],
+  bottom:["S1 = ≥2 of medial gastrocnemius (tibial) + gluteus maximus (inferior gluteal) + biceps long head, with a delayed H-reflex and a normal sural SNAP. F-waves/H only say 'proximal' — they cannot separate root from plexus.",
+          "S1 = ≥2 de gastroc. médial (tibial) + grand glutéal (glutéal inf.) + chef long du biceps, avec réflexe H retardé et SNAP sural normal. Ondes F/H disent seulement « proximal » — sans séparer racine et plexus."]},
+];
+let planSel=null;
+function renderPlanner(){
+  const bar=document.getElementById("planbar");
+  bar.innerHTML=PLANNER.map(s=>`<button class="planpill" data-scn="${s.id}">${esc(tx(s.label[0],s.label[1]))}</button>`).join("");
+  bar.querySelectorAll(".planpill").forEach(b=>b.onclick=()=>plannerPick(b.dataset.scn));
+  if(planSel) plannerRender(planSel); else {const p=document.getElementById("planpanel");p.hidden=true;p.innerHTML="";}
+}
+function plannerPick(id){
+  if(planSel===id){planSel=null;const p=document.getElementById("planpanel");p.hidden=true;p.innerHTML="";
+    document.querySelectorAll(".planpill").forEach(b=>b.classList.remove("on"));updateHash();return;}
+  planSel=id; plannerRender(id); updateHash();
+  const p=document.getElementById("planpanel");
+  const reduce=(typeof matchMedia==="function")&&matchMedia("(prefers-reduced-motion:reduce)").matches;
+  try{p.scrollIntoView({behavior:reduce?"auto":"smooth",block:"nearest"});}catch(e){}
+}
+function plannerRender(id){
+  const s=PLANNER.find(x=>x.id===id); if(!s)return;
+  document.querySelectorAll(".planpill").forEach(b=>b.classList.toggle("on",b.dataset.scn===id));
+  const item=a=>`<div class="plitem"><div class="pln">${esc(tx(a[0],a[1]))}</div><div class="plw">${esc(tx(a[2],a[3]))}</div></div>`;
+  const p=document.getElementById("planpanel"); p.hidden=false;
+  p.innerHTML=`<div class="plhead">${esc(tx(s.label[0],s.label[1]))}</div>`+
+    `<div class="plvig">${esc(tx(s.vig[0],s.vig[1]))}</div>`+
+    `<div class="plcols">`+
+      `<div class="plcol ncs"><h4>${esc(tx("Nerve conduction studies","Études de conduction"))}</h4>${s.ncs.map(item).join("")}</div>`+
+      `<div class="plcol ndl"><h4>${esc(tx("Needle exam","Examen à l'aiguille"))}</h4>${s.ndl.map(item).join("")}</div>`+
+    `</div>`+
+    `<div class="plbottom"><b>${esc(tx("Bottom line","En bref"))} :</b> ${esc(tx(s.bottom[0],s.bottom[1]))}</div>`;
+}
+
+/* ---- NCS REFERENCE ---- */
+const NCSREF=[
+ {n:["Fibular (peroneal) motor","Fibulaire moteur"],t:"mot",rec:["Ext. digitorum brevis (EDB)","Court ext. des orteils (CEDB)"],stim:["Ankle · below & above fibular head","Cheville · sous & au-dessus du col"],norm:["DL ≤6.5 ms · amp ≥2 mV · CV ≥40 m/s"]},
+ {n:["Fibular motor (foot drop)","Fibulaire moteur (pied tombant)"],t:"mot",rec:["Tibialis anterior","Tibial antérieur"],stim:["Below fibular head / lateral popliteal","Sous le col / poplité latéral"],norm:["side-to-side amp · localizes neck block"]},
+ {n:["Tibial motor","Tibial moteur"],t:"mot",rec:["Abductor hallucis (AbdH)","Abd. de l'hallux (AbdH)"],stim:["Ankle · popliteal fossa","Cheville · fosse poplitée"],norm:["DL ≤5.8 ms · amp ≥4 mV · CV ≥40 m/s"]},
+ {n:["Sural sensory","Sural sensitif"],t:"sen",rec:["Posterior to lateral malleolus","Post. à la malléole latérale"],stim:["Calf, ~14 cm","Mollet, ~14 cm"],norm:["amp ≥6 µV · peak ~4.0 ms"]},
+ {n:["Superficial fibular sensory","Fibulaire superficiel sensitif"],t:"sen",rec:["Anterolateral ankle","Cheville antéro-latérale"],stim:["Lateral leg, 12–14 cm","Jambe latérale, 12–14 cm"],norm:["amp ≥6 µV"]},
+ {n:["Saphenous sensory","Saphène sensitif"],t:"sen",rec:["Medial ankle","Cheville médiale"],stim:["Medial leg","Jambe médiale"],norm:["amp ≥4 µV · often absent >60 y / obese"]},
+ {n:["Medial plantar (mixed)","Plantaire médial (mixte)"],t:"mix",rec:["Ankle (tibial)","Cheville (tibial)"],stim:["Medial sole / arch","Plante médiale / voûte"],norm:["small amp · compare sides · absent >40 y common"]},
+ {n:["Lateral plantar (mixed)","Plantaire latéral (mixte)"],t:"mix",rec:["Ankle (tibial)","Cheville (tibial)"],stim:["Lateral sole","Plante latérale"],norm:["small amp · compare sides"]},
+ {n:["H-reflex","Réflexe H"],t:"mix",rec:["Soleus","Soléaire"],stim:["Tibial n. (popliteal)","N. tibial (poplité)"],norm:["~28–35 ms (height) · side-to-side <1.5 ms"]},
+ {n:["F-wave (fibular / tibial)","Onde F (fibulaire / tibial)"],t:"mot",rec:["EDB / AbdH","CEDB / AbdH"],stim:["Supramaximal, distal","Supramaximale, distale"],norm:["min. latency · side-to-side <2–4 ms"]},
+];
+const NCSNOTES=[
+ ["Accessory deep fibular nerve","Nerf fibulaire profond accessoire",
+  "Anomalous motor branch of the SUPERFICIAL fibular nerve that supplies the lateral EDB (~20–28% of people). The peroneal CMAP recorded at EDB is SMALLER at the ankle than at the fibular head — amplitude paradoxically RISES proximally. Confirm by stimulating behind the lateral malleolus (a CMAP there = the accessory nerve). Don't mistake it for a conduction abnormality.",
+  "Rameau moteur anormal du fibulaire SUPERFICIEL innervant le CEDB latéral (~20–28 %). Le CMAP fibulaire au CEDB est PLUS PETIT à la cheville qu'au col — l'amplitude AUGMENTE paradoxalement en proximal. Confirmer en stimulant derrière la malléole latérale (un CMAP = nerf accessoire). Ne pas confondre avec une anomalie de conduction."],
+ ["Conduction block & temporal dispersion","Bloc de conduction & dispersion temporelle",
+  "A proximal-vs-distal CMAP drop beyond normal limits = block (commonly >50% amplitude or >40% area, segment-dependent); duration widening >~20% = temporal dispersion. At the fibular neck, focal slowing (>10 m/s across the segment) ± block localizes the lesion — inch/short-segment stimulate to catch it.",
+  "Chute du CMAP proximal vs distal au-delà des limites = bloc (souvent >50 % amplitude ou >40 % aire, selon le segment) ; élargissement de durée >~20 % = dispersion temporelle. Au col fibulaire, un ralentissement focal (>10 m/s sur le segment) ± bloc localise la lésion — stimulation par petits segments pour le détecter."],
+];
+function renderNcs(){
+  const t=document.getElementById("ncstable");
+  const th=`<thead><tr><th>${esc(tx("Study","Étude"))}</th><th>${esc(tx("Record","Recueil"))}</th><th>${esc(tx("Stimulate","Stimulation"))}</th><th>${esc(tx("Normal (adult)","Normal (adulte)"))}</th></tr></thead>`;
+  const tag={mot:["mot","M"],sen:["sen","S"],mix:["mix","Mx"]};
+  const tb=NCSREF.map(r=>{const g=tag[r.t];
+    return `<tr><td class="nnm">${esc(tx(r.n[0],r.n[1]))}<span class="ntag ${g[0]}">${g[1]}</span></td>`+
+      `<td>${esc(tx(r.rec[0],r.rec[1]))}</td><td>${esc(tx(r.stim[0],r.stim[1]))}</td>`+
+      `<td class="nnorm">${esc(r.norm[isf()&&r.norm[1]?1:0])}</td></tr>`;}).join("");
+  t.innerHTML=th+`<tbody>${tb}</tbody>`;
+  document.getElementById("ncsnotes").innerHTML=NCSNOTES.map(nn=>
+    `<div class="ncsnote"><div class="nnh">${esc(tx(nn[0],nn[1]))}</div><div>${esc(tx(nn[2],nn[3]))}</div></div>`).join("");
+}
+
+/* ---- QUIZ / self-test ---- */
+const QUIZ=[
+ {stem:["Painless foot drop: weak dorsiflexion & eversion, NORMAL inversion and ankle jerk; abnormal superficial fibular SNAP, normal sural; motor block across the fibular neck.",
+        "Pied tombant indolore : dorsiflexion & éversion faibles, inversion et réflexe achilléen NORMAUX ; SNAP fibulaire superf. anormal, sural normal ; bloc moteur au col fibulaire."],
+  opts:[["Common fibular at the fibular neck","Fibulaire commun au col"],["Sciatic neuropathy","Neuropathie sciatique"],["L5 radiculopathy","Radiculopathie L5"],["Deep fibular only","Fibulaire profond isolé"]],ans:0,
+  exp:["Eversion weak (superficial fibular) but inversion (tib. post.) and ankle jerk (S1) spared → at/above the common fibular yet below the sciatic; the neck block pins it to the fibular neck.",
+       "Éversion faible (fibul. superf.) mais inversion (tib. post.) et achilléen (S1) épargnés → au/au-dessus du fibulaire commun mais sous le sciatique ; le bloc au col le localise."]},
+ {stem:["Foot drop with weak dorsiflexion, eversion AND inversion; abnormal sural SNAP; short-head biceps femoris denervated; glutei normal.",
+        "Pied tombant avec dorsiflexion, éversion ET inversion faibles ; SNAP sural anormal ; chef court du biceps dénervé ; glutéaux normaux."],
+  opts:[["Common fibular at the neck","Fibulaire commun au col"],["Sciatic neuropathy","Neuropathie sciatique"],["LS plexopathy","Plexopathie LS"],["L5 radiculopathy","Radiculopathie L5"]],ans:1,
+  exp:["Weak inversion (tib. post.) + abnormal sural + short-head biceps femoris denervation push it above the fibular division; NORMAL glutei keep it below the plexus → sciatic.",
+       "Inversion faible (tib. post.) + sural anormal + dénervation du chef court du biceps → au-dessus de la division fibulaire ; glutéaux NORMAUX → sous le plexus → sciatique."]},
+ {stem:["Foot drop with weak dorsiflexion, inversion, knee flexion AND glutei; abnormal L5 paraspinals; ALL sensory SNAPs normal.",
+        "Pied tombant avec dorsiflexion, inversion, flexion du genou ET glutéaux faibles ; paraspinaux L5 anormaux ; TOUS les SNAP sensitifs normaux."],
+  opts:[["L5 radiculopathy","Radiculopathie L5"],["Sciatic neuropathy","Neuropathie sciatique"],["Common fibular","Fibulaire commun"],["LS plexopathy","Plexopathie LS"]],ans:0,
+  exp:["Gluteal + paraspinal involvement with NORMAL sensory SNAPs (lesion proximal to the DRG) = root. A plexopathy would give abnormal SNAPs.",
+       "Atteinte glutéale + paraspinale avec SNAP sensitifs NORMAUX (lésion proximale au ganglion) = racine. Une plexopathie donnerait des SNAP anormaux."]},
+ {stem:["Burning patch over the lateral thigh, worse standing; needle EMG entirely normal; abnormal lateral femoral cutaneous SNAP.",
+        "Plaque brûlante de la cuisse latérale, pire debout ; EMG à l'aiguille entièrement normal ; SNAP du nerf cutané latéral anormal."],
+  opts:[["Meralgia paresthetica (LFCN)","Méralgie paresthésique (NCLC)"],["L3 radiculopathy","Radiculopathie L3"],["Femoral neuropathy","Neuropathie fémorale"],["Lumbar plexopathy","Plexopathie lombaire"]],ans:0,
+  exp:["Pure sensory, normal needle exam, abnormal LFCN SNAP under the inguinal ligament — the definition of meralgia paresthetica.",
+       "Purement sensitif, aiguille normale, SNAP NCLC anormal sous le lig. inguinal — définition de la méralgie paresthésique."]},
+ {stem:["Postpartum foot drop: peroneal-predominant weakness WITH weak inversion and hip abduction; sural (S1) SPARED, superficial fibular abnormal; NO focal block at the fibular neck.",
+        "Pied tombant postpartum : faiblesse à prédominance fibulaire AVEC inversion et abduction de hanche faibles ; sural (S1) ÉPARGNÉ, fibulaire superf. anormal ; PAS de bloc focal au col."],
+  opts:[["Lumbosacral trunk (pelvic brim)","Tronc lombo-sacré (détroit sup.)"],["Common fibular at the neck","Fibulaire commun au col"],["L5 radiculopathy","Radiculopathie L5"],["Sciatic neuropathy","Neuropathie sciatique"]],ans:0,
+  exp:["L4–L5 trunk compressed at the pelvic brim → peroneal-predominant BUT with L5 muscles beyond the fibular nerve (tib. post., glut. med.) and S1/sural spared; the absent neck block excludes a simple fibular-neck palsy.",
+       "Tronc L4–L5 comprimé au détroit sup. → prédominance fibulaire MAIS avec des muscles L5 hors du fibulaire (tib. post., moyen glut.) et S1/sural épargnés ; l'absence de bloc au col exclut une paralysie du col."]},
+ {stem:["Elderly patient, bilateral distal foot numbness; sural/radial amplitude ratio 0.30; distal-predominant sensory loss, reflexes reduced symmetrically.",
+        "Patient âgé, engourdissement distal bilatéral des pieds ; rapport d'amplitude sural/radial 0,30 ; perte sensitive à prédominance distale, réflexes diminués symétriquement."],
+  opts:[["Distal polyneuropathy","Polyneuropathie distale"],["Bilateral L5–S1 radiculopathies","Radiculopathies L5–S1 bilatérales"],["Bilateral tarsal tunnel","Tunnel tarsien bilatéral"],["Cauda equina","Queue de cheval"]],ans:0,
+  exp:["A sural/radial amplitude ratio <0.40 favours a peripheral neuropathy over bilateral L5–S1 radiculopathies (sens/spec ~90%); radiculopathy spares the sural SNAP.",
+       "Un rapport sural/radial <0,40 favorise une neuropathie périphérique plutôt que des radiculopathies L5–S1 bilatérales (sens/spéc ~90 %) ; la radiculopathie épargne le SNAP sural."]},
+];
+let quizState={};
+function renderQuiz(){
+  const box=document.getElementById("quiz");
+  box.innerHTML=QUIZ.map((c,i)=>
+    `<div class="qcard" data-qi="${i}"><div class="qstem">${esc(tx(c.stem[0],c.stem[1]))}</div>`+
+    `<div class="qopts">`+c.opts.map((o,j)=>`<button class="qopt" data-qi="${i}" data-oi="${j}">${esc(tx(o[0],o[1]))}</button>`).join("")+`</div>`+
+    `<div class="qexplain" id="qx-${i}"><b>${esc(tx("Why","Pourquoi"))} :</b> ${esc(tx(c.exp[0],c.exp[1]))}</div></div>`).join("");
+  box.querySelectorAll(".qopt").forEach(b=>b.onclick=()=>quizAnswer(+b.dataset.qi,+b.dataset.oi));
+  Object.keys(quizState).forEach(i=>applyQuizReveal(+i));
+  renderQuizBar();
+}
+function quizAnswer(i,j){ if(quizState[i]!==undefined)return; quizState[i]=j; applyQuizReveal(i); renderQuizBar(); }
+function applyQuizReveal(i){
+  const card=document.querySelector(`.qcard[data-qi="${i}"]`); if(!card)return;
+  const ans=QUIZ[i].ans, chosen=quizState[i];
+  card.querySelectorAll(".qopt").forEach(b=>{const j=+b.dataset.oi; b.classList.add("locked");
+    if(j===ans)b.classList.add("correct"); if(j===chosen&&j!==ans)b.classList.add("wrong");});
+  const ex=document.getElementById("qx-"+i); if(ex)ex.classList.add("show");
+}
+function renderQuizBar(){
+  const bar=document.getElementById("quizbar");
+  const keys=Object.keys(quizState), done=keys.length;
+  const correct=keys.filter(i=>+quizState[i]===QUIZ[+i].ans).length;
+  bar.innerHTML=`<button class="planpill" id="quizreset">${esc(tx("Reset quiz","Recommencer"))}</button>`+
+    `<span class="quizscore">${done?`${correct} / ${done} ${esc(tx("correct","bon"+(correct>1?"s":"")))}`:esc(tx("Answer to score","Répondez pour le score"))}</span>`;
+  const rb=document.getElementById("quizreset"); if(rb)rb.onclick=()=>{quizState={};renderQuiz();};
+}
+
+/* ---- DEEP LINKS (shareable URL hash) ---- */
+let selfHash="";
+function updateHash(){
+  const parts=[];
+  if(activeRoot)parts.push("root="+activeRoot);
+  else if(focusN)parts.push("nerve="+focusN);
+  else if(plexSel)parts.push("plex="+plexSel);
+  else if(siteSel)parts.push("site="+siteSel.dataset.card+"~"+encodeURIComponent(siteSel.dataset.key||""));
+  if(planSel)parts.push("plan="+planSel);
+  const h=parts.join("&");
+  selfHash=h?("#"+h):"";
+  try{history.replaceState(null,"",h?("#"+h):location.pathname+location.search);}
+  catch(e){try{location.hash=h;}catch(_){}}
+}
+function applyHash(){
+  const h=(location.hash||"").replace(/^#/,""); if(!h)return;
+  const m={}; h.split("&").forEach(kv=>{const[k,v]=kv.split("=");if(k)m[k]=decodeURIComponent(v||"");});
+  if(m.plan && PLANNER.some(s=>s.id===m.plan) && planSel!==m.plan) plannerPick(m.plan);
+  if(m.root){ if(activeRoot!==m.root) selectRoot(m.root); }
+  else if(m.nerve){ if(focusN!==m.nerve) focusNerve(m.nerve); }
+  else if(m.plex){ if(plexSel!==m.plex) plexClick(m.plex); }
+  else if(m.site){ const[card,key]=m.site.split("~");
+    if(!(siteSel&&siteSel.dataset.card===card&&(siteSel.dataset.key||"").toLowerCase()===(key||"").toLowerCase())){
+      const g=document.querySelector(`.csite[data-card="${card}"][data-key="${(key||'').toLowerCase()}"]`);
+      if(g){ if(g.dataset.prox) proxClick(g.dataset.prox); else siteClick(g); showUS(g); } } }
+}
+function showUS(g){
+  const un=document.getElementById("usnote"); if(!un)return;
+  const active=g.classList.contains("sel")||(g.dataset.prox&&plexSel===g.dataset.prox);
+  const us=g.dataset.us;
+  if(active&&us){un.hidden=false;
+    un.innerHTML=`<span class="ustag">${esc(tx("Ultrasound","Échographie"))}</span><b>${esc(g.dataset.label)}</b> — ${esc(us)}`;}
+  else un.hidden=true;
+}
+
+/* ===================================================================
+   CHUNK 7D — HIGHLIGHT ENGINE + INTERACTIVITY
+   =================================================================== */
+const body=document.body, statusEl=document.getElementById("status");
+let activeRoot=null, focusN=null, treeSel=null, siteSel=null, plexSel=null, query="";
+const typeOff=new Set();
+function setStatus(h){statusEl.innerHTML=h;}
+function defaultStatus(){setStatus(T("tip"));}
+
+/* ---- braid clear / by-root / focus ---- */
+function clearBraidHL(){
+  const b=document.getElementById("braid"); if(b)b.classList.remove("rootlit");
+  document.querySelectorAll(".braid .seg,.braid .node,.braid .tap").forEach(n=>n.classList.remove("lvhit","lvdim","dim","lit","sweep"));
+}
+function braidByRoot(r){
+  clearBraidHL();
+  const b=document.getElementById("braid"); if(b)b.classList.add("rootlit");
+  document.querySelectorAll(".braid .seg,.braid .node.small,.braid .node.term,.braid .tap,.braid .plexel").forEach(n=>{
+    const lv=(n.dataset.lv||"").split(" ");
+    n.classList.add(lv.includes(r)?"lvhit":"lvdim");
+  });
+  document.querySelectorAll(".braid .node.root").forEach(n=>n.classList.add(n.dataset.root===r?"lvhit":"lvdim"));
+}
+function braidByNerve(id){
+  clearBraidHL();
+  const roots=new Set(NROOTS[id]||[]);
+  document.querySelectorAll(".braid .seg,.braid .tap").forEach(n=>{
+    const path=(n.dataset.path||"").split(" ");
+    if(path.includes(id)){n.classList.add("lit"); if(n.tagName==="path"){try{const L=n.getTotalLength();n.style.setProperty("--len",L);n.classList.add("sweep");}catch(e){}}}
+    else n.classList.add("dim");
+  });
+  document.querySelectorAll(".braid .node.term").forEach(n=>{
+    const on=n.dataset.nerve===id||(id==="sciatic"&&["peroneal","tibial"].includes(n.dataset.nerve));
+    n.classList.add(on?"lit":"dim");
+  });
+  document.querySelectorAll(".braid .node.root").forEach(n=>n.classList.add(roots.has(n.dataset.root)?"lit":"dim"));
+  const hub=NHUB[id], usesLST=roots.has("L4")||roots.has("L5");
+  document.querySelectorAll(".braid .plexel").forEach(n=>{
+    const k=n.dataset.elself;
+    const on=(k==="LUMB"&&hub==="lumbar")||(k==="SACR"&&hub==="sacral")||(k==="LST"&&hub==="sacral"&&usesLST);
+    n.classList.add(on?"lit":"dim");
+  });
+  document.querySelectorAll(".braid .node.small:not(.plexel)").forEach(n=>{
+    const path=(n.dataset.path||"").split(" ");
+    n.classList.add(path.includes(id)?"lit":"dim");
+  });
+}
+
+/* ---- ROOT selection ---- */
+function clearRoot(){
+  activeRoot=null; body.classList.remove("rootmode");
+  document.querySelectorAll(".rootchip,.rootcard").forEach(n=>n.classList.remove("on"));
+  document.querySelectorAll(".item.hit").forEach(n=>n.classList.remove("hit"));
+  document.querySelectorAll(".lvl.match").forEach(n=>n.classList.remove("match"));
+  clearBraidHL();
+}
+function selectRoot(r){
+  clearFocus();clearTree();clearSite();clearPlex();
+  if(activeRoot===r){clearRoot();defaultStatus();updateHash();return;}
+  clearRoot(); activeRoot=r; body.classList.add("rootmode");
+  document.querySelectorAll(`.rootchip[data-root="${r}"],.rootcard[data-root="${r}"]`).forEach(n=>n.classList.add("on"));
+  braidByRoot(r);
+  let muscles=0; const nerves=new Set();
+  document.querySelectorAll('#grid .item[data-levels]').forEach(it=>{
+    if((it.dataset.levels||"").split(" ").includes(r)){
+      it.classList.add("hit"); muscles++;
+      it.querySelectorAll(`.lvl[data-lvl="${r}"]`).forEach(c=>c.classList.add("match"));
+      const card=it.closest(".card"); if(card)nerves.add(card.querySelector(".nm").textContent);
+    }
+  });
+  setStatus(T("litRoot")(r,muscles,nerves.size));
+  updateHash();
+}
+
+/* ---- NERVE focus ---- */
+function clearFocus(){
+  focusN=null;
+  document.querySelectorAll(".card").forEach(c=>c.classList.remove("focus","dimcard"));
+  clearBraidHL();
+}
+function focusNerve(id){
+  clearRoot();clearTree();clearSite();clearPlex();
+  if(focusN===id){clearFocus();defaultStatus();updateHash();return;}
+  clearFocus(); focusN=id;
+  document.querySelectorAll(".card").forEach(c=>c.classList.add(c.dataset.nerve===id?"focus":"dimcard"));
+  braidByNerve(id);
+  const card=document.getElementById("card-"+id);
+  const reduce=(typeof matchMedia==="function")&&matchMedia("(prefers-reduced-motion:reduce)").matches;
+  if(card){try{card.scrollIntoView({behavior:reduce?"auto":"smooth",block:"start"});}catch(e){}}
+  setStatus(T("litEl")(NERVENAME(id)));
+  updateHash();
+}
+
+/* ---- PLEXUS pattern panel ---- */
+function clearPlex(){
+  plexSel=null;
+  document.querySelectorAll(".plexel.sel").forEach(n=>n.classList.remove("sel"));
+  const p=document.getElementById("plexpanel");p.hidden=true;p.innerHTML="";
+  const un=document.getElementById("usnote"); if(un)un.hidden=true;
+  clearBraidHL();
+}
+function braidByPlex(E){
+  clearBraidHL();
+  const lv=new Set(E.levels), nv=new Set(E.nerves);
+  document.querySelectorAll(".braid .seg,.braid .tap,.braid .node.small:not(.plexel)").forEach(n=>{
+    const path=(n.dataset.path||"").split(" ");
+    const on=path.some(x=>nv.has(x));
+    n.classList.add(on?"lit":"dim");
+  });
+  document.querySelectorAll(".braid .node.term").forEach(n=>n.classList.add(nv.has(n.dataset.nerve)?"lit":"dim"));
+  document.querySelectorAll(".braid .node.root").forEach(n=>n.classList.add(lv.has(n.dataset.root)?"lit":"dim"));
+}
+function plexPanelHTML(E){
+  const L=tx(E.label[0],E.label[1]),sub=tx(E.sub[0],E.sub[1]);
+  const row=(k,a)=>`<div class="pprow"><div class="ppk">${k}</div><div class="ppv">${esc(tx(a[0],a[1]))}</div></div>`;
+  return `<div class="pphead">${esc(L)} <span class="ppsub">${esc(sub)}</span></div>`+
+    row(T("weak"),E.motor)+
+    row(T("spared"),E.spared)+
+    row(T("sensory"),E.sensory)+
+    row("SNAP",E.snap)+
+    row("EMG",E.emg)+
+    `<div class="pprow warn"><div class="ppk">▸</div><div class="ppv">${esc(tx(E.warn[0],E.warn[1]))}</div></div>`;
+}
+function plexClick(key,srcEl){
+  const E=PLEX[key]; if(!E)return;
+  if(plexSel===key){clearPlex();defaultStatus();updateHash();return;}
+  clearRoot();clearFocus();clearTree();clearSite();clearPlex();
+  plexSel=key;
+  document.querySelectorAll(`.plexel[data-elself="${key}"]`).forEach(n=>n.classList.add("sel"));
+  braidByPlex(E);
+  const p=document.getElementById("plexpanel");p.hidden=false;p.innerHTML=plexPanelHTML(E);
+  let n=0; const nv=new Set(E.nerves);
+  document.querySelectorAll('#grid .item[data-levels]').forEach(it=>{
+    const card=it.closest(".card"); if(card&&nv.has(card.dataset.nerve))n++;
+  });
+  setStatus(T("litPlex")(tx(E.label[0],E.label[1]),n));
+  updateHash();
+  const reduce=(typeof matchMedia==="function")&&matchMedia("(prefers-reduced-motion:reduce)").matches;
+  try{p.scrollIntoView({behavior:reduce?"auto":"smooth",block:"nearest"});}catch(e){}
+}
+/* PROX (cmap slate dots) reuse the same PLEX panel */
+function proxClick(key){plexClick(key);}
+
+/* ---- TREE branch click (highlight card items) ---- */
+function clearTree(){
+  treeSel=null;
+  document.querySelectorAll(".cbody.treemode").forEach(c=>c.classList.remove("treemode"));
+  document.querySelectorAll(".thit").forEach(n=>n.classList.remove("thit"));
+  document.querySelectorAll(".tnode.sel").forEach(n=>n.classList.remove("sel"));
+}
+function treeClick(g){
+  const card=document.getElementById("card-"+g.dataset.card);
+  const cbody=card&&card.querySelector(".cbody"); if(!cbody)return;
+  if(treeSel===g){clearTree();defaultStatus();return;}
+  clearRoot();clearFocus();clearTree();clearSite();clearPlex();
+  treeSel=g; g.classList.add("sel"); cbody.classList.add("treemode");
+  const keys=(g.dataset.keys||"").split("|").filter(Boolean);
+  let n=0;
+  cbody.querySelectorAll("[data-search]").forEach(it=>{
+    if(keys.some(k=>(it.dataset.search||"").includes(k))){it.classList.add("thit");n++;}
+  });
+  setStatus(T("litTree")(g.dataset.label,n));
+}
+
+/* ---- SITE dot (cmap green) → highlight passage text in card ---- */
+function clearSite(){siteSel=null;
+  document.querySelectorAll(".csite.sel").forEach(n=>n.classList.remove("sel"));
+  document.querySelectorAll(".sitehit").forEach(n=>n.classList.remove("sitehit"));
+  const un=document.getElementById("usnote"); if(un)un.hidden=true;
+}
+function siteClick(g){
+  const card=document.getElementById("card-"+g.dataset.card);
+  const cbody=card&&card.querySelector(".cbody"); if(!cbody)return;
+  if(siteSel===g){clearSite();defaultStatus();updateHash();return;}
+  clearRoot();clearFocus();clearTree();clearSite();clearPlex();
+  siteSel=g; g.classList.add("sel");
+  const key=(g.dataset.key||"").toLowerCase(); let n=0,first=null;
+  cbody.querySelectorAll('[data-type="pass"]').forEach(el=>{
+    if((el.dataset.search||"").includes(key)){el.classList.add("sitehit");if(!first)first=el;n++;}
+  });
+  const nm=card.querySelector(".nm")?card.querySelector(".nm").textContent:"card";
+  setStatus(`<b>${esc(g.dataset.label)}</b> — ${tx('located in the','situé dans la fiche')} <b>${esc(nm)}</b>.`);
+  updateHash();
+  const reduce=(typeof matchMedia==="function")&&matchMedia("(prefers-reduced-motion:reduce)").matches;
+  try{(first||card).scrollIntoView({behavior:reduce?"auto":"smooth",block:"center"});}catch(e){}
+}
+
+/* ---- TYPE filters + SEARCH ---- */
+function applyTypeFilters(){
+  ["motor","sensory","pass","pearl"].forEach(t=>{
+    const hide=typeOff.has(t);
+    document.querySelectorAll(`[data-type="${t}"]`).forEach(n=>n.style.display=hide?"none":"");
+  });
+}
+function mark(i){const nm=i.querySelector(".mn")||i;if(nm.dataset.orig===undefined)nm.dataset.orig=nm.innerHTML;
+  const re=new RegExp("("+query.replace(/[.*+?^${}()|[\]\\]/g,"\\$&")+")","ig");
+  nm.innerHTML=nm.dataset.orig.replace(re,"<mark>$1</mark>");}
+function unmark(i){const nm=i.querySelector(".mn")||i;if(nm&&nm.dataset.orig!==undefined)nm.innerHTML=nm.dataset.orig;}
+function runSearch(qv){
+  query=qv.trim().toLowerCase();
+  document.querySelectorAll(".epsub").forEach(s=>s.style.display=query?"none":"");
+  document.getElementById("qx").style.display=query?"block":"none";
+  const items=document.querySelectorAll("#grid [data-search],#eponyms [data-search]");
+  if(!query){items.forEach(i=>{i.style.display="";unmark(i);});applyTypeFilters();
+    document.querySelectorAll(".card,.epi").forEach(c=>c.style.display="");defaultStatus();return;}
+  clearRoot();clearFocus();clearTree();clearSite();clearPlex();
+  let hits=0;
+  items.forEach(i=>{
+    const match=(i.dataset.search||"").includes(query);
+    i.style.display=match?"":"none";
+    if(match){hits++;mark(i);}else unmark(i);
+  });
+  document.querySelectorAll(".card").forEach(c=>{
+    const vis=c.querySelectorAll('[data-search]:not([style*="display: none"])').length;
+    c.style.display=vis?"":"none";
+  });
+  document.querySelectorAll(".epi").forEach(c=>{
+    if(c.hasAttribute("data-search")) c.style.display=(c.dataset.search||"").includes(query)?"":"none";
+  });
+  applyTypeFilters();
+  setStatus(T("searchRes")(qv,hits));
+}
+
+/* ---- static UI text (labels that live in HTML, refreshed on lang switch) ---- */
+function applyLang(){
+  document.documentElement.lang=lang;
+  const s=STR[lang];
+  document.getElementById("ttlA").textContent=s.ttlA;
+  document.getElementById("ttlB").textContent=s.ttlB;
+  document.getElementById("q").placeholder=s.search;
+  document.getElementById("rootlab").textContent=s.rootlab;
+  document.getElementById("hint").textContent=s.hint;
+  document.getElementById("ebCmap").textContent=s.ebCmap;
+  document.getElementById("ebLesion").textContent=s.ebLesion;
+  document.getElementById("ebFd").textContent=s.ebFd;
+  document.getElementById("ebRoots").textContent=s.ebRoots;
+  document.getElementById("ebNerves").textContent=s.ebNerves;
+  document.getElementById("ebEpon").textContent=s.ebEpon;
+  document.getElementById("ebPlan").textContent=s.ebPlan;
+  document.getElementById("ebNcs").textContent=s.ebNcs;
+  document.getElementById("ebQuiz").textContent=s.ebQuiz;
+  document.getElementById("reset").textContent=s.reset;
+  document.getElementById("printbtn").textContent=s.print;
+  document.getElementById("langBtn").textContent=isf()?"English":"Français";
+  document.querySelectorAll(".tgl[data-k]").forEach(el=>{el.textContent=s[el.dataset.k];});
+  document.getElementById("foot").textContent=s.foot;
+}
+function renderAll(){
+  applyLang();
+  renderRootChips(); renderRoots(); renderCards(); buildCMap(); renderFootDrop(); buildLesions(); renderEponyms();
+  renderPlanner(); renderNcs(); renderQuiz();
+  buildBraid();
+  wireCards();
+  defaultStatus();
+}
+function wireCards(){
+  document.querySelectorAll(".chead").forEach(h=>h.onclick=()=>h.closest(".card").classList.toggle("collapsed"));
+  document.querySelectorAll(".tnode.tn-on").forEach(g=>g.addEventListener("click",()=>treeClick(g)));
+}
+
+/* ---- braid interactions via delegation (nodes rebuild on lang switch) ---- */
+function wireBraid(){/* delegation set up once below */}
+document.getElementById("braid").addEventListener("click",e=>{
+  const pe=e.target.closest(".plexel");   if(pe){plexClick(pe.dataset.elself,pe);return;}
+  const rt=e.target.closest(".node.root");if(rt){selectRoot(rt.dataset.root);return;}
+  const tm=e.target.closest(".node.term");if(tm){focusNerve(tm.dataset.nerve);return;}
+  const sm=e.target.closest(".node.small[data-nerve],.node.tap[data-nerve]");if(sm){focusNerve(sm.dataset.nerve);return;}
+});
+
+/* ---- global controls ---- */
+const q=document.getElementById("q");
+q.addEventListener("input",e=>runSearch(e.target.value));
+document.getElementById("qx").onclick=()=>{q.value="";runSearch("");q.focus();};
+document.querySelectorAll(".tg").forEach(t=>t.onclick=()=>{
+  const k=t.dataset.t; if(typeOff.has(k)){typeOff.delete(k);t.classList.remove("off");}else{typeOff.add(k);t.classList.add("off");}
+  applyTypeFilters();
+});
+document.getElementById("langBtn").onclick=()=>{
+  lang=isf()?"en":"fr";
+  const keepR=activeRoot,keepF=focusN;
+  clearRoot();clearFocus();clearTree();clearSite();clearPlex();
+  renderAll();
+  if(keepR)selectRoot(keepR); else if(keepF)focusNerve(keepF);
+};
+document.getElementById("printbtn").onclick=()=>{
+  clearRoot();clearFocus();clearTree();clearSite();clearPlex();
+  document.querySelectorAll(".card").forEach(c=>c.classList.remove("collapsed"));
+  setTimeout(()=>{try{window.print();}catch(e){}},60);
+};
+if(typeof window!=="undefined")window.addEventListener("beforeprint",()=>{clearRoot();clearFocus();clearTree();clearSite();clearPlex();});
+document.getElementById("reset").onclick=()=>{
+  clearRoot();clearFocus();clearTree();clearSite();clearLesion();clearPlex();
+  fdSel=null;document.querySelectorAll(".colon").forEach(n=>n.classList.remove("colon"));
+  planSel=null;document.querySelectorAll(".planpill").forEach(b=>b.classList.remove("on"));
+  document.getElementById("planpanel").hidden=true;
+  typeOff.clear();document.querySelectorAll(".tg").forEach(t=>t.classList.remove("off"));
+  q.value="";runSearch("");
+  document.querySelectorAll(".card").forEach(c=>{c.style.display="";c.classList.remove("collapsed");});
+  updateHash();
+  defaultStatus();
+};
+document.addEventListener("keydown",e=>{
+  if(e.key==="Escape"){document.getElementById("reset").click();q.blur();}
+  if(e.key==="/"&&document.activeElement!==q){e.preventDefault();q.focus();}
+});
+
+/* ---- boot ---- */
+renderAll();
+wireBraid();
+try{applyHash();}catch(e){}
+window.addEventListener("hashchange",()=>{
+  if((location.hash||"")===selfHash) return;   /* our own replaceState/hash write — ignore */
+  try{applyHash();}catch(e){}
+});
+</script>
+</body>
+</html>

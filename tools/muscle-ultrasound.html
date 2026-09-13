@@ -1,0 +1,1727 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ultrasound Muscle Explorer – Spasticity</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#f3f6f8;
+    --card:#ffffff;
+    --ink:#152430;
+    --muted:#64757f;
+    --line:#e6ecf0;
+    --accent:#0e7490;
+    --shadow-sm:0 1px 2px rgba(16,40,60,.05),0 2px 6px rgba(16,40,60,.05);
+    --shadow-md:0 6px 20px rgba(16,40,60,.10);
+    --shadow-lg:0 26px 64px rgba(10,28,42,.30);
+    --radius:16px;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    margin:0;
+    font-family:"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    color:var(--ink);
+    background:
+      radial-gradient(1100px 480px at 12% -12%, #e4f2f5 0%, rgba(228,242,245,0) 60%),
+      radial-gradient(1000px 480px at 100% -6%, #eceffc 0%, rgba(236,239,252,0) 55%),
+      var(--bg);
+    background-attachment:fixed;
+    line-height:1.55;
+    -webkit-font-smoothing:antialiased;
+    text-rendering:optimizeLegibility;
+  }
+  .wrap{max-width:1120px;margin:0 auto;padding:32px 20px 76px;}
+
+  /* Header */
+  header.app{display:flex;flex-wrap:wrap;align-items:center;gap:16px 20px;justify-content:space-between;margin-bottom:24px;}
+  .brand{display:flex;align-items:center;gap:14px;min-width:0;}
+  .logo{width:48px;height:48px;border-radius:14px;flex:0 0 auto;display:flex;align-items:center;justify-content:center;color:#fff;
+    background:linear-gradient(145deg,#0e7490,#0891b2);box-shadow:0 8px 20px rgba(8,145,178,.32);}
+  .logo svg{width:27px;height:27px;}
+  .titles h1{font-size:1.42rem;margin:0;font-weight:800;letter-spacing:-.025em;line-height:1.15;}
+  .titles p{margin:3px 0 0;color:var(--muted);font-size:.9rem;max-width:560px;}
+  .lang-toggle{display:inline-flex;border:1px solid var(--line);border-radius:999px;background:var(--card);box-shadow:var(--shadow-sm);flex:0 0 auto;padding:3px;gap:2px;}
+  .lang-toggle button{border:0;background:transparent;padding:7px 17px;font-size:.82rem;font-weight:700;letter-spacing:.02em;cursor:pointer;color:var(--muted);border-radius:999px;transition:all .15s;font-family:inherit;}
+  .lang-toggle button:hover{color:var(--ink);}
+  .lang-toggle button.active{background:linear-gradient(145deg,#0e7490,#0891b2);color:#fff;box-shadow:0 3px 9px rgba(8,145,178,.34);}
+
+  /* Search */
+  .search-row{position:relative;margin:0 0 24px;}
+  .search-row .search-ico{position:absolute;left:16px;top:50%;transform:translateY(-50%);width:18px;height:18px;color:var(--muted);pointer-events:none;}
+  .search-row input{width:100%;padding:13px 16px 13px 44px;border:1px solid var(--line);border-radius:13px;font-size:.95rem;font-family:inherit;outline:none;background:var(--card);box-shadow:var(--shadow-sm);transition:all .15s;color:var(--ink);}
+  .search-row input::placeholder{color:#9aa8b0;}
+  .search-row input:focus{border-color:var(--accent);box-shadow:0 0 0 4px rgba(14,116,144,.12);}
+
+  /* Region card */
+  .region{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow-sm);padding:18px 22px 22px;margin-bottom:18px;position:relative;overflow:hidden;}
+  .region::before{content:"";position:absolute;left:0;top:0;bottom:0;width:5px;background:var(--rc,#0e7490);}
+  .region-head{display:flex;align-items:center;gap:12px;margin:0 0 14px;}
+  .region-head .dot{width:30px;height:30px;border-radius:9px;flex:0 0 auto;display:flex;align-items:center;justify-content:center;color:var(--rc,#0e7490);
+    background:color-mix(in srgb,var(--rc,#0e7490) 14%,#fff);font-weight:800;font-size:.85rem;}
+  .region-head h2{font-size:1.1rem;margin:0;font-weight:800;letter-spacing:-.015em;flex:1;}
+  .region-head .count{color:var(--muted);font-size:.72rem;font-weight:700;background:var(--bg);border:1px solid var(--line);padding:3px 10px;border-radius:999px;}
+  .sub{margin:16px 0 0;}
+  .sub:first-of-type{margin-top:0;}
+  .sub-label{font-size:.7rem;text-transform:uppercase;letter-spacing:.1em;color:var(--rc,#0e7490);font-weight:800;margin:0 0 10px;display:flex;align-items:center;gap:10px;}
+  .sub-label::after{content:"";flex:1;height:1px;background:var(--line);}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(212px,1fr));gap:10px;}
+
+  /* Muscle button */
+  .m-btn{position:relative;text-align:left;border:1px solid var(--line);background:var(--card);border-radius:12px;padding:13px 14px 11px;cursor:pointer;transition:all .16s ease;display:flex;flex-direction:column;gap:2px;font-family:inherit;color:var(--ink);}
+  .m-btn:hover{border-color:var(--rc,#0e7490);background:color-mix(in srgb,var(--rc,#0e7490) 6%,#fff);transform:translateY(-2px);box-shadow:var(--shadow-md);}
+  .m-btn .mn{font-weight:700;font-size:.92rem;letter-spacing:-.01em;line-height:1.25;}
+  .m-btn .ms{font-size:.76rem;color:var(--muted);line-height:1.3;}
+  .m-foot{display:flex;align-items:center;justify-content:space-between;margin-top:8px;gap:8px;}
+  .chip{font-size:.63rem;font-weight:800;letter-spacing:.03em;text-transform:uppercase;color:var(--rc,#0e7490);background:color-mix(in srgb,var(--rc,#0e7490) 12%,#fff);padding:2px 7px;border-radius:6px;white-space:nowrap;}
+  .play{font-size:.7rem;color:var(--muted);font-weight:700;display:inline-flex;align-items:center;gap:4px;transition:color .15s;margin-left:auto;}
+  .m-btn:hover .play{color:var(--rc,#0e7490);}
+
+  .credit{margin-top:30px;padding-top:18px;border-top:1px solid var(--line);color:var(--muted);font-size:.82rem;line-height:1.6;}
+  .credit a{color:var(--accent);font-weight:600;text-decoration:none;}
+  .credit a:hover{text-decoration:underline;}
+
+  /* Modal */
+  .overlay{position:fixed;inset:0;background:rgba(10,22,30,.5);backdrop-filter:blur(4px);display:none;align-items:flex-start;justify-content:center;padding:32px 16px;z-index:60;overflow-y:auto;}
+  .overlay.open{display:flex;}
+  .modal{background:var(--card);border-radius:20px;max-width:840px;width:100%;box-shadow:var(--shadow-lg);overflow:hidden;animation:pop .22s cubic-bezier(.2,.7,.3,1);}
+  @keyframes pop{from{opacity:0;transform:translateY(16px) scale(.97)}to{opacity:1;transform:none}}
+  .modal-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:18px 20px 14px;}
+  .modal-head h3{margin:0;font-size:1.22rem;font-weight:800;letter-spacing:-.02em;line-height:1.2;}
+  .modal-head .sub2{margin:3px 0 0;color:var(--muted);font-size:.85rem;}
+  .x{border:0;background:var(--bg);width:36px;height:36px;border-radius:50%;font-size:1.15rem;cursor:pointer;color:var(--muted);flex:0 0 auto;line-height:1;transition:all .2s;}
+  .x:hover{background:#fde8e8;color:#c0392b;transform:rotate(90deg);}
+  .video-box{position:relative;width:100%;aspect-ratio:16/9;background:#000;}
+  .video-box iframe{position:absolute;inset:0;width:100%;height:100%;border:0;}
+  .poster{position:absolute;inset:0;width:100%;height:100%;border:0;padding:0;margin:0;cursor:pointer;background-size:cover;background-position:center;background-color:#000;display:flex;align-items:center;justify-content:center;}
+  .poster::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.04),rgba(0,0,0,.28));}
+  .poster .play-btn{position:relative;z-index:1;width:74px;height:52px;border-radius:14px;background:rgba(0,0,0,.55);color:#fff;display:flex;align-items:center;justify-content:center;font-size:1.5rem;padding-left:5px;transition:all .18s;box-shadow:0 6px 22px rgba(0,0,0,.42);}
+  .poster:hover .play-btn{background:#e00;transform:scale(1.06);}
+  .desc{padding:20px 22px 26px;max-height:42vh;overflow-y:auto;}
+  .desc .desc-text{white-space:pre-wrap;font-size:.9rem;color:#33454e;line-height:1.62;}
+  .yt-link{display:inline-flex;align-items:center;gap:6px;margin-top:16px;font-size:.85rem;color:var(--accent);font-weight:700;text-decoration:none;padding:8px 14px;border:1px solid var(--line);border-radius:9px;transition:all .15s;}
+  .yt-link:hover{background:var(--bg);border-color:var(--accent);}
+  .empty{color:var(--muted);font-style:italic;padding:8px 2px;}
+  .flag{background:#fff7e6;border:1px solid #f2d488;color:#8a5a00;font-size:.8rem;padding:9px 12px;border-radius:9px;margin-bottom:14px;line-height:1.4;}
+  @media(max-width:560px){
+    .wrap{padding:20px 14px 56px;}
+    .titles h1{font-size:1.18rem}
+    .region{padding:15px 16px 18px;}
+    .desc{max-height:36vh}
+    .grid{grid-template-columns:repeat(auto-fill,minmax(150px,1fr));}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="app">
+    <div class="brand">
+      <span class="logo" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="8" y="2.5" width="8" height="11" rx="2.2"/><line x1="8.7" y1="10.4" x2="15.3" y2="10.4"/><path d="M8.8 15.4c.9.7 2 .9 3.2.9s2.3-.2 3.2-.9"/><path d="M7.9 18.2c1.2 1 2.5 1.4 4.1 1.4s2.9-.4 4.1-1.4"/>
+        </svg>
+      </span>
+      <div class="titles">
+        <h1 id="appTitle"></h1>
+        <p id="appSub"></p>
+      </div>
+    </div>
+    <div class="lang-toggle" role="group" aria-label="Language">
+      <button id="btnEn" class="active" onclick="setLang('en')">ENG</button>
+      <button id="btnFr" onclick="setLang('fr')">FR</button>
+    </div>
+  </header>
+
+  <div class="search-row">
+    <svg class="search-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+    <input id="search" type="text" oninput="renderList()" autocomplete="off">
+  </div>
+
+  <div id="list"></div>
+
+  <div class="credit" id="credit"></div>
+</div>
+
+<!-- Modal -->
+<div class="overlay" id="overlay" onclick="if(event.target===this)closeModal()">
+  <div class="modal" role="dialog" aria-modal="true">
+    <div class="modal-head">
+      <div>
+        <h3 id="mTitle"></h3>
+        <p class="sub2" id="mSub"></p>
+      </div>
+      <button class="x" onclick="closeModal()" aria-label="Close">&times;</button>
+    </div>
+    <div class="video-box"><div id="playerMount"></div></div>
+    <div class="desc">
+      <div id="mFlag"></div>
+      <div class="desc-text" id="mDesc"></div>
+      <a class="yt-link" id="mYt" target="_blank" rel="noopener"></a>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   Dr Andrei Bursuc – Ultrasound Muscle Explorer (Spasticity)
+   Data: 27 videos, bilingual (EN/FR). Edit MUSCLES below to
+   update names, descriptions, or add videos.
+   ============================================================ */
+
+const UI = {
+  en:{
+    title:"Ultrasound Muscle Explorer — Spasticity",
+    sub:"Click a muscle to open its ultrasound video and injection-landmark notes. Organised anatomically, proximal to distal.",
+    search:"Search a muscle (e.g. biceps, flexor, deltoid)…",
+    watch:"Watch video",
+    openYt:"Open on YouTube ↗",
+    noResults:"No muscle matches your search.",
+    credit:'Educational content by <a href="https://www.youtube.com/@DrAndreiBursucVideos" target="_blank" rel="noopener">Dr Andrei Bursuc, MD — Videos</a>. Free for teaching and educational use; please credit the channel and link to the original video.',
+    translated:"This video’s YouTube description was English-only; the French text below was translated for this tool — please verify."
+  },
+  fr:{
+    title:"Explorateur échographique des muscles — Spasticité",
+    sub:"Cliquez sur un muscle pour ouvrir sa vidéo échographique et les repères d’injection. Organisation anatomique, du proximal au distal.",
+    search:"Rechercher un muscle (ex. biceps, fléchisseur, deltoïde)…",
+    watch:"Voir la vidéo",
+    openYt:"Ouvrir sur YouTube ↗",
+    noResults:"Aucun muscle ne correspond à votre recherche.",
+    credit:'Contenu éducatif par <a href="https://www.youtube.com/@DrAndreiBursucVideos" target="_blank" rel="noopener">Dr Andrei Bursuc, MD — Videos</a>. Libre pour l’enseignement et la formation; merci de citer la chaîne et de lier la vidéo originale.',
+    translated:"La description YouTube de cette vidéo était uniquement en anglais; le texte français ci-dessous a été traduit pour cet outil — à vérifier."
+  }
+};
+
+const REGIONS = {
+  en:{ shoulder:"Shoulder", arm:"Arm", forearm:"Forearm", hand:"Hand",
+       anterior:"Anterior", lateral:"Lateral", posterior:"Posterior" },
+  fr:{ shoulder:"Épaule", arm:"Bras", forearm:"Avant-bras", hand:"Main",
+       anterior:"Antérieur", lateral:"Latéral", posterior:"Postérieur" }
+};
+
+// Order of regions (proximal -> distal) and subgroups
+const REGION_ORDER = ["shoulder","arm","forearm","hand"];
+const SUB_ORDER = ["anterior","lateral","posterior",""];
+// Colour coding per anatomical region
+const REGION_COLORS = { shoulder:"#2563eb", arm:"#7c3aed", forearm:"#0e9384", hand:"#e0701a" };
+
+let LANG = "en";
+let PLAYER_ID = null;
+
+/* MUSCLES: bilingual data for all 27 videos */
+const MUSCLES = [
+// ---------- SHOULDER · ANTERIOR ----------
+{
+ id:"l6_6CxnNrGw", region:"shoulder", sub:"anterior", abbrEn:"PM / Pm", abbrFr:"GP / PP",
+ nameEn:"Pectoralis major & minor", nameFr:"Grand pectoral & petit pectoral",
+ descEn:`Pectoralis Major & Pectoralis Minor (Spasticity) — Ultrasound-Guided Injection
+
+Two key contributors to shoulder adduction, internal rotation, and scapular protraction patterns in upper-limb spasticity.
+
+ANATOMY
+• Pectoralis major: adduction, internal rotation; innervated by medial & lateral pectoral nerves.
+• Pectoralis minor: scapular protraction / anterior tilt; innervated by the medial pectoral nerve.
+• The coracoid process is an important sonographic landmark.
+• The lateral pectoral nerve lies between major and minor; the medial pectoral nerve pierces pectoralis minor.
+
+ULTRASOUND LOCALIZATION
+• Pectoralis major superficial; pectoralis minor deep, over the ribs and intercostals.
+• Identify the lungs and pleural line deep to the ribs for safety.
+• More lateral/caudal: brachial artery and cords of the brachial plexus in the axilla.
+• Maintain a superficial-to-deep needle trajectory to avoid the pleura and neurovascular structures.
+
+INDICATIONS (SPASTICITY)
+• Pectoralis minor: injected when the shoulder is protracted with anterior tilt.
+• Pectoralis major: injected when palpatory tone is increased, typically with internal rotation and adduction postures.`,
+ descFr:`Grand pectoral & Petit pectoral (Spasticité) — Injection sous guidage échographique
+
+Deux muscles impliqués dans l’adduction, la rotation interne et la protraction scapulaire dans la spasticité du membre supérieur.
+
+ANATOMIE
+• Grand pectoral : adduction, rotation interne; innervation par les nerfs pectoraux médial et latéral.
+• Petit pectoral : protraction / bascule antérieure; innervation par le nerf pectoral médial.
+• Le processus coracoïde est un repère échographique essentiel.
+• Le nerf pectoral latéral passe entre les deux muscles; le nerf pectoral médial perfore le petit pectoral.
+
+LOCALISATION ÉCHOGRAPHIQUE
+• Plan superficiel : grand pectoral; plan profond : petit pectoral au-dessus des côtes.
+• Visualisation obligatoire des poumons et de la ligne pleurale pour la sécurité.
+• Plus latéralement/caudalement : artère brachiale et cordons du plexus brachial.
+• Toujours utiliser une trajectoire d’aiguille superficielle-vers-profondeur.
+
+INDICATIONS (SPASTICITÉ)
+• Petit pectoral : injection lors de protraction de l’épaule avec bascule antérieure.
+• Grand pectoral : injection lors d’un tonus augmenté à la palpation, souvent en rotation interne / adduction.`
+},
+{
+ id:"ob7UHc6B4ow", region:"shoulder", sub:"anterior", abbrEn:"AD", abbrFr:"DA",
+ nameEn:"Anterior deltoid", nameFr:"Deltoïde antérieur",
+ descEn:`Anterior Deltoid — Origin, Insertion, Innervation, Action, Localisation
+
+Origin
+• Lateral third of the clavicle (anterior border)
+Insertion
+• Deltoid tuberosity of the humerus
+Innervation
+• Axillary nerve (C5–C6)
+Action
+• Shoulder flexion
+• Medial (internal) rotation
+• Horizontal adduction
+• Contributes to glenohumeral stability
+
+Localisation (Ultrasound & Surface Anatomy)
+• Lies superficially on the anterior aspect of the shoulder.
+• Positioned lateral to the pectoralis major muscle.
+• In proximity to the coracobrachialis, with the musculocutaneous nerve piercing the coracobrachialis at this level.
+• Appears as a superficial, well-defined fibrillar layer overlying the proximal humerus, with the long head of the biceps tendon and humeral head deep to it.
+
+Indications for Botulinum Toxin Injection
+• Persistent involuntary shoulder flexion, with the arm held forward.
+• Difficulty bringing the arm back to the side of the body due to tonic anterior pull.
+• Spastic horizontal adduction bringing the arm across the midline and interfering with dressing, hygiene, or reaching.
+• Abnormal shoulder positioning disrupting transfers, wheelchair propulsion, or midline control.
+• Co-contraction with pectoralis major causing a “closed shoulder” posture.
+• Protective, maladaptive anterior-flexion posture following pain or surgery.
+• Tone-related interference with upper-limb rehabilitation or scapular mechanics.`,
+ descFr:`Deltoïde antérieur — Origine, Insertion, Innervation, Action, Localisation
+
+Origine
+• Tiers latéral de la clavicule (bord antérieur)
+Insertion
+• Tubérosité deltoïdienne de l’humérus
+Innervation
+• Nerf axillaire (C5–C6)
+Action
+• Flexion de l’épaule
+• Rotation médiale (interne)
+• Adduction horizontale
+• Rôle de stabilisation gléno-humérale
+
+Localisation (Échographie & Anatomie de surface)
+• Situé en superficie à la partie antérieure de l’épaule.
+• Positionné latéralement au muscle grand pectoral.
+• Au voisinage du muscle coracobrachial, dans lequel on voit le nerf musculocutané pénétrer.
+• Visible comme une couche musculaire fibrillaire superficielle recouvrant l’humérus proximal, avec le tendon du long biceps et la tête humérale en profondeur.
+
+Indication d’injection de toxine botulinique
+• Flexion antérieure involontaire de l’épaule, maintenant le bras projeté vers l’avant.
+• Difficulté à ramener le bras le long du corps en raison d’un tirage antérieur constant.
+• Adduction horizontale spastique entraînant une fermeture du membre supérieur et gênant l’habillage ou les soins personnels.
+• Perturbation de la biomécanique lors des transferts, de la marche ou de la propulsion en fauteuil.
+• Co-contraction deltoïde–grand pectoral créant une posture « d’épaule fermée ».
+• Persistance d’une posture antérieure de protection après douleur ou chirurgie.
+• Interférence du tonus avec la rééducation fonctionnelle ou les mouvements scapulaires.`
+},
+{
+ id:"V9Dcw9p8oOo", region:"shoulder", sub:"posterior", abbrEn:"SSc", abbrFr:"SSc",
+ nameEn:"Subscapularis", nameFr:"Sous-scapulaire",
+ descEn:`Subscapularis — Ultrasound Localization (Spasticity)
+
+Origin
+• Subscapular fossa of the scapula
+Insertion
+• Lesser tubercle of the humerus
+• Anterior glenohumeral capsule
+Innervation
+• Upper and lower subscapular nerves (C5–C6)
+Action
+• Internal rotation of the humerus
+• Contributes to adduction
+• Dynamic anterior stabilizer of the shoulder
+
+Localization (Ultrasound)
+In this approach, the probe is placed under the scapula, along the lateral scapular border, with a posterior–lateral to anterior orientation. This gives a unique cross-section where the latissimus dorsi is seen superficially, the subscapularis belly lies deep to it, and the serratus anterior sits between the muscle and the rib cage. The subscapularis appears as a broad, hypoechoic, triangular muscle tapering laterally. A small dynamic internal rotation maneuver helps confirm the belly by subtle contraction and medial scapular motion.
+
+Indications for Botulinum Toxin Injection (Spasticity)
+• Persistent internal rotation posture
+• Painful shoulder tightness
+• Difficulty with dressing, hygiene, or external rotation mobilization
+• Scapulohumeral imbalance from dominant internal rotators
+• Upper motor neuron patterns causing anterior shoulder contracture`,
+ descFr:`Sous-scapulaire — Repérage Échographique (Spasticité)
+
+Origine
+• Fosse sous-scapulaire de l’omoplate
+Insertion
+• Petit tubercule de l’humérus
+• Capsule antérieure glénohumérale
+Innervation
+• Nerfs sous-scapulaires supérieur et inférieur (C5–C6)
+Action
+• Rotation interne de l’humérus
+• Participe à l’adduction
+• Stabilisateur antérieur dynamique de l’épaule
+
+Localisation (Échographie)
+La sonde est placée sous l’omoplate, le long du bord latéral de la scapula, avec une orientation postéro-latérale vers antérieure. Cette coupe montre en superficie le grand dorsal, en profondeur le sous-scapulaire, et encore plus profondément le dentelé antérieur au-dessus de la cage thoracique. Le sous-scapulaire apparaît comme un muscle triangulaire hypoéchogène s’amincissant vers l’extérieur. Une rotation interne active ou résistée permet une confirmation dynamique par une contraction visible et un léger mouvement de la scapula.
+
+Indications d’Injection de Toxine Botulinique (Spasticité)
+• Posture en rotation interne persistante
+• Raideur douloureuse de l’épaule
+• Rotation externe passive limitée pour l’habillage ou l’hygiène
+• Rotateurs internes dominants dans une dyskinésie scapulo-humérale
+• Atteintes du motoneurone supérieur provoquant une tension antérieure marquée`
+},
+// ---------- SHOULDER · LATERAL ----------
+{
+ id:"ubhmRbaT8hw", region:"shoulder", sub:"lateral", abbrEn:"MD", abbrFr:"DM",
+ nameEn:"Middle deltoid", nameFr:"Deltoïde moyen",
+ descEn:`Middle Deltoid — Origin, Insertion, Innervation, Action, Localisation
+
+Origin
+• Lateral margin of the acromion
+Insertion
+• Deltoid tuberosity of the humerus
+Innervation
+• Axillary nerve (C5–C6)
+Action
+• Primary abductor of the shoulder
+• Contributes to glenohumeral joint stability
+• Assists with elevation of the arm in the frontal plane
+
+Localisation (Ultrasound & Surface Anatomy)
+• Lies on the lateral aspect of the shoulder, forming the rounded contour of the arm.
+• Situated superficially, directly beneath the subcutaneous fat.
+• Deep to the muscle, the window often reveals the greater tuberosity, the supraspinatus tendon, and the lateral humeral cortex.
+• Thickens visibly during active or resisted shoulder abduction, which helps confirm identification.
+• Positioned between the anterior and posterior deltoid fibers, creating a clear bipennate architecture in cross-section.
+
+Indications for Botulinum Toxin Injection
+• Involuntary shoulder abduction, pulling the arm away from the body.
+• Difficulty maintaining the arm in neutral adduction, leading to postural asymmetry.
+• Abduction-driven interference with transfers, dressing, or wheelchair maneuvering.
+• Co-contraction with supraspinatus, producing a rigid “winged-out” arm position.
+• Tone-related disruption of scapulohumeral rhythm, impairing functional reach or midline hand use.
+• Painful mechanical overload in glenohumeral osteoarthritis or rotator cuff insufficiency where excess deltoid tone worsens symptoms.`,
+ descFr:`Deltoïde moyen — Origine, Insertion, Innervation, Action, Localisation
+
+Origine
+• Bord latéral de l’acromion
+Insertion
+• Tubérosité deltoïdienne de l’humérus
+Innervation
+• Nerf axillaire (C5–C6)
+Action
+• Abduction principale de l’épaule
+• Participation à la stabilité gléno-humérale
+• Contribution à l’élévation du bras dans le plan frontal
+
+Localisation (Échographie & Anatomie de surface)
+• Situé sur la face latérale de l’épaule, donnant la forme arrondie du moignon de l’épaule.
+• Muscle superficiel, juste sous le tissu sous-cutané.
+• En profondeur, on visualise la grosse tubérosité, le tendon du supra-épineux et la corticale latérale de l’humérus.
+• Le muscle s’épaissit nettement lors de l’abduction active ou résistée, facilitant son repérage dynamique.
+• Situé entre les faisceaux antérieur et postérieur du deltoïde, formant un aspect bipenné en coupe.
+
+Indication d’injection de toxine botulinique
+• Abduction involontaire de l’épaule, empêchant le bras de rester en adduction.
+• Difficulté à maintenir un bras « collé » au tronc, créant une asymétrie ou gênant les soins personnels.
+• Abduction spastique perturbant l’habillage, les transferts ou l’utilisation du fauteuil roulant.
+• Co-contraction avec le supra-épineux, rigidifiant le bras en position « ouvert ».
+• Altération du rythme scapulo-huméral, limitant la portée fonctionnelle ou l’accès à la ligne médiane.
+• Surcharge mécanique douloureuse, notamment en cas d’arthrose gléno-humérale ou de déficit de la coiffe des rotateurs.`
+},
+// ---------- SHOULDER · POSTERIOR ----------
+{
+ id:"twQr1TFds8U", region:"shoulder", sub:"posterior", abbrEn:"PD", abbrFr:"DP",
+ nameEn:"Posterior deltoid", nameFr:"Deltoïde postérieur",
+ descEn:`Posterior Deltoid — Origin, Insertion, Innervation, Action, Localisation
+
+Origin
+• Spine of the scapula (posterior border)
+Insertion
+• Deltoid tuberosity of the humerus
+Innervation
+• Axillary nerve (C5–C6)
+Action
+• Shoulder horizontal abduction
+• Extension of the humerus
+• External rotation (depending on fiber orientation)
+• Acts as a dynamic stabilizer of the glenohumeral joint during posterior movements
+
+Localization (Ultrasound / Surface Anatomy)
+• Lies posterior to the acromion, forming the thick muscular contour of the back of the shoulder.
+• Sits superficial, overlying the infraspinatus and teres minor.
+• Fibers run obliquely from the scapular spine toward the deltoid tuberosity, giving a clear fibrillar pattern in longitudinal view.
+• Often visualized lateral to — or slightly above — the posterior border of the infraspinatus.
+• The posterior circumflex humeral artery and vein may be seen in the deeper field depending on probe position.
+
+Indications for Botulinum Toxin Injection
+• Problematic shoulder retraction in upper-motor-neuron syndromes.
+• Posterior arm swing limitation during gait in hemiparesis.
+• Maladaptive extension postures of the arm (posterior deltoid overpowering anterior deltoid/pectoralis).
+• Interference with functional reaching when increased tone pulls the humerus backward.
+Typical postures leading to injection:
+• Shoulder held in persistent extension
+• Arm retracted behind the trunk
+• Difficulty initiating forward flexion due to counter-pull of posterior fibers
+• Compensatory trunk rotation due to shoulder malposition`,
+ descFr:`Deltoïde postérieur — Origine, Insertion, Innervation, Action, Localisation
+
+Origine
+• Épine de la scapula (bord postérieur)
+Insertion
+• Tubérosité deltoïdienne de l’humérus
+Innervation
+• Nerf axillaire (C5–C6)
+Action
+• Abduction horizontale de l’épaule
+• Extension de l’humérus
+• Rotation externe selon l’orientation des fibres
+• Stabilisation dynamique postérieure de l’articulation gléno-humérale
+
+Localisation (Échographie / Anatomie de surface)
+• Situé en arrière de l’acromion, formant le relief musculaire postérieur de l’épaule.
+• Muscle superficiel recouvrant l’infra-épineux et le petit rond.
+• Fibres allant obliquement de l’épine scapulaire vers la tubérosité deltoïdienne, donnant un aspect fibrillaire clair en coupe longitudinale.
+• Souvent visible latéralement au bord postérieur de l’infra-épineux.
+• À ce niveau, on peut parfois repérer l’artère et la veine circonflexes humérales postérieures en profondeur.
+
+Indications d’injection de toxine botulinique
+• Rétraction postérieure de l’épaule dans les syndromes du neurone moteur supérieur.
+• Limitation du balancement du bras en arrière lors de la marche en cas d’hémiparésie.
+• Postures d’extension de l’épaule dues à une hyperactivité du deltoïde postérieur.
+• Gêne fonctionnelle lors de l’élévation antérieure (traction du bras vers l’arrière).
+Postures menant à injecter ce muscle :
+• Épaule tenue en extension constante
+• Bras tiré en arrière du tronc
+• Difficulté à initier la flexion de l’épaule
+• Compensation par rotation du tronc en lien avec une épaule en hyperextension`
+},
+{
+ id:"JTQAqGuKixM", region:"shoulder", sub:"posterior", abbrEn:"LD", abbrFr:"GD",
+ nameEn:"Latissimus dorsi", nameFr:"Grand dorsal",
+ descEn:`Latissimus Dorsi — Anatomy & Ultrasound Localization (Spasticity Injections)
+
+Origin: Spinous processes of T7–T12, thoracolumbar fascia, iliac crest, and lower 3–4 ribs.
+Insertion: Floor of the intertubercular groove of the humerus.
+Innervation: Thoracodorsal nerve (C6–C8).
+Action: Shoulder extension, adduction, and internal rotation. Contributes to trunk and pelvic motion in closed-chain activities.
+
+Localization (Ultrasound)
+The latissimus dorsi lies superficial and posterolateral to the thorax. Using a longitudinal or transverse view along the mid-axillary to posterior axillary line, the muscle appears as a broad superficial hypoechoic layer overlying the serratus anterior and ribs. At the posterior axillary fold, it can be visualized joining the teres major before inserting on the humerus. The thoracodorsal nerve can occasionally be seen within the muscle belly.
+
+Indications for botulinum toxin in spasticity
+• Shoulder internal rotation and adduction postures
+• Difficulty with arm elevation due to overpowering adduction
+• Trunk deviation caused by latissimus hyperactivity
+• Hygiene problems due to arm tightly adducted toward trunk`,
+ descFr:`Grand dorsal — Anatomie et repérage échographique (Injections de spasticité)
+
+Origine : Processus épineux de T7–T12, fascia thoraco-lombaire, crête iliaque et côtes inférieures (3–4 dernières).
+Insertion : Sillon intertuberculaire de l’humérus.
+Innervation : Nerf thoraco-dorsal (C6–C8).
+Action : Extension, adduction et rotation interne de l’épaule. Participe aux mouvements du tronc en chaîne fermée.
+
+Localisation (Échographie)
+Le grand dorsal se situe en superficie sur la paroi thoracique postéro-latérale. En vue longitudinale ou transversale le long de la ligne axillaire moyenne ou postérieure, il apparaît comme une large couche hypoéchogène superficielle recouvrant le dentelé antérieur et les côtes. Au niveau du pli axillaire postérieur, on peut le voir rejoindre le grand rond avant son insertion humérale. Le nerf thoraco-dorsal peut parfois être visualisé dans le muscle.
+
+Indications pour la toxine botulinique dans la spasticité
+• Posture en rotation interne et en adduction de l’épaule
+• Difficulté à élever le bras
+• Déviation du tronc liée à l’hyperactivité du grand dorsal
+• Difficultés d’hygiène liées à un bras collé au tronc`
+},
+{
+ id:"RLcJf4aw6OQ", region:"shoulder", sub:"posterior", abbrEn:"TM", abbrFr:"GR",
+ nameEn:"Teres major", nameFr:"Grand rond",
+ descEn:`Teres Major — Ultrasound Localization
+
+Origin
+• Inferior angle and lower third of the lateral border of the scapula
+Insertion
+• Medial lip of the intertubercular groove of the humerus (crest of the lesser tubercle)
+Innervation
+• Lower subscapular nerve (C5–C6)
+Action
+• Internal rotation of the humerus
+• Adduction of the arm
+• Assists in extension of the arm
+• Synergist of the latissimus dorsi
+
+Localization (Ultrasound)
+The teres major appears as a thick, hypoechoic muscle located just inferior to the teres minor and medial to the latissimus dorsi. In a cephalad-to-distal sweep, the probe follows the lateral border of the scapula. Dynamic resisted internal rotation provides clear confirmation through visible contraction of the teres major belly.
+
+Indications for Botulinum Toxin Injection
+• Internal rotation posturing of the shoulder
+• Adduction that limits functional arm elevation
+• Posterior shoulder tightness in upper motor neuron lesions
+• Compensatory recruitment patterns in scapulohumeral dyskinesia`,
+ descFr:`Grand rond — Repérage Échographique
+
+Origine
+• Angle inférieur et tiers inférieur du bord latéral de l’omoplate
+Insertion
+• Lèvre médiale du sillon intertuberculaire de l’humérus (crête du petit tubercule)
+Innervation
+• Nerf subscapulaire inférieur (C5–C6)
+Action
+• Rotation interne de l’humérus
+• Adduction du bras
+• Participe à l’extension du bras
+• Synergique du grand dorsal
+
+Localisation (Échographie)
+Le grand rond apparaît comme un muscle épais et hypoéchogène situé immédiatement sous le petit rond et médialement au grand dorsal. Dans un balayage du céphalique vers le distal, la sonde suit le bord latéral de l’omoplate. La rotation interne résistée confirme dynamiquement la contraction du grand rond.
+
+Indications d’Injection de Toxine Botulinique
+• Posture en rotation interne de l’épaule
+• Adduction limitant l’élévation fonctionnelle du bras
+• Tension postérieure de l’épaule dans les atteintes du motoneurone supérieur
+• Recrutements compensatoires dans les dyskinésies scapulo-humérales`
+},
+{
+ id:"rnC7kizyFms", region:"shoulder", sub:"posterior", abbrEn:"TM (IR)", abbrFr:"GR (RI)",
+ nameEn:"Teres major (resisted IR)", nameFr:"Grand rond (RI résistée)",
+ descEn:`Teres Major with Resisted Internal Rotation — Ultrasound Localization
+
+This clip demonstrates the same muscle using a resisted internal-rotation maneuver to confirm the belly.
+
+Origin
+• Inferior angle and lower third of the lateral border of the scapula
+Insertion
+• Medial lip of the intertubercular groove of the humerus (crest of the lesser tubercle)
+Innervation
+• Lower subscapular nerve (C5–C6)
+Action
+• Internal rotation of the humerus
+• Adduction of the arm
+• Assists in extension of the arm
+• Synergist of the latissimus dorsi
+
+Localization (Ultrasound)
+The teres major appears as a thick, hypoechoic muscle just inferior to the teres minor and medial to the latissimus dorsi. Following the lateral border of the scapula, dynamic resisted internal rotation provides clear confirmation through visible contraction of the teres major belly.
+
+Indications for Botulinum Toxin Injection
+• Internal rotation posturing of the shoulder
+• Adduction that limits functional arm elevation
+• Posterior shoulder tightness in upper motor neuron lesions
+• Compensatory recruitment patterns in scapulohumeral dyskinesia`,
+ descFr:`Grand rond avec rotation interne résistée — Repérage Échographique
+
+Cette séquence montre le même muscle à l’aide d’une manœuvre de rotation interne contrariée pour confirmer le corps musculaire.
+
+Origine
+• Angle inférieur et tiers inférieur du bord latéral de l’omoplate
+Insertion
+• Lèvre médiale du sillon intertuberculaire de l’humérus (crête du petit tubercule)
+Innervation
+• Nerf subscapulaire inférieur (C5–C6)
+Action
+• Rotation interne de l’humérus
+• Adduction du bras
+• Participe à l’extension du bras
+• Synergique du grand dorsal
+
+Localisation (Échographie)
+Le grand rond apparaît comme un muscle épais et hypoéchogène situé immédiatement sous le petit rond et médialement au grand dorsal. En suivant le bord latéral de l’omoplate, la rotation interne résistée confirme dynamiquement la contraction du grand rond.
+
+Indications d’Injection de Toxine Botulinique
+• Posture en rotation interne de l’épaule
+• Adduction limitant l’élévation fonctionnelle du bras
+• Tension postérieure de l’épaule dans les atteintes du motoneurone supérieur
+• Recrutements compensatoires dans les dyskinésies scapulo-humérales`
+},
+// ---------- ARM · ANTERIOR ----------
+{
+ id:"2SYai4ks6xo", region:"arm", sub:"anterior", abbrEn:"CB", abbrFr:"CB",
+ nameEn:"Coracobrachialis", nameFr:"Coracobrachial",
+ descEn:`Coracobrachialis (Spasticity) — Ultrasound-Guided Injection
+
+An important flexor–adductor muscle of the shoulder and a frequent contributor to medial arm tightness in upper-limb spasticity.
+
+ANATOMY
+• Origin on the coracoid process; insertion on the medial humeral shaft.
+• Musculocutaneous nerve (C5–C7) pierces the muscle — a critical sonographic landmark.
+• Action: shoulder flexion, adduction, and stabilization of the humeral head.
+
+ULTRASOUND LOCALIZATION
+• Located in the anteromedial upper arm, medial to the short head of the biceps.
+• Identify the coracoid, the muscle belly, and the musculocutaneous nerve entering/piercing it.
+• The brachial artery and brachial plexus cords sit more lateral/caudal in the axilla.
+• Scan in short and long axis; maintain continuous visualization of the nerve before injecting.
+
+INDICATIONS (SPASTICITY)
+• Shoulder flexion–adduction patterns.
+• Medial arm tightness limiting passive abduction.
+• Increased tone deep to the short head of the biceps.
+• Often synergistic with pectoralis major and biceps short head in flexor–adductor postures.`,
+ descFr:`Coracobrachial (Spasticité) — Injection sous guidage échographique
+
+Muscle fléchisseur–adducteur de l’épaule, responsable d’une tension médiale du bras dans plusieurs patrons spastiques du membre supérieur.
+
+ANATOMIE
+• Origine sur le processus coracoïde; insertion sur la face médiale de l’humérus.
+• Le nerf musculo-cutané (C5–C7) perfore le muscle — repère essentiel à l’échographie.
+• Action : flexion et adduction de l’épaule; stabilisation de la tête humérale.
+
+LOCALISATION ÉCHOGRAPHIQUE
+• Situé dans la région antéro-médiale du bras, médial au chef court du biceps.
+• Identifier le coracoïde, le corps musculaire et le nerf musculo-cutané qui le traverse.
+• L’artère brachiale et les cordons du plexus brachial se trouvent plus latéral/caudal dans l’aisselle.
+• Visualisation continue du nerf recommandée avant toute injection.
+
+INDICATIONS (SPASTICITÉ)
+• Patrons de flexion–adduction de l’épaule.
+• Tension médiale limitant l’abduction passive.
+• Tonus accru en profondeur du chef court du biceps.
+• Synergie spastique fréquente avec le grand pectoral et le chef court du biceps.`
+},
+{
+ id:"SmDHEFx30H4", region:"arm", sub:"anterior", abbrEn:"BB (SH)", abbrFr:"BB (CC)",
+ nameEn:"Biceps — short head", nameFr:"Biceps — chef court",
+ descEn:`Short Head of the Biceps Brachii (Spasticity) — Ultrasound Localization
+
+Origin: Coracoid process of the scapula
+Insertion: Radial tuberosity and bicipital aponeurosis
+Innervation: Musculocutaneous nerve (C5–C6)
+Action: Elbow flexion, forearm supination, assists shoulder flexion
+
+Indications for botulinum toxin injection
+• Persistent elbow flexion posture at rest
+• Difficulty with passive or active elbow extension
+• Interference with hygiene, dressing, or upper-limb positioning
+• Abnormal flexor synergy of the upper limb
+• Pain or discomfort related to sustained elbow flexor overactivity
+
+Ultrasound localisation
+The short head of the biceps is identified on a transverse anterior arm view, typically in the proximal to mid-arm. It lies medial to the long head of the biceps and superficial to the brachialis. Proximally, it can be followed toward the coracoid process, where it appears as a distinct muscular belly. The musculocutaneous nerve is commonly visualised coursing between the biceps brachii and brachialis, serving as a key landmark for safe needle placement.`,
+ descFr:`Chef court du biceps brachial (Spasticité) — Repérage échographique
+
+Origine : Processus coracoïde de la scapula
+Insertion : Tubérosité radiale et aponévrose bicipitale
+Innervation : Nerf musculo-cutané (C5–C6)
+Action : Flexion du coude, supination de l’avant-bras, participation à la flexion de l’épaule
+
+Indications d’injection de toxine botulinique
+• Posture persistante en flexion du coude
+• Limitation de l’extension passive ou active du coude
+• Gêne pour l’hygiène, l’habillage ou le positionnement du membre supérieur
+• Synergie fléchisseuse anormale du membre supérieur
+• Douleur ou inconfort liés à une hyperactivité prolongée des fléchisseurs du coude
+
+Localisation échographique
+Le chef court du biceps est visualisé en coupe transverse antérieure du bras, au tiers proximal à moyen. Il se situe médialement par rapport au chef long du biceps et en superficie du muscle brachial. En proximal, il peut être suivi jusqu’au processus coracoïde. Le nerf musculo-cutané, cheminant entre le biceps et le brachial, constitue un repère échographique essentiel pour sécuriser l’injection.`
+},
+{
+ id:"d3UL41hgMzc", region:"arm", sub:"anterior", abbrEn:"BB (SH)", abbrFr:"BB (CC)",
+ nameEn:"Biceps brachii — short head (anatomy)", nameFr:"Biceps brachial — chef court (anatomie)",
+ descEn:`Biceps Brachii — Short Head (Anatomy)
+
+Origin
+• Apex of the coracoid process of the scapula (tendinous origin shared with the coracobrachialis)
+Insertion
+• Radial tuberosity
+• Bicipital aponeurosis into the forearm’s deep fascia
+
+Course
+• Begins on the coracoid process via a tendinous origin, which explains why the coracobrachialis displays a muscle belly earlier despite both muscles starting from the same point.
+• Descends above and slightly lateral to the coracobrachialis along the anteromedial arm.
+• As the coracobrachialis tapers and inserts, the short head transitions to lie directly superficial to the brachialis.
+• Merges with the long head to form the common biceps muscle belly.
+• Continues distally toward the elbow, inserting on the radial tuberosity, with its aponeurosis spreading medially across the forearm fascia.
+
+Actions
+• Elbow flexion
+• Forearm supination
+• Assists in shoulder flexion
+• Provides anterior shoulder stability
+
+Innervation
+• Musculocutaneous nerve (C5–C6)`,
+ descFr:`Biceps brachial — Chef court (anatomie)
+
+Origine
+• Sommet du processus coracoïde de la scapula (origine tendineuse partagée avec le coracobrachial)
+Insertion
+• Tubérosité radiale
+• Aponévrose bicipitale dans le fascia profond de l’avant-bras
+
+Trajet
+• Démarre du processus coracoïde par une origine tendineuse, ce qui explique pourquoi le coracobrachial montre un ventre musculaire plus tôt malgré une origine commune.
+• Descend au-dessus et légèrement latéral au coracobrachial le long de la face antéro-médiale du bras.
+• Lorsque le coracobrachial s’affine et s’insère, le chef court devient directement superficiel au brachial.
+• Fusionne avec le chef long pour former le ventre musculaire commun du biceps.
+• Se poursuit distalement vers le coude pour s’insérer sur la tubérosité radiale, avec son aponévrose s’étendant médialement dans le fascia de l’avant-bras.
+
+Actions
+• Flexion du coude
+• Supination de l’avant-bras
+• Aide à la flexion de l’épaule
+• Contribue à la stabilité antérieure de l’épaule
+
+Innervation
+• Nerf musculo-cutané (C5–C6)`
+},
+// ---------- ARM · POSTERIOR ----------
+{
+ id:"QoIJLGsfiTw", region:"arm", sub:"posterior", abbrEn:"TB (LH)", abbrFr:"TB (LP)",
+ nameEn:"Triceps — long head", nameFr:"Triceps — longue portion",
+ descEn:`Long Head of Triceps — Ultrasound Localization (Spasticity)
+
+Origin
+• Infraglenoid tubercle of the scapula
+Insertion
+• Olecranon process of the ulna
+• Deep fascia of the forearm (via the triceps tendon)
+Innervation
+• Radial nerve (C6–C8)
+Action
+• Elbow extension
+• Assists shoulder extension
+• Contributes to humeral adduction
+• Provides posterior glenohumeral stability
+
+Localization (Ultrasound)
+The long head of the triceps is visualized on the posterior shoulder, arising from the infraglenoid tubercle and running distally along the medial upper arm. In transverse view it appears as a broad hypoechoic muscle, bordered laterally by the lateral head of the triceps and deep to subcutaneous tissues. When scanning the proximal portion, the radial nerve can be seen passing between the long head and lateral head of the triceps as it descends along the posterior humerus — its position is important to identify before any needle-based procedure. To visualize the origin, place the probe under the posterior–inferior glenoid, where the long head fibers emerge deep to teres minor and near teres major. Dynamic elbow extension helps confirm muscle contraction during the scan.
+
+Indications for Botulinum Toxin Injection (Spasticity)
+• Painful or restrictive elbow extension posture
+• Limitation of elbow flexion for hygiene or dressing
+• Posterior shoulder tightness
+• Abnormal synergy patterns after stroke or UMN injuries
+• Contribution to shoulder adduction/internal rotation tone in severe spasticity`,
+ descFr:`Longue portion du triceps — Repérage Échographique (Spasticité)
+
+Origine
+• Tubercule infraglénoïdal de l’omoplate
+Insertion
+• Processus olécrânien de l’ulna
+• Aponévrose de l’avant-bras (via le tendon tricipital)
+Innervation
+• Nerf radial (C6–C8)
+Action
+• Extension du coude
+• Participe à l’extension de l’épaule
+• Contribue à l’adduction du bras
+• Stabilisateur postérieur de l’articulation glénohumérale
+
+Localisation (Échographie)
+La longue portion du triceps est visualisée à l’épaule postérieure, prenant naissance sur le tubercule infraglénoïdal, puis descendant le long de la face médiale du bras. En coupe transverse, elle apparaît comme un muscle large et hypoéchogène, bordé latéralement par la portion latérale du triceps. Lors du balayage proximal, on identifie le nerf radial, qui passe entre la longue portion et la portion latérale du triceps avant de rejoindre la gouttière radiale sur la face postérieure de l’humérus — sa visualisation est essentielle avant tout geste percutané. Pour repérer l’origine, la sonde est placée sous le rebord postéro-inférieur de la glène, où les fibres émergent sous le petit rond et à proximité du grand rond. Une extension active du coude permet une confirmation dynamique de la contraction musculaire.
+
+Indications d’Injection de Toxine Botulinique (Spasticité)
+• Posture en extension du coude douloureuse ou limitante
+• Difficulté de flexion du coude pour les soins ou l’habillage
+• Tension postérieure de l’épaule
+• Synergies anormales après AVC ou lésion du motoneurone supérieur
+• Participation aux postures d’adduction/rotation interne dans les spasticités sévères`
+},
+// ---------- FOREARM · ANTERIOR (flexor / pronator) ----------
+{
+ id:"j28JXJON10Q", region:"forearm", sub:"anterior", abbrEn:"PT", abbrFr:"RP",
+ nameEn:"Pronator teres", nameFr:"Rond pronateur",
+ descEn:`Pronator Teres — Ultrasound Anatomy & Localisation (Spasticity)
+
+Origin
+• Humeral head: medial epicondyle of the humerus
+• Ulnar head: coronoid process of the ulna
+Insertion: Lateral surface of the radius (mid-shaft)
+Innervation: Median nerve (C6–C7)
+Action: Forearm pronation, assists elbow flexion
+
+Indications for botulinum toxin injection
+• Persistent forearm pronation posture
+• Difficulty achieving or maintaining forearm supination
+• Functional limitation during reaching, grasping, or hygiene
+• Contribution to a flexor–pronator synergy of the upper limb
+• Pain or overactivity of the medial forearm flexor compartment
+
+Ultrasound localisation
+The pronator teres is identified in the proximal volar forearm, just distal to the medial epicondyle. On transverse view it appears as a superficial muscle running obliquely from medial to lateral, crossing the forearm.
+• It lies superficial to the flexor digitorum superficialis (FDS).
+• It is lateral to the flexor carpi radialis (FCR) and medial to the brachioradialis.
+• The median nerve typically courses between the two heads of the pronator teres or immediately deep to the muscle — a critical landmark to identify before injection.
+Dynamic scanning with resisted pronation helps confirm the muscle and distinguish it from adjacent flexors.`,
+ descFr:`Rond pronateur — Anatomie échographique & Localisation (Spasticité)
+
+Origine
+• Chef huméral : épicondyle médial de l’humérus
+• Chef ulnaire : processus coronoïde de l’ulna
+Insertion : Face latérale du radius (tiers moyen)
+Innervation : Nerf médian (C6–C7)
+Action : Pronation de l’avant-bras, aide à la flexion du coude
+
+Indications d’injection de toxine botulinique
+• Posture persistante en pronation de l’avant-bras
+• Limitation de la supination active ou passive
+• Retentissement fonctionnel (préhension, toilette, habillage)
+• Participation à une synergie fléchisseur–pronateur du membre supérieur
+• Douleur ou hyperactivité du compartiment fléchisseur médial
+
+Localisation échographique
+Le rond pronateur est visualisé dans la région antérieure proximale de l’avant-bras, juste sous l’épicondyle médial. En coupe transverse, il apparaît comme un muscle superficiel à trajet oblique de médial vers latéral.
+• Il est superficiel par rapport au fléchisseur superficiel des doigts (FSD).
+• Il se situe latéralement au fléchisseur radial du carpe (FRC) et médialement au brachio-radial.
+• Le nerf médian chemine entre les deux chefs du rond pronateur ou immédiatement en profondeur — repère essentiel à identifier avant toute injection.
+La contraction contre résistance en pronation facilite l’identification dynamique du muscle.`
+},
+{
+ id:"Fb9dJ2Uyozw", region:"forearm", sub:"anterior", abbrEn:"FCR", abbrFr:"FRC",
+ nameEn:"Flexor carpi radialis", nameFr:"Fléchisseur radial du carpe",
+ descEn:`Flexor Carpi Radialis (FCR) — Ultrasound Anatomy & Localisation (Spasticity)
+
+Origin: Medial epicondyle of the humerus (common flexor tendon)
+Insertion: Base of the 2nd metacarpal (often with a slip to the 3rd metacarpal)
+Innervation: Median nerve (C6–C7)
+Action: Wrist flexion and radial deviation
+
+Indications for botulinum toxin injection
+• Persistent wrist flexion with radial deviation posture
+• Difficulty achieving or maintaining a neutral or extended wrist position
+• Functional impairment affecting grasp, release, hygiene, or splint tolerance
+• Contribution to a wrist–finger flexor synergy of the upper limb
+• Pain or focal overactivity of the volar forearm flexor compartment
+
+Ultrasound localisation
+The FCR is identified in the volar forearm, typically at the proximal to mid-forearm level.
+• On transverse view, it appears as a superficial fusiform muscle, medial to the pronator teres at its origin, where it shows a crescent (half-moon) shape closely apposed to the pronator teres.
+• More distally, it lies medial to the brachioradialis and lateral to the palmaris longus (when present).
+• It is superficial to the flexor digitorum superficialis (FDS).
+• The radial artery courses lateral to the FCR tendon in the distal forearm and must be identified prior to injection.
+• The median nerve lies deeper and slightly ulnar, typically beneath the FDS at this level.
+Dynamic scanning with resisted wrist flexion combined with radial deviation helps confirm the muscle.`,
+ descFr:`Fléchisseur radial du carpe (FRC) — Anatomie échographique & Localisation (Spasticité)
+
+Origine : Épicondyle médial de l’humérus (tendon commun des fléchisseurs)
+Insertion : Base du 2ᵉ métacarpien (souvent avec un prolongement vers le 3ᵉ)
+Innervation : Nerf médian (C6–C7)
+Action : Flexion du poignet et déviation radiale
+
+Indications d’injection de toxine botulinique
+• Posture persistante en flexion du poignet avec déviation radiale
+• Difficulté à obtenir ou maintenir une position neutre ou en extension
+• Retentissement fonctionnel (préhension, lâcher, toilette, port d’orthèse)
+• Participation à une synergie fléchisseur du poignet et des doigts
+• Douleur ou hyperactivité focale du compartiment fléchisseur antérieur de l’avant-bras
+
+Localisation échographique
+Le FRC est visualisé sur la face antérieure de l’avant-bras, le plus souvent au tiers proximal à moyen.
+• En coupe transverse, il apparaît comme un muscle superficiel fusiforme, situé médialement au rond pronateur à son origine, avec une forme en croissant (demi-lune), intimement accolé au rond pronateur.
+• Plus distalement, il se situe médialement au brachio-radial et latéralement au long palmaire (lorsqu’il est présent).
+• Il est superficiel par rapport au fléchisseur superficiel des doigts (FSD).
+• L’artère radiale chemine latéralement au tendon du FRC en distal — repère vasculaire essentiel avant toute injection.
+• Le nerf médian se situe plus en profondeur et légèrement en dedans, le plus souvent sous le FSD.
+L’examen dynamique avec flexion du poignet et déviation radiale contre résistance facilite l’identification du muscle.`
+},
+{
+ id:"3G_bX6Jl81I", region:"forearm", sub:"anterior", abbrEn:"PL", abbrFr:"LP",
+ nameEn:"Palmaris longus", nameFr:"Long palmaire",
+ descEn:`Palmaris Longus (Spasticity) — Ultrasound-Guided Injection
+
+A superficial wrist flexor that may contribute to palmar tension and flexor synergy in upper-limb spasticity. The muscle is anatomically variable and may be absent.
+
+ANATOMY
+• Origin on the medial epicondyle of the humerus (common flexor tendon).
+• Insertion into the palmar aponeurosis and flexor retinaculum.
+• Innervated by the median nerve (C7–C8).
+• Action: weak wrist flexion; tenses the palmar aponeurosis.
+
+ULTRASOUND LOCALIZATION
+• Superficial muscle of the volar forearm, when present.
+• Located between the flexor carpi radialis (laterally) and flexor carpi ulnaris (medially).
+• Superficial to the flexor digitorum superficialis.
+• Distally forms a long, thin superficial tendon toward the palm.
+• Median nerve lies deeper (usually beneath the FDS); ulnar nerve and artery are medial and deeper near the FCU.
+• Dynamic test: wrist flexion with thumb–little finger opposition accentuates the tendon.
+
+INDICATIONS (SPASTICITY)
+• Superficial wrist flexor overactivity.
+• Excessive palmar tension contributing to wrist–finger flexor synergy.
+• Difficulty with hand opening, hygiene, or orthosis tolerance.
+• Consider only if the muscle is present and clinically contributory.`,
+ descFr:`Long palmaire (Spasticité) — Injection sous guidage échographique
+
+Muscle fléchisseur superficiel du poignet pouvant contribuer à une tension palmaire et à une synergie fléchisseuse dans la spasticité du membre supérieur. Ce muscle est inconstant et peut être absent.
+
+ANATOMIE
+• Origine sur l’épicondyle médial de l’humérus (tendon commun des fléchisseurs).
+• Insertion sur l’aponévrose palmaire et le rétinaculum des fléchisseurs.
+• Innervation par le nerf médian (C7–C8).
+• Action : flexion faible du poignet; mise en tension de l’aponévrose palmaire.
+
+LOCALISATION ÉCHOGRAPHIQUE
+• Muscle superficiel de la face antérieure de l’avant-bras, lorsqu’il est présent.
+• Situé entre le fléchisseur radial du carpe (latéralement) et le fléchisseur ulnaire du carpe (médialement).
+• Superficiel par rapport au fléchisseur superficiel des doigts.
+• En distal, tendon long et fin, superficiel, se dirigeant vers la paume.
+• Le nerf médian est plus profond (souvent sous le FSD); le nerf et l’artère ulnaires sont médiaux et profonds près du FUC.
+• Test dynamique : flexion du poignet avec opposition pouce–auriculaire.
+
+INDICATIONS (SPASTICITÉ)
+• Hypertonie superficielle des fléchisseurs du poignet.
+• Tension palmaire excessive dans une synergie fléchisseur poignet–doigts.
+• Difficulté à l’ouverture de la main, à l’hygiène ou au port d’orthèse.
+• À considérer uniquement si le muscle est présent et cliniquement pertinent.`
+},
+{
+ id:"QcSCufScqkc", region:"forearm", sub:"anterior", abbrEn:"FCU", abbrFr:"FUC",
+ nameEn:"Flexor carpi ulnaris", nameFr:"Fléchisseur ulnaire du carpe",
+ descEn:`Flexor Carpi Ulnaris (FCU, Spasticity) — Ultrasound-Guided Injection
+
+A key wrist flexor–ulnar deviator and a frequent contributor to ulnar-deviated wrist postures in upper-limb spasticity.
+
+ANATOMY
+• Two heads: humeral head from the medial epicondyle; ulnar head from the olecranon and posterior border of the ulna.
+• Insertion on the pisiform, with extensions to the hook of hamate and base of the 5th metacarpal.
+• Innervated by the ulnar nerve (C8–T1).
+• Action: wrist flexion and ulnar deviation.
+
+ULTRASOUND LOCALIZATION
+• Located on the ulnar aspect of the volar forearm.
+• Most medial superficial flexor muscle.
+• Superficial to the flexor digitorum profundus.
+• The ulnar nerve and ulnar artery course deep and immediately radial to the FCU — critical structures to identify before injection.
+• Best visualized in transverse view at the proximal to mid-forearm.
+• Dynamic scanning with resisted wrist flexion and ulnar deviation helps confirm the muscle.
+
+INDICATIONS (SPASTICITY)
+• Wrist flexion with ulnar deviation posture.
+• Difficulty maintaining neutral or extended wrist alignment.
+• Contribution to wrist–finger flexor synergy.
+• Pain or focal overactivity along the ulnar volar forearm.`,
+ descFr:`Fléchisseur ulnaire du carpe (FUC, Spasticité) — Injection sous guidage échographique
+
+Muscle fléchisseur et déviateur ulnaire du poignet fréquemment impliqué dans les postures spastiques du membre supérieur.
+
+ANATOMIE
+• Deux chefs : chef huméral (épicondyle médial) et chef ulnaire (olécrâne et bord postérieur de l’ulna).
+• Insertion sur le pisiforme, avec prolongements vers l’hamatum et la base du 5ᵉ métacarpien.
+• Innervation par le nerf ulnaire (C8–T1).
+• Action : flexion du poignet et déviation ulnaire.
+
+LOCALISATION ÉCHOGRAPHIQUE
+• Situé sur le versant ulnaire de la face antérieure de l’avant-bras.
+• Muscle fléchisseur superficiel le plus médial.
+• Superficiel par rapport au fléchisseur profond des doigts.
+• Le nerf ulnaire et l’artère ulnaire cheminent en profondeur, immédiatement en dedans du muscle — repères essentiels avant toute injection.
+• Visualisation optimale en coupe transverse au tiers proximal à moyen de l’avant-bras.
+• L’examen dynamique avec flexion et déviation ulnaire contre résistance facilite l’identification.
+
+INDICATIONS (SPASTICITÉ)
+• Posture du poignet en flexion avec déviation ulnaire.
+• Difficulté à maintenir une position neutre ou en extension.
+• Participation à une synergie fléchisseur poignet–doigts.
+• Douleur ou hyperactivité focale sur le versant ulnaire antérieur de l’avant-bras.`
+},
+{
+ id:"V_rx0JmhJuM", region:"forearm", sub:"anterior", abbrEn:"FDS", abbrFr:"FSD",
+ nameEn:"Flexor digitorum superficialis", nameFr:"Fléchisseur superficiel des doigts",
+ descEn:`Flexor Digitorum Superficialis (FDS) — Ultrasound Anatomy & Localisation (Spasticity)
+
+Origin
+• Humeroulnar head: medial epicondyle of the humerus, ulnar collateral ligament, coronoid process of the ulna
+• Radial head: anterior border of the radius (proximal half)
+Insertion: Sides of the middle phalanges of digits II–V
+Innervation: Median nerve (C7–T1)
+Action: Flexion of the proximal interphalangeal (PIP) joints; assists MCP and wrist flexion
+
+Indications for botulinum toxin injection
+• Persistent finger flexion posture, predominantly at the PIP joints
+• Difficulty opening the hand or releasing objects
+• Functional limitation affecting grasp, release, hygiene, or dressing
+• Contribution to a flexor synergy of the wrist and fingers
+• Pain, stiffness, or hygiene issues related to finger flexor overactivity
+
+Ultrasound localisation
+The FDS forms the intermediate layer of the flexor compartment.
+• In the proximal forearm, it lies deep to the pronator teres and superficial to the flexor digitorum profundus (FDP).
+• It is medial to the flexor carpi radialis (FCR) and lateral to the flexor carpi ulnaris (FCU).
+• The median nerve courses on the deep surface of the FDS proximally then more superficially distally, and must be clearly identified before injection.
+• On transverse view, the FDS appears as a broad muscle belly that progressively divides into distinct fascicles for digits II–V in the mid-forearm.
+Dynamic scanning with resisted PIP flexion helps confirm the muscle and differentiate it from the deeper FDP.`,
+ descFr:`Fléchisseur superficiel des doigts (FSD) — Anatomie échographique & Localisation (Spasticité)
+
+Origine
+• Chef huméro-ulnaire : épicondyle médial de l’humérus, ligament collatéral ulnaire, processus coronoïde de l’ulna
+• Chef radial : bord antérieur du radius (moitié proximale)
+Insertion : Faces latérales des phalanges moyennes des doigts II à V
+Innervation : Nerf médian (C7–T1)
+Action : Flexion des articulations interphalangiennes proximales (IPP); participe à la flexion des MCP et du poignet
+
+Indications d’injection de toxine botulinique
+• Posture persistante en flexion des doigts, surtout au niveau des IPP
+• Difficulté à ouvrir la main ou à relâcher la préhension
+• Retentissement fonctionnel (préhension, lâcher, hygiène, habillage)
+• Participation à une synergie fléchisseuse du poignet et des doigts
+• Douleur, raideur ou problèmes d’hygiène liés à l’hyperactivité des fléchisseurs des doigts
+
+Localisation échographique
+Le FSD correspond au plan intermédiaire du compartiment fléchisseur.
+• Dans l’avant-bras proximal, il est situé en profondeur du rond pronateur et en superficie du fléchisseur profond des doigts (FPD).
+• Il se trouve médialement au fléchisseur radial du carpe (FRC) et latéralement au fléchisseur ulnaire du carpe (FUC).
+• Le nerf médian chemine au contact profond du FSD en proximal puis devient plus superficiel en distal — repère essentiel à identifier avant toute injection.
+• En coupe transverse, le FSD apparaît comme un muscle large se divisant progressivement en faisceaux distincts pour les doigts II à V.
+La flexion contre résistance au niveau des IPP permet une identification dynamique fiable et aide à le distinguer du fléchisseur profond des doigts.`
+},
+{
+ id:"poTWIEgXfvQ", region:"forearm", sub:"anterior", abbrEn:"FDP", abbrFr:"FPD",
+ nameEn:"Flexor digitorum profundus", nameFr:"Fléchisseur profond des doigts",
+ descEn:`Flexor Digitorum Profundus (FDP) — Ultrasound Anatomy & Localisation (Spasticity)
+
+Origin
+• Proximal three-quarters of the anterior and medial surfaces of the ulna
+• Interosseous membrane
+Insertion: Bases of the distal phalanges of digits II–V
+Innervation: Median nerve (anterior interosseous nerve) for digits II–III; ulnar nerve for digits IV–V (C8–T1)
+Action: Flexion of the distal interphalangeal (DIP) joints; assists PIP, MCP, and wrist flexion
+
+Indications for botulinum toxin injection
+• Persistent finger flexion posture involving the distal interphalangeal joints
+• Inability to extend the fingers fully, particularly at the DIP level
+• Functional impairment affecting grasp, release, hygiene, or nail care
+• Contribution to a severe flexor synergy of the wrist and fingers
+• Pain, skin maceration, or hygiene issues related to deep finger flexor overactivity
+
+Ultrasound localisation
+The FDP is the deepest muscle of the finger flexor group.
+• In the proximal and mid-forearm, it lies deep to the FDS and superficial to the interosseous membrane and ulna.
+• It is located centrally within the deep flexor compartment, with the flexor pollicis longus lying laterally.
+• The anterior interosseous nerve courses along the deep surface of the FDP and should be recognised when scanning.
+• On transverse view, the FDP appears as a deep, relatively homogeneous muscle mass that divides distally into four tendinous units for digits II–V.
+Dynamic scanning with resisted DIP flexion is essential to confirm FDP activation and differentiate it from the more superficial FDS (which primarily produces PIP flexion).`,
+ descFr:`Fléchisseur profond des doigts (FPD) — Anatomie échographique & Localisation (Spasticité)
+
+Origine
+• Trois quarts proximaux des faces antérieure et médiale de l’ulna
+• Membrane interosseuse
+Insertion : Base des phalanges distales des doigts II à V
+Innervation : Nerf médian (nerf interosseux antérieur) pour les doigts II–III; nerf ulnaire pour les doigts IV–V (C8–T1)
+Action : Flexion des articulations interphalangiennes distales (IPD); participe à la flexion des IPP, des MCP et du poignet
+
+Indications d’injection de toxine botulinique
+• Posture persistante en flexion des doigts touchant principalement les IPD
+• Impossibilité d’extension complète des doigts, surtout en distal
+• Retentissement fonctionnel (préhension, lâcher, hygiène, soins des ongles)
+• Participation à une synergie fléchisseuse sévère du poignet et des doigts
+• Douleur, macération cutanée ou problèmes d’hygiène liés à l’hyperactivité des fléchisseurs profonds
+
+Localisation échographique
+Le FPD est le muscle le plus profond du groupe fléchisseur des doigts.
+• Dans l’avant-bras proximal et moyen, il est situé en profondeur du FSD et au contact de la membrane interosseuse et de l’ulna.
+• Il occupe une position centrale dans le compartiment fléchisseur profond, le long fléchisseur du pouce étant situé plus latéralement.
+• Le nerf interosseux antérieur chemine au contact profond du FPD et doit être identifié lors du repérage.
+• En coupe transverse, le FPD apparaît comme une masse musculaire profonde relativement homogène, se divisant en quatre unités tendineuses pour les doigts II à V.
+La flexion contre résistance au niveau des IPD constitue la manœuvre clé pour identifier le FPD et le distinguer du FSD (flexion des IPP).`
+},
+{
+ id:"bsT_S2-Ila0", region:"forearm", sub:"anterior", abbrEn:"FPL", abbrFr:"FLP",
+ nameEn:"Flexor pollicis longus", nameFr:"Fléchisseur long du pouce",
+ descEn:`Flexor Pollicis Longus (FPL) — Ultrasound Anatomy & Localisation (Spasticity)
+
+Origin
+• Anterior surface of the radius (middle half)
+• Adjacent interosseous membrane
+Insertion: Base of the distal phalanx of the thumb
+Innervation: Median nerve (C8–T1)
+Action: Flexion of the interphalangeal (IP) joint of the thumb; assists MCP and wrist flexion
+
+Indications for botulinum toxin injection
+• Persistent thumb flexion posture, predominantly at the IP joint
+• Difficulty opening the hand or releasing objects due to thumb flexion patterns
+• Functional limitation affecting grasp, pinch, release, or hand hygiene
+• Contribution to a flexor synergy of the thumb associated with wrist and finger flexor overactivity
+• Pain, stiffness, or hygiene issues related to sustained thumb flexor overactivity
+
+Ultrasound localisation
+The FPL lies in the deep volar compartment of the forearm.
+• Proximally, it becomes visible where the pronator teres muscle ends.
+• It lies deep to the FDS and lateral (radial) to the FDP.
+• The muscle courses along the anterior surface of the radius and is typically well visualised in the mid-forearm as a distinct, fusiform belly.
+• On transverse view, the FPL appears as a single, well-defined muscle on the radial side of the deep flexor compartment.
+Dynamic ultrasound with resisted thumb IP flexion helps confirm identification and differentiate the FPL from adjacent deep flexors.`,
+ descFr:`Fléchisseur long du pouce (FLP) — Anatomie échographique & Localisation (Spasticité)
+
+Origine
+• Face antérieure du radius (moitié moyenne)
+• Membrane interosseuse adjacente
+Insertion : Base de la phalange distale du pouce
+Innervation : Nerf médian (C8–T1)
+Action : Flexion de l’articulation interphalangienne (IP) du pouce; participe à la flexion de la MCP du pouce et du poignet
+
+Indications d’injection de toxine botulinique
+• Posture persistante en flexion du pouce, principalement au niveau de l’IP
+• Difficulté à ouvrir la main ou à relâcher les objets liée à la flexion du pouce
+• Retentissement fonctionnel (préhension, pince, lâcher, hygiène)
+• Participation à une synergie fléchisseuse du pouce associée à l’hyperactivité des fléchisseurs du poignet et des doigts
+• Douleur, raideur ou problèmes d’hygiène liés à l’hyperactivité prolongée du muscle
+
+Localisation échographique
+Le FLP est situé dans le compartiment profond de la loge antérieure de l’avant-bras.
+• En proximal, il apparaît à partir de la zone où se termine le rond pronateur.
+• Il est situé en profondeur du FSD et en position latérale (radiale) par rapport au FPD.
+• Le muscle chemine le long de la face antérieure du radius et est généralement bien individualisé dans l’avant-bras moyen sous forme d’un ventre fusiforme.
+• En coupe transverse, le FLP apparaît comme un muscle unique, bien délimité, du côté radial du plan profond des fléchisseurs.
+La flexion contre résistance de l’IP du pouce permet une identification dynamique fiable et aide à distinguer le FLP des autres fléchisseurs profonds.`
+},
+{
+ id:"4leEUqtiE1E", region:"forearm", sub:"anterior", abbrEn:"PQ", abbrFr:"CP",
+ nameEn:"Pronator quadratus", nameFr:"Carré pronateur",
+ descEn:`Pronator Quadratus (PQ) — Ultrasound Anatomy & Localisation (Spasticity)
+
+Origin: Distal anterior surface of the ulna
+Insertion: Distal anterior surface of the radius
+Innervation: Median nerve (C8–T1)
+Action: Forearm pronation; dynamic stabilisation of the distal radioulnar joint (DRUJ)
+
+Indications for botulinum toxin injection
+• Persistent distal forearm pronation posture
+• Difficulty achieving or maintaining full forearm supination
+• Functional limitation affecting grasp, object manipulation, hygiene, or positioning
+• Contribution to a flexor–pronator synergy pattern
+• Residual pronation after treatment of pronator teres
+
+Ultrasound localisation
+The pronator quadratus is identified in the distal volar forearm, immediately proximal to the wrist joint.
+• It lies deep in the distal anterior compartment, directly over the interosseous membrane.
+• It extends transversely between the distal ulna and distal radius.
+• It is deep to the flexor tendons (FDS, FDP, FPL) at the distal forearm.
+• On transverse view, it appears as a thin, rectangular muscle spanning between the radius and ulna.
+Because of its distal, deep position, probe placement close to the wrist crease is required. Resisted forearm pronation helps confirm identification and differentiate the PQ from overlying flexor tendons.`,
+ descFr:`Carré pronateur — Anatomie échographique & Localisation (Spasticité)
+
+Origine : Face antérieure distale de l’ulna
+Insertion : Face antérieure distale du radius
+Innervation : Nerf médian (C8–T1)
+Action : Pronation de l’avant-bras; stabilisation dynamique de l’articulation radio-ulnaire distale
+
+Indications d’injection de toxine botulinique
+• Attitude persistante en pronation distale de l’avant-bras
+• Difficulté à obtenir ou maintenir une supination complète
+• Retentissement fonctionnel (préhension, manipulation d’objets, hygiène, positionnement)
+• Participation à une synergie fléchisseur–pronateur
+• Persistance d’une pronation après traitement du rond pronateur
+
+Localisation échographique
+Le carré pronateur est visualisé dans la portion distale et antérieure de l’avant-bras, juste au-dessus du poignet.
+• Il est situé en profondeur dans la loge antérieure distale, directement appliqué sur la membrane interosseuse.
+• Il s’étend transversalement entre l’ulna distal et le radius distal.
+• Il est en profondeur des tendons fléchisseurs (FSD, FPD, FLP) au tiers distal.
+• En coupe transverse distale, il apparaît comme un muscle fin, rectangulaire, reliant le radius et l’ulna.
+En raison de sa position profonde et distale, la sonde doit être placée à proximité du pli du poignet. La pronation contrariée confirme l’identification et le différencie des tendons fléchisseurs sus-jacents.`
+},
+// ---------- FOREARM · POSTERIOR / LATERAL (extensor) ----------
+{
+ id:"2CcYGllr1b4", region:"forearm", sub:"posterior", abbrEn:"BR", abbrFr:"BR",
+ nameEn:"Brachioradialis", nameFr:"Brachioradial",
+ descEn:`Brachioradialis — Ultrasound Anatomy & Localisation (Spasticity)
+
+A lateral forearm elbow flexor (part of the mobile wad), located in the radial/posterolateral compartment.
+
+Origin
+• Proximal two-thirds of the lateral supracondylar ridge of the humerus
+Insertion: Lateral surface of the distal radius, near the radial styloid
+Innervation: Radial nerve (C5–C7)
+Action: Elbow flexion (maximal in neutral / mid-pronation); assists return to neutral from pronation or supination
+
+Indications for botulinum toxin injection
+• Excessive elbow flexion posture driven by lateral flexor overactivity
+• Difficulty achieving full elbow extension during reaching
+• Contribution to a flexor synergy pattern
+• Persistent elbow flexion despite treatment of biceps and brachialis
+• Painful or functionally limiting elbow flexion tone
+
+Ultrasound localisation
+The brachioradialis forms the lateral border of the cubital fossa proximally.
+• It is a superficial muscle in the lateral compartment of the forearm.
+• Proximally, it lies lateral to the biceps tendon and brachialis; the radial nerve runs deep and slightly medial before dividing.
+• On transverse view it may appear large or relatively small compared to the ECRL and ECRB.
+• It must not be confused with ECRL or ECRB during injection, as these lie posterior and may have similar echotexture.
+• The radial nerve is often described as lying deep to the brachioradialis, but it may instead lie beneath the ECRL — it should not be used as the sole landmark.
+Resisted elbow flexion in neutral forearm helps confirm identification.`,
+ descFr:`Brachioradial — Anatomie échographique & Localisation (Spasticité)
+
+Fléchisseur latéral du coude (« mobile wad »), situé dans la loge radiale / postéro-latérale.
+
+Origine
+• Deux tiers proximaux de la crête supracondylaire latérale de l’humérus
+Insertion : Face latérale du radius distal, près du processus styloïde
+Innervation : Nerf radial (C5–C7)
+Action : Flexion du coude (maximale en position neutre); participe au retour vers la position neutre depuis la pronation ou la supination
+
+Indications d’injection de toxine botulinique
+• Attitude persistante en flexion du coude
+• Difficulté à obtenir une extension complète du coude
+• Participation à une synergie fléchisseur du membre supérieur
+• Persistance d’une hypertonie après traitement du biceps et du brachial
+• Retentissement fonctionnel ou douloureux lié à la flexion
+
+Localisation échographique
+Le brachioradial constitue la limite latérale de la fosse cubitale en proximal.
+• Il est situé en superficie dans la loge latérale de l’avant-bras.
+• En proximal, il est latéral au tendon du biceps et au brachial; le nerf radial chemine en profondeur avant sa division.
+• En coupe transverse, il peut paraître volumineux ou relativement petit par rapport aux ECRL et ECRB.
+• Il ne doit pas être confondu avec l’ECRL ou l’ECRB, situés plus en arrière avec une échostructure parfois similaire.
+• Le nerf radial, souvent décrit en profondeur du brachioradial, peut se retrouver sous l’ECRL — il ne doit pas être l’unique repère.
+La flexion contrariée du coude en position neutre permet de confirmer l’identification.`
+},
+{
+ id:"sGRazEkJm6E", region:"forearm", sub:"posterior", abbrEn:"ECRL", abbrFr:"ERCL",
+ nameEn:"Extensor carpi radialis longus", nameFr:"Extenseur radial du carpe long",
+ descEn:`Extensor Carpi Radialis Longus (ECRL) — Ultrasound Anatomy & Localisation (Spasticity)
+
+Origin: Lateral supracondylar ridge of the humerus
+Insertion: Base of the second metacarpal (dorsal surface)
+Innervation: Radial nerve (C6–C7)
+Action: Wrist extension; radial deviation of the wrist; assists in stabilising the wrist during finger flexion
+
+Indications for botulinum toxin injection
+• Persistent wrist extension posture contributing to abnormal upper limb patterns
+• Radial deviation of the wrist due to extensor overactivity
+• Difficulty positioning the hand for grasp or functional tasks
+• Contribution to abnormal extensor synergy patterns
+• Painful or functionally limiting wrist extension tone
+
+Ultrasound localisation
+The ECRL is identified in the lateral compartment of the proximal forearm.
+• It lies immediately posterior to the brachioradialis.
+• It is superficial and lateral in the extensor compartment.
+• The ECRB lies just medial and slightly deeper.
+• On transverse ultrasound, the ECRL appears as a superficial muscle posterior to the brachioradialis and lateral to the ECRB.
+• The brachioradialis may look similar and be mistaken for the ECRL if the probe is slightly anterior — distinguishing them avoids unintended brachioradialis injection.
+• The radial nerve travels deep to the brachioradialis proximally, then divides into superficial and deep branches near the lateral elbow.
+Resisted wrist extension with radial deviation helps confirm the ECRL and differentiate it from adjacent extensors.`,
+ descFr:`Extenseur radial du carpe long (ECRL) — Anatomie échographique & Localisation (Spasticité)
+
+Origine : Crête supracondylaire latérale de l’humérus
+Insertion : Base du deuxième métacarpien (face dorsale)
+Innervation : Nerf radial (C6–C7)
+Action : Extension du poignet; déviation radiale; stabilisation du poignet lors de la flexion des doigts
+
+Indications d’injection de toxine botulinique
+• Attitude persistante en extension du poignet
+• Déviation radiale du poignet liée à une hyperactivité des extenseurs
+• Difficulté à positionner la main pour la préhension ou les activités fonctionnelles
+• Participation à un schéma de synergie extenseur
+• Hypertonie douloureuse ou limitant la fonction du poignet
+
+Localisation échographique
+L’ECRL est visualisé dans la loge latérale de l’avant-bras proximal.
+• Il est situé immédiatement en arrière du brachio-radial.
+• Il est superficiel dans la loge des extenseurs.
+• L’ECRB se situe juste en médial et légèrement plus profond.
+• En coupe transverse, l’ECRL apparaît comme un muscle superficiel situé derrière le brachio-radial et latéral à l’ECRB.
+• Le brachio-radial peut avoir une échostructure similaire et être confondu avec l’ECRL si la sonde est trop en avant — les distinguer évite une injection involontaire du brachio-radial.
+• Le nerf radial chemine en profondeur du brachio-radial avant de se diviser en branches superficielle et profonde près du coude.
+L’extension contrariée du poignet avec déviation radiale confirme l’ECRL et le différencie des extenseurs adjacents.`
+},
+{
+ id:"NFzOEmOSxbE", region:"forearm", sub:"posterior", abbrEn:"ECU", abbrFr:"EUC",
+ nameEn:"Extensor carpi ulnaris", nameFr:"Extenseur ulnaire du carpe",
+ descEn:`Extensor Carpi Ulnaris (ECU) — Ultrasound Anatomy & Localisation (Spasticity)
+
+Origin
+• Lateral epicondyle of the humerus
+• Posterior border of the ulna
+Insertion: Base of the fifth metacarpal
+Innervation: Posterior interosseous nerve (C7–C8)
+Action: Wrist extension; ulnar deviation; dynamic ulnar wrist stabilisation
+
+Indications for botulinum toxin injection
+• Wrist extension with ulnar deviation posture
+• Difficulty positioning the wrist in neutral
+• Ulnar-sided deforming pull or pain
+• Functional limitation affecting grasp, release, hygiene, or splinting
+• Contribution to extensor synergy patterns
+• Selected wrist flexion cases when palmar-volar ECU tendon luxation contributes to an abnormal flexion vector
+
+Ultrasound localisation
+The ECU is identified in the posterior-ulnar forearm.
+• It lies superficially along the ulnar dorsal forearm, just posterior to the ulna in the mid/distal forearm.
+• It lies ulnar to the extensor digitorum and extensor digiti minimi.
+• On transverse view it appears as a superficial elongated muscle belly.
+• Distally, the tendon runs in the ECU groove of the distal ulna.
+Resisted wrist extension or ulnar deviation helps confirm identification. Avoid confusing the ECU with the extensor digiti minimi or extensor digitorum tendons distally, or with the anconeus more proximally.`,
+ descFr:`Extenseur ulnaire du carpe (EUC) — Anatomie échographique & Localisation (Spasticité)
+
+Origine
+• Épicondyle latéral de l’humérus
+• Bord postérieur de l’ulna
+Insertion : Base du cinquième métacarpien
+Innervation : Nerf interosseux postérieur (C7–C8)
+Action : Extension du poignet; inclinaison ulnaire; stabilisation dynamique ulnaire du poignet
+
+Indications d’injection de toxine botulinique
+• Attitude du poignet en extension avec déviation ulnaire
+• Difficulté à replacer le poignet en position neutre
+• Traction déformante ou douleur du versant ulnaire
+• Retentissement fonctionnel (préhension, lâcher, hygiène, appareillage)
+• Participation à une synergie spastique à prédominance extenseur
+• Certains poignets en flexion lorsqu’une luxation palmaire du tendon de l’EUC contribue à un vecteur pathologique de flexion
+
+Localisation échographique
+L’EUC est visualisé sur le versant postéro-ulnaire de l’avant-bras.
+• Il est superficiel le long du bord ulnaire dorsal, juste en arrière de l’ulna au tiers moyen/distal.
+• Il est en dedans de l’extenseur commun des doigts et de l’extenseur du cinquième doigt.
+• En coupe transverse, il apparaît comme un muscle superficiel allongé.
+• Distalement, son tendon chemine dans la gouttière de l’ulna distal.
+L’extension contrariée du poignet ou la déviation ulnaire dynamique confirment l’identification. Éviter de le confondre avec les tendons extenseurs voisins distalement ou avec l’anconé plus proximalement.`
+},
+{
+ id:"B7UZvLL9pwI", region:"forearm", sub:"posterior", abbrEn:"EDC", abbrFr:"ECD",
+ nameEn:"Extensor digitorum communis", nameFr:"Extenseur commun des doigts",
+ descEn:`Extensor Digitorum Communis (EDC) — Ultrasound Anatomy & Localisation (Spasticity)
+
+Origin: Lateral epicondyle of the humerus
+Insertion: Extensor expansions of digits 2–5
+Innervation: Posterior interosseous nerve (C7–C8)
+Action: Extension of digits 2–5; assists wrist extension
+
+Indications for botulinum toxin injection
+• Excessive finger extension posture
+• Abnormal hand opening patterns interfering with grasp
+• Difficulty with coordinated finger flexion and release
+• Painful overactivity of the finger extensors
+• Functional interference during reach or object manipulation
+• Contribution to mixed spastic-dystonic hand postures
+
+Ultrasound localisation
+The EDC is identified in the superficial posterior forearm.
+• It occupies a central position in the posterior compartment.
+• It lies between the extensor carpi radialis muscles laterally and the extensor digiti minimi / extensor carpi ulnaris medially.
+• On transverse view, it appears as a broad superficial muscle with multiple internal septations.
+• Distally, it divides into tendons for digits 2–5.
+Dynamic finger extension helps confirm identification. Avoid confusing it with the extensor digiti minimi medially, the extensor carpi radialis muscles laterally, or distal tendinous structures.`,
+ descFr:`Extenseur commun des doigts (ECD) — Anatomie échographique & Localisation (Spasticité)
+
+Origine : Épicondyle latéral de l’humérus
+Insertion : Expansions dorsales des 2e au 5e doigts
+Innervation : Nerf interosseux postérieur (C7–C8)
+Action : Extension des doigts 2 à 5; participe à l’extension du poignet
+
+Indications d’injection de toxine botulinique
+• Attitude excessive en extension des doigts
+• Schéma pathologique d’ouverture de la main gênant la préhension
+• Difficulté de coordination entre flexion et relâchement des doigts
+• Hyperactivité douloureuse des extenseurs des doigts
+• Retentissement fonctionnel lors de l’atteinte ou de la manipulation d’objets
+• Participation à des postures mixtes spastiques ou dystoniques de la main
+
+Localisation échographique
+L’ECD est visualisé sur le versant postérieur superficiel de l’avant-bras.
+• Il occupe une position centrale dans la loge postérieure.
+• Il est situé entre les extenseurs radiaux du carpe en dehors et l’extenseur du cinquième doigt / extenseur ulnaire du carpe en dedans.
+• En coupe transverse, il apparaît comme un large muscle superficiel comportant plusieurs cloisons internes.
+• Distalement, il se divise en tendons pour les 2e au 5e doigts.
+L’extension des doigts aide à confirmer son identification. Éviter de le confondre avec l’extenseur du cinquième doigt en dedans, les extenseurs radiaux du carpe en dehors, ou les structures tendineuses distales.`
+},
+{
+ id:"PBavfJiwEzI", region:"forearm", sub:"posterior", abbrEn:"EDM", abbrFr:"ECD5",
+ nameEn:"Extensor digiti minimi", nameFr:"Extenseur du cinquième doigt",
+ descEn:`Extensor Digiti Minimi (EDM) — Ultrasound Anatomy & Localisation (Spasticity)
+
+Origin: Lateral epicondyle of the humerus
+Insertion: Extensor expansion of the fifth digit
+Innervation: Posterior interosseous nerve (C7–C8)
+Action: Extension of the fifth finger; assists wrist extension
+
+Indications for botulinum toxin injection
+• Excessive extension or abduction posture of the fifth finger
+• Persistent little finger clawing or malposition during hand opening
+• Difficulty with grasp, glove donning, hygiene, or splinting
+• Contribution to abnormal hand opening patterns
+• Painful overpull of the fifth ray
+• Functional interference with coordinated finger extension
+
+Ultrasound localisation
+The EDM is identified in the superficial posterior forearm.
+• It lies just ulnar to the extensor digitorum in the mid forearm.
+• It is usually smaller and more distinct distally.
+• On transverse view, it appears as a narrow superficial muscle belly between extensor digitorum and extensor carpi ulnaris.
+• Distally, its tendon crosses toward the fifth digit.
+Dynamic extension of the little finger helps confirm identification. Avoid confusing it with adjacent extensor digitorum slips, the extensor carpi ulnaris, or tendinous structures distally.`,
+ descFr:`Extenseur du cinquième doigt (ECD5) — Anatomie échographique & Localisation (Spasticité)
+
+Origine : Épicondyle latéral de l’humérus
+Insertion : Expansion dorsale du cinquième doigt
+Innervation : Nerf interosseux postérieur (C7–C8)
+Action : Extension du cinquième doigt; participe à l’extension du poignet
+
+Indications d’injection de toxine botulinique
+• Attitude excessive en extension ou en abduction du cinquième doigt
+• Griffe ou mauvais positionnement persistant du cinquième doigt à l’ouverture de la main
+• Difficulté pour la préhension, l’enfilage d’un gant, l’hygiène ou l’appareillage
+• Participation à un schéma pathologique d’ouverture de main
+• Douleur liée à une traction excessive du cinquième rayon
+• Retentissement fonctionnel sur l’extension coordonnée des doigts
+
+Localisation échographique
+L’ECD5 est visualisé sur le versant postérieur superficiel de l’avant-bras.
+• Il se situe juste en dedans de l’extenseur commun des doigts au tiers moyen.
+• Il est généralement plus individualisable distalement.
+• En coupe transverse, il apparaît comme un petit ventre musculaire superficiel entre l’extenseur commun des doigts et l’extenseur ulnaire du carpe.
+• Distalement, son tendon se dirige vers le cinquième doigt.
+L’extension du cinquième doigt aide à confirmer son identification. Éviter de le confondre avec les bandelettes de l’extenseur commun des doigts, l’extenseur ulnaire du carpe, ou les structures tendineuses distales.`
+},
+{
+ id:"cXSYpzUhjBQ", region:"forearm", sub:"posterior", abbrEn:"EPL", abbrFr:"LEP",
+ nameEn:"Extensor pollicis longus", nameFr:"Long extenseur du pouce",
+ descEn:`Extensor Pollicis Longus (EPL) — Ultrasound Anatomy & Localisation (Spasticity)
+
+Origin
+• Posterior surface of the ulna
+• Interosseous membrane
+Insertion: Base of the distal phalanx of the thumb
+Innervation: Posterior interosseous nerve (C7–C8)
+Action: Thumb IP and MCP extension; assists thumb CMC extension and wrist extension
+
+Indications for botulinum toxin injection
+• Excessive thumb extension posture
+• Hyperextension of the thumb interphalangeal joint
+• Thumb positioning interfering with grasp or hand closing
+• Difficulty with thumb opposition or object manipulation
+• Painful overactivity of the thumb extensors
+• Contribution to mixed spastic-dystonic thumb postures
+
+Ultrasound localisation
+The EPL is identified in the deep posterior forearm, more ulnar and more distal than the APL.
+• It lies deep to the superficial extensor muscles.
+• It arises from the posterior ulna and interosseous membrane.
+• On transverse view it appears as a deep posterior muscle belly before becoming tendinous distally.
+• Distally, its tendon courses around Lister's tubercle before reaching the thumb.
+Dynamic thumb IP extension helps confirm identification. It is more easily confused with the extensor indicis proprius (EIP) than the EPB (whose bulk is more distal and radial).`,
+ descFr:`Long extenseur du pouce (LEP) — Anatomie échographique & Localisation (Spasticité)
+
+Origine
+• Face postérieure de l’ulna
+• Membrane interosseuse
+Insertion : Base de la phalange distale du pouce
+Innervation : Nerf interosseux postérieur (C7–C8)
+Action : Extension de l’IP et de la MCP du pouce; participe à l’extension trapézo-métacarpienne et à l’extension du poignet
+
+Indications d’injection de toxine botulinique
+• Attitude excessive en extension du pouce
+• Hyperextension de l’interphalangienne du pouce
+• Positionnement du pouce gênant la préhension ou la fermeture de la main
+• Difficulté d’opposition du pouce ou de manipulation d’objets
+• Hyperactivité douloureuse des extenseurs du pouce
+• Participation à des postures mixtes spastiques ou dystoniques du pouce
+
+Localisation échographique
+Le LEP est visualisé dans la loge postérieure profonde de l’avant-bras, plus ulnaire et plus distal que le LAP.
+• Il est situé en profondeur des extenseurs superficiels.
+• Il prend origine sur l’ulna postérieur et la membrane interosseuse.
+• En coupe transverse, il apparaît comme un corps musculaire profond postérieur avant de devenir tendineux distalement.
+• Distalement, son tendon contourne le tubercule de Lister avant de se diriger vers le pouce.
+L’extension de l’IP du pouce aide à confirmer son identification. Il est plus facilement confondu avec l’extenseur propre de l’index (EPI) qu’avec le CEP (dont le corps est plus distal et radial).`
+},
+// ---------- HAND ----------
+{
+ id:"vUGiUTwfhlY", region:"hand", sub:"", abbrEn:"Intrinsics", abbrFr:"Intrinsèques", frTranslated:true,
+ nameEn:"Intrinsic hand muscles", nameFr:"Muscles intrinsèques de la main",
+ descEn:`Intrinsic Hand Muscles — Ultrasound Anatomy and Injection Landmarks (Spasticity)
+
+This video reviews the ultrasound anatomy and localisation of the intrinsic hand muscles for spasticity management. Emphasis is on recognising the thenar, hypothenar, interosseous, and lumbrical groups, their sonographic relationships, and their contribution to abnormal hand postures for accurate, safe botulinum toxin injection.
+
+Muscles reviewed
+• Thenar: abductor pollicis brevis (APB), flexor pollicis brevis (FPB), opponens pollicis (OP), adductor pollicis (AP)
+• Hypothenar: abductor digiti minimi (ADM), flexor digiti minimi brevis (FDMB), opponens digiti minimi (ODM)
+• Interossei: first dorsal interosseous (FDI), dorsal interossei (D1–D4), palmar interossei (P1–P3)
+• Lumbricals (L1–L4)
+
+Indications for botulinum toxin injection
+• Intrinsic-plus hand posture
+• Thumb-in-palm deformity
+• Excessive thumb adduction
+• MCP joint flexion with IP extension
+• Impaired grasp and release
+• Difficulty with hygiene, dressing, or splinting
+• Painful intrinsic muscle overactivity
+• Focal dystonic or mixed spastic-dystonic hand postures
+
+Ultrasound localisation
+High-frequency ultrasound with systematic examination of the thenar eminence, hypothenar eminence, dorsal intermetacarpal spaces, and palmar compartments.
+• Thenar muscles visualised around the first metacarpal and thumb base.
+• Hypothenar muscles along the ulnar aspect of the hand.
+• Dorsal interossei in the intermetacarpal spaces on the dorsum.
+• Palmar interossei on the palmar surfaces of the metacarpals.
+• Lumbricals in the palm adjacent to the flexor tendons.
+Dynamic finger and thumb movements confirm identification. Recognise the close relationship with the digital neurovascular bundles, flexor tendons, and metacarpal bones when planning injections.`,
+ descFr:`Muscles intrinsèques de la main — Anatomie échographique et repères d’injection (Spasticité)
+
+Cette vidéo présente l’anatomie échographique et la localisation des muscles intrinsèques de la main pour la prise en charge de la spasticité. L’accent est mis sur la reconnaissance des groupes thénarien, hypothénarien, interosseux et lombrical, de leurs rapports échographiques et de leur contribution aux postures anormales de la main, afin d’assurer des injections de toxine botulinique précises et sûres.
+
+Muscles étudiés
+• Thénar : court abducteur du pouce (APB), court fléchisseur du pouce (FPB), opposant du pouce (OP), adducteur du pouce (AP)
+• Hypothénar : abducteur du cinquième doigt (ADM), court fléchisseur du cinquième doigt (FDMB), opposant du cinquième doigt (ODM)
+• Interosseux : premier interosseux dorsal (FDI), interosseux dorsaux (D1–D4), interosseux palmaires (P1–P3)
+• Lombricaux (L1–L4)
+
+Indications d’injection de toxine botulinique
+• Main en posture « intrinsèque plus »
+• Pouce dans la paume
+• Adduction excessive du pouce
+• Flexion des MCP avec extension des IP
+• Préhension et relâchement altérés
+• Difficultés d’hygiène, d’habillage ou d’appareillage
+• Hyperactivité douloureuse des muscles intrinsèques
+• Postures dystoniques focales ou mixtes spastiques-dystoniques
+
+Localisation échographique
+Échographie haute fréquence avec examen systématique de l’éminence thénar, de l’éminence hypothénar, des espaces intermétacarpiens dorsaux et des loges palmaires.
+• Muscles thénariens visualisés autour du premier métacarpien et de la base du pouce.
+• Muscles hypothénariens le long du bord ulnaire de la main.
+• Interosseux dorsaux dans les espaces intermétacarpiens du dos de la main.
+• Interosseux palmaires sur les faces palmaires des métacarpiens.
+• Lombricaux dans la paume, au contact des tendons fléchisseurs.
+Les mouvements dynamiques des doigts et du pouce confirment l’identification. Reconnaître les rapports étroits avec les paquets vasculo-nerveux digitaux, les tendons fléchisseurs et les métacarpiens lors de la planification des injections.`
+}
+];
+
+function t(k){return UI[LANG][k];}
+
+function setLang(l){
+  LANG=l;
+  document.documentElement.lang=l;
+  document.getElementById("btnEn").classList.toggle("active",l==="en");
+  document.getElementById("btnFr").classList.toggle("active",l==="fr");
+  applyStaticText();
+  renderList();
+  if(PLAYER_ID) refreshModalText();
+}
+
+function applyStaticText(){
+  document.getElementById("appTitle").textContent=t("title");
+  document.getElementById("appSub").textContent=t("sub");
+  document.getElementById("search").placeholder=t("search");
+  document.getElementById("credit").innerHTML=t("credit");
+}
+
+function renderList(){
+  const q=(document.getElementById("search").value||"").trim().toLowerCase();
+  const host=document.getElementById("list");
+  host.innerHTML="";
+  let anyShown=false;
+
+  REGION_ORDER.forEach(region=>{
+    const inRegion=MUSCLES.filter(m=>m.region===region);
+    // filter by search across both languages
+    const matches=inRegion.filter(m=>{
+      if(!q) return true;
+      return (m.nameEn+" "+m.nameFr+" "+m.abbrEn+" "+m.abbrFr).toLowerCase().includes(q);
+    });
+    if(matches.length===0) return;
+    anyShown=true;
+
+    const rEl=document.createElement("div");
+    rEl.className="region";
+    rEl.style.setProperty("--rc", REGION_COLORS[region]||"#0e7490");
+    const rh=document.createElement("div");
+    rh.className="region-head";
+    const rIdx=REGION_ORDER.indexOf(region)+1;
+    rh.innerHTML='<span class="dot">'+rIdx+'</span><h2>'+REGIONS[LANG][region]+'</h2><span class="count">'+matches.length+'</span>';
+    rEl.appendChild(rh);
+
+    SUB_ORDER.forEach(sub=>{
+      const subMatches=matches.filter(m=>(m.sub||"")===sub);
+      if(subMatches.length===0) return;
+      const sEl=document.createElement("div");
+      sEl.className="sub";
+      if(sub){
+        const lab=document.createElement("p");
+        lab.className="sub-label";
+        lab.textContent=REGIONS[LANG][sub];
+        sEl.appendChild(lab);
+      }
+      const grid=document.createElement("div");
+      grid.className="grid";
+      subMatches.forEach(m=>{
+        const b=document.createElement("button");
+        b.className="m-btn";
+        b.onclick=()=>openModal(m.id);
+        const name=LANG==="en"?m.nameEn:m.nameFr;
+        const other=LANG==="en"?m.nameFr:m.nameEn;
+        const ab=LANG==="en"?m.abbrEn:m.abbrFr;
+        b.innerHTML='<span class="mn">'+name+'</span>'
+          +'<span class="ms">'+other+'</span>'
+          +'<span class="m-foot">'+(ab?'<span class="chip">'+ab+'</span>':'<span></span>')
+          +'<span class="play">▶ '+t("watch")+'</span></span>';
+        grid.appendChild(b);
+      });
+      sEl.appendChild(grid);
+      rEl.appendChild(sEl);
+    });
+    host.appendChild(rEl);
+  });
+
+  if(!anyShown){
+    host.innerHTML='<p class="empty">'+t("noResults")+'</p>';
+  }
+}
+
+function openModal(id){
+  const m=MUSCLES.find(x=>x.id===id);
+  if(!m) return;
+  PLAYER_ID=id;
+  mountPoster(m);
+  refreshModalText();
+  document.getElementById("overlay").classList.add("open");
+  document.body.style.overflow="hidden";
+}
+
+// Show a clickable thumbnail first; load the real player only on click.
+// (More reliable than auto-loading an iframe, and confirms the correct video.)
+function mountPoster(m){
+  const mount=document.getElementById("playerMount");
+  mount.innerHTML="";
+  const poster=document.createElement("button");
+  poster.type="button";
+  poster.className="poster";
+  poster.style.backgroundImage="url('https://i.ytimg.com/vi/"+m.id+"/hqdefault.jpg')";
+  poster.setAttribute("aria-label","Play video");
+  const play=document.createElement("span");
+  play.className="play-btn";
+  play.textContent="▶";
+  poster.appendChild(play);
+  poster.onclick=()=>loadPlayer(m);
+  mount.appendChild(poster);
+}
+
+function loadPlayer(m){
+  const mount=document.getElementById("playerMount");
+  mount.innerHTML="";
+  const ifr=document.createElement("iframe");
+  ifr.src="https://www.youtube.com/embed/"+m.id+"?rel=0&modestbranding=1&autoplay=1&playsinline=1";
+  ifr.title=m.nameEn;
+  ifr.allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share";
+  ifr.allowFullscreen=true;
+  mount.appendChild(ifr);
+}
+
+function refreshModalText(){
+  const m=MUSCLES.find(x=>x.id===PLAYER_ID);
+  if(!m) return;
+  const name=LANG==="en"?m.nameEn:m.nameFr;
+  const other=LANG==="en"?m.nameFr:m.nameEn;
+  document.getElementById("mTitle").textContent=name;
+  const ab=LANG==="en"?m.abbrEn:m.abbrFr;
+  document.getElementById("mSub").textContent=other+(ab?' · '+ab:'');
+  const desc=LANG==="en"?m.descEn:m.descFr;
+  document.getElementById("mDesc").textContent=desc;
+  const flag=document.getElementById("mFlag");
+  if(LANG==="fr" && m.frTranslated){
+    flag.innerHTML='<div class="flag">'+t("translated")+'</div>';
+  } else { flag.innerHTML=""; }
+  const yt=document.getElementById("mYt");
+  yt.href="https://www.youtube.com/watch?v="+m.id;
+  yt.textContent=t("openYt");
+  document.querySelector(".desc").scrollTop=0;
+}
+
+function closeModal(){
+  document.getElementById("overlay").classList.remove("open");
+  document.getElementById("playerMount").innerHTML="";
+  document.body.style.overflow="";
+  PLAYER_ID=null;
+}
+
+document.addEventListener("keydown",e=>{if(e.key==="Escape")closeModal();});
+
+applyStaticText();
+renderList();
+</script>
+</body>
+</html>
