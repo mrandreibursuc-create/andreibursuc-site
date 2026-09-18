@@ -6,6 +6,7 @@ ROOT=Path(__file__).resolve().parents[1]
 D=json.loads((ROOT/'data/site.json').read_text())
 C=D['clinic']; esc=html.escape
 TOOLS=[
+ ('emg-explorer','emg-explorer.html','Explorateur EMG et conduction nerveuse','EMG & nerve conduction explorer','Explorer les principes de l’électrodiagnostic, les tracés et les simulations interactives.','Explore electrodiagnostic principles, waveforms and interactive simulations.','FR / EN','EMG'),
  ('nerve-explorer','upper-limb-en.html','Explorateur des nerfs du membre supérieur','Upper-limb nerve explorer','Plexus brachial, myotomes et localisation des lésions.','Brachial plexus, myotomes and lesion localization.','EN','EMG'),
  ('explorateur-nerfs-membres-supérieurs','upper-limb-fr.html','Explorateur des nerfs du membre supérieur','Upper-limb nerve explorer','La version française, du plexus brachial à la main.','The French version, from brachial plexus to hand.','FR','EMG'),
  ('lower-extremity-nerve-explorer','lower-limb.html','Explorateur des nerfs du membre inférieur','Lower-limb nerve explorer','Plexus lombo-sacré, territoires et localisation.','Lumbosacral plexus, territories and localization.','FR / EN','EMG'),
