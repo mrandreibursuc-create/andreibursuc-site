@@ -47,7 +47,7 @@ def faq_html(lang,clinic,home):
  title='Questions fréquentes.' if fr else 'Frequently asked questions.'
  intro='Consultation en physiatrie à Montréal, EMG et rendez-vous : les réponses aux questions des patients.' if fr else 'Physiatry in Montréal, EMG and appointments: answers to common patient questions.'
  note='Informations générales. Les recommandations pour votre situation sont précisées lors de la consultation.' if fr else 'General information. Recommendations for your situation are discussed during your consultation.'
- return f'<main id="main"><section class="edu-hero"><div class="wrap"><p class="eyebrow">Dr Andrei Bursuc · Montréal</p><h1>{title}</h1><p>{intro}</p></div></section><section class="section wrap"><div class="faq-list">{cards(lang,clinic,FAQ)}</div><p class="faq-footer">{note}</p><div class="actions"><a class="button" href="/docs/demande-consultation-dr-andrei-bursuc.pdf" download>{"Télécharger le formulaire (PDF)" if fr else "Download referral form (PDF)"}</a><a class="button secondary" href="{home}#consultations">{"Coordonnées" if fr else "Contact details"}</a></div></section></main>'
+ return f'<main id="main"><section class="edu-hero"><div class="wrap"><p class="eyebrow">Dr Andrei Bursuc · Montréal</p><h1>{title}</h1><p>{intro}</p></div></section><section class="section wrap"><div class="faq-list">{cards(lang,clinic,FAQ)}</div><p class="faq-footer">{note}</p></section></main>'
 
 def faq_teaser(lang,url):
  fr=lang=='fr'
