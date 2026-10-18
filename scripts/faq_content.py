@@ -10,11 +10,11 @@ FAQ=[
  'Une consultation peut être utile pour des douleurs musculosquelettiques, certaines atteintes nerveuses ou des difficultés fonctionnelles après une maladie neurologique. Votre médecin peut vous orienter selon votre situation.',
  'A consultation may help with musculoskeletal pain, certain nerve conditions or functional difficulties following neurological illness. Your physician can advise whether physiatry is appropriate for you.',PMR,'AAPM&R'),
  ('montreal','Où consulter le Dr Andrei Bursuc à Montréal?','Where does Dr Andrei Bursuc see patients in Montréal?',
- 'Le Dr Bursuc consulte à la {name}, au {street}, {city}. Pour un rendez-vous, appelez le {phone}.',
- 'Dr Bursuc sees patients at {name}, {street}, {city}. To arrange an appointment, call {phone}.',None,None),
+ 'Le Dr Bursuc consulte à la {name}, au {street}, {city}. Les demandes de consultation doivent être envoyées au fax {referralFax}.',
+ 'Dr Bursuc sees patients at {name}, {street}, {city}. Consultation referrals should be sent to fax {referralFax}.',None,None),
  ('reference','Faut-il une référence médicale pour consulter?','Do I need a physician referral?',
- 'Une référence médicale est requise. Contactez la clinique au {phone} pour connaître la procédure et les documents à transmettre, notamment pour une demande d’EMG.',
- 'A physician referral is required. Contact the clinic at {phone} for the booking process and required documents, including an EMG request when applicable.',None,None),
+ 'Une référence médicale est requise. Votre médecin peut remplir le formulaire de consultation et le transmettre directement au Dr Bursuc par fax au {referralFax}, y compris pour une demande d’EMG.',
+ 'A physician referral is required. Your doctor can complete the consultation referral form and fax it directly to Dr Bursuc at {referralFax}, including for an EMG request.',None,None),
  ('services','Quels services le Dr Bursuc offre-t-il?','Which services does Dr Bursuc offer?',
  'Sa pratique comprend l’électromyographie, la gestion de la spasticité, les infiltrations échoguidées et les injections de toxine botulinique pour la migraine chronique. L’évaluation médicale détermine les options adaptées à votre situation.',
  'His practice includes electromyography, spasticity management, ultrasound-guided injections and botulinum toxin injections for chronic migraine. Medical assessment determines which options are appropriate for you.',None,None),
@@ -28,8 +28,8 @@ FAQ=[
  'Les stimulations électriques et l’aiguille peuvent être inconfortables. Signalez toute douleur à la personne qui réalise l’examen.',
  'Electrical stimulation and the needle can be uncomfortable. Tell the examiner if you experience pain.',EMG,'Mayo Clinic'),
  ('frais','Comment connaître les délais et les frais éventuels?','How can I check wait times and possible fees?',
- 'Contactez directement la clinique au {phone}. Elle pourra préciser les délais, les modalités de couverture et les frais éventuels selon le service demandé.',
- 'Contact the clinic at {phone}. Staff can clarify wait times, coverage arrangements and any fees for the requested service.',None,None),
+ 'Les délais, les modalités de couverture et les frais éventuels seront précisés selon le service demandé et la demande reçue.',
+ 'Wait times, coverage arrangements and any fees can be clarified based on the service requested and the referral received.',None,None),
  ('outils','Les outils d’éducation médicale sont-ils accessibles au public?','Are the medical education tools publicly accessible?',
  'Oui. La section Éducation médicale propose des explorateurs des nerfs, des fascicules intraneuraux, des blocs moteurs et des muscles en échographie. Ils sont destinés à l’apprentissage et ne remplacent pas une évaluation médicale.',
  'Yes. The Medical education section offers nerve, intraneural fascicle, motor block and muscle ultrasound explorers. They support learning and do not replace a medical assessment.',None,None)
@@ -47,7 +47,7 @@ def faq_html(lang,clinic,home):
  title='Questions fréquentes.' if fr else 'Frequently asked questions.'
  intro='Consultation en physiatrie à Montréal, EMG et rendez-vous : les réponses aux questions des patients.' if fr else 'Physiatry in Montréal, EMG and appointments: answers to common patient questions.'
  note='Informations générales. Les recommandations pour votre situation sont précisées lors de la consultation.' if fr else 'General information. Recommendations for your situation are discussed during your consultation.'
- return f'<main id="main"><section class="edu-hero"><div class="wrap"><p class="eyebrow">Dr Andrei Bursuc · Montréal</p><h1>{title}</h1><p>{intro}</p></div></section><section class="section wrap"><div class="faq-list">{cards(lang,clinic,FAQ)}</div><p class="faq-footer">{note}</p><div class="actions"><a class="button" href="tel:{clinic["phoneLink"]}">{"Appeler la clinique" if fr else "Call the clinic"} · {e(clinic["phone"])}</a><a class="button secondary" href="{home}#consultations">{"Coordonnées" if fr else "Contact details"}</a></div></section></main>'
+ return f'<main id="main"><section class="edu-hero"><div class="wrap"><p class="eyebrow">Dr Andrei Bursuc · Montréal</p><h1>{title}</h1><p>{intro}</p></div></section><section class="section wrap"><div class="faq-list">{cards(lang,clinic,FAQ)}</div><p class="faq-footer">{note}</p><div class="actions"><a class="button" href="/docs/demande-consultation-dr-andrei-bursuc.pdf" download>{"Télécharger le formulaire (PDF)" if fr else "Download referral form (PDF)"}</a><a class="button secondary" href="{home}#consultations">{"Coordonnées" if fr else "Contact details"}</a></div></section></main>'
 
 def faq_teaser(lang,url):
  fr=lang=='fr'

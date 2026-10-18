@@ -22,3 +22,17 @@
 @media(max-width:1050px){.navlinks{gap:12px;font-size:13px}.navrow{gap:12px}}
 @media(max-width:760px){.hero{gap:30px;padding-top:28px}.hero .intro{font-size:16px}.hero h1{font-size:2.65rem}.hero-contact{margin-top:18px;padding-left:14px}.hero-contact-links{display:grid;gap:3px}.portrait-frame{max-width:400px}.portrait-frame img{height:auto;aspect-ratio:auto}.service img{height:auto}.faq-list summary{font-size:17px}}
 .faq-question-links{display:grid;gap:0;max-width:860px}.faq-question-link{display:flex;justify-content:space-between;align-items:center;gap:20px;border-top:1px solid var(--line);padding:20px 0;text-decoration:none;font-size:18px;font-weight:600}.faq-question-link:hover{color:var(--blue)}details:target{border-left:3px solid var(--blue);padding-left:18px}
+
+/* Direct referral contact in both language versions. */
+.nav-fax{white-space:nowrap;color:var(--blue);font-weight:700}
+.hero-contact h2{font:700 clamp(1.45rem,2vw,1.8rem)/1.22 Arial,Helvetica,sans-serif;letter-spacing:-.02em;margin-bottom:11px}
+.hero-contact .referral-intro{font-size:15.5px;color:var(--ink);line-height:1.55}
+.hero-contact .actions{margin-top:17px;margin-bottom:15px}
+.hero-contact .button{max-width:100%;text-align:center}
+.hero-contact .referral-fax{font-size:16px;color:var(--ink);margin-top:4px}
+.hero-contact .referral-fax strong{color:var(--blue);white-space:nowrap}
+.clinic-location{border-top:1px solid var(--line);padding-top:17px;margin-top:20px}
+.clinic-location h3{font:700 13px/1.4 Arial,Helvetica,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:7px}
+.clinic-location p{margin-bottom:5px}
+.clinic-location a{color:var(--blue);font-size:14px;text-underline-offset:3px}
+@media(max-width:760px){.nav-fax{flex-basis:100%}.hero-contact h2{font-size:1.55rem}.hero-contact .button{width:100%}}
