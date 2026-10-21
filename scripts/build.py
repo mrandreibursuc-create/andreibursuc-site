@@ -1,6 +1,6 @@
 """Rebuild published pages after editing data/site.json. Python 3, no dependencies."""
 from pathlib import Path
-import json,html,os
+import json,html,os,unicodedata
 from urllib.parse import quote,urlencode
 ROOT=Path(__file__).resolve().parents[1]
 D=json.loads((ROOT/'data/site.json').read_text())
@@ -8,14 +8,16 @@ C=D['clinic']; esc=html.escape
 TOOLS=[
  ('emg-explorer','emg-explorer.html','Explorateur EMG et conduction nerveuse','EMG & nerve conduction explorer','Explorer les principes de l’électrodiagnostic, les tracés et les simulations interactives.','Explore electrodiagnostic principles, waveforms and interactive simulations.','FR / EN','EMG'),
  ('nerve-explorer','upper-limb-en.html','Explorateur des nerfs du membre supérieur','Upper-limb nerve explorer','Plexus brachial, myotomes et localisation des lésions.','Brachial plexus, myotomes and lesion localization.','EN','EMG'),
- ('explorateur-nerfs-membres-supérieurs','upper-limb-fr.html','Explorateur des nerfs du membre supérieur','Upper-limb nerve explorer','La version française, du plexus brachial à la main.','The French version, from brachial plexus to hand.','FR','EMG'),
+ ('explorateur-nerfs-membres-superieurs','upper-limb-fr.html','Explorateur des nerfs du membre supérieur','Upper-limb nerve explorer','La version française, du plexus brachial à la main.','The French version, from brachial plexus to hand.','FR','EMG'),
  ('lower-extremity-nerve-explorer','lower-limb.html','Explorateur des nerfs du membre inférieur','Lower-limb nerve explorer','Plexus lombo-sacré, territoires et localisation.','Lumbosacral plexus, territories and localization.','FR / EN','EMG'),
  ('fascicle-explorer','fascicle.html','Explorateur des fascicules intraneuraux','Intraneural fascicle explorer','Explorer l’organisation des fascicules à l’intérieur des nerfs.','Explore the organization of fascicles within nerves.','FR / EN','EMG'),
  ('motor-block-explorer','motor-blocks.html','Explorateur des blocs moteurs','Motor block explorer','Membres supérieurs et inférieurs réunis dans un seul outil.','Upper and lower limbs together in one tool.','FR / EN','Neuro'),
  ('muscle-ultrasound','muscle-ultrasound.html','Muscles en échographie','Muscle ultrasound','Anatomie musculaire et vidéos échographiques.','Muscle anatomy and ultrasound videos.','FR / EN','Neuro')]
 URLS=[]
 from faq_content import faq_html, faq_teaser
-def rel(path,target):return os.path.relpath(target or '.',start=os.path.dirname(path) or '.').replace(os.sep,'/')
+def rel(path,target):
+ if path=='404.html':return '/'+target
+ return os.path.relpath(target or '.',start=os.path.dirname(path) or '.').replace(os.sep,'/')
 def page(path,lang,title,desc,body,active='home',alternate=None,cls=''):
  fr=lang=='fr';r=lambda t:rel(path,t)
  home='index.html' if fr else 'en/index.html';edu='education/index.html' if fr else 'en/education/index.html'
@@ -64,6 +66,13 @@ for lang in ['fr','en']:
  home(lang);education(lang)
  fp='faq/index.html' if lang=='fr' else 'en/faq/index.html'
  page(fp,lang,'Questions fréquentes — Physiatre à Montréal | Dr Andrei Bursuc' if lang=='fr' else 'Frequently asked questions — Montréal physiatrist | Dr Andrei Bursuc','Consultation en physiatrie à Montréal, EMG, préparation et rendez-vous : réponses aux questions des patients.' if lang=='fr' else 'Physiatry in Montréal, EMG, preparation and appointments: answers to common patient questions.',faq_html(lang,C,rel(fp,'index.html' if lang=='fr' else 'en/index.html')),active='faq',alternate='en/faq/index.html' if lang=='fr' else 'faq/index.html')
+# Preserve both Unicode spellings of the former upper-limb explorer address.
+for prefix in ['education/','en/education/']:
+ for form in ['NFC','NFD']:
+  old=unicodedata.normalize(form,'explorateur-nerfs-membres-supérieurs')
+  dest=ROOT/prefix/old/'index.html';dest.parent.mkdir(parents=True,exist_ok=True)
+  target='../explorateur-nerfs-membres-superieurs/index.html'
+  dest.write_text('<!doctype html><html lang="'+('en' if prefix.startswith('en/') else 'fr')+'"><meta charset="utf-8"><meta http-equiv="refresh" content="0;url='+target+'"><link rel="canonical" href="'+D['domain']+'/'+prefix+'explorateur-nerfs-membres-superieurs/"><title>Explorateur des nerfs du membre supérieur</title><a href="'+target+'">Ouvrir / Open</a></html>')
 # Preserve previously shared links while retiring the separate block applications.
 for prefix in ['education/','en/education/']:
  for old in ['upper-extremity-nerve-blocks-blocs-moteurs-membre-supérieur','nerve-blocks-lower-extremity']:
