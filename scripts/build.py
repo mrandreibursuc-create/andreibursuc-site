@@ -7,8 +7,7 @@ D=json.loads((ROOT/'data/site.json').read_text())
 C=D['clinic']; esc=html.escape
 TOOLS=[
  ('emg-explorer','emg-explorer.html','Explorateur EMG et conduction nerveuse','EMG & nerve conduction explorer','Explorer les principes de l’électrodiagnostic, les tracés et les simulations interactives.','Explore electrodiagnostic principles, waveforms and interactive simulations.','FR / EN','EMG'),
- ('nerve-explorer','upper-limb-en.html','Explorateur des nerfs du membre supérieur','Upper-limb nerve explorer','Plexus brachial, myotomes et localisation des lésions.','Brachial plexus, myotomes and lesion localization.','EN','EMG'),
- ('explorateur-nerfs-membres-superieurs','upper-limb-fr.html','Explorateur des nerfs du membre supérieur','Upper-limb nerve explorer','La version française, du plexus brachial à la main.','The French version, from brachial plexus to hand.','FR','EMG'),
+ ('nerve-explorer','upper-limb.html','Explorateur des nerfs du membre supérieur','Upper-limb nerve explorer','Plexus brachial, myotomes et localisation des lésions.','Brachial plexus, myotomes and lesion localization.','FR / EN','EMG'),
  ('lower-extremity-nerve-explorer','lower-limb.html','Explorateur des nerfs du membre inférieur','Lower-limb nerve explorer','Plexus lombo-sacré, territoires et localisation.','Lumbosacral plexus, territories and localization.','FR / EN','EMG'),
  ('fascicle-explorer','fascicle.html','Explorateur des fascicules intraneuraux','Intraneural fascicle explorer','Explorer l’organisation des fascicules à l’intérieur des nerfs.','Explore the organization of fascicles within nerves.','FR / EN','EMG'),
  ('motor-block-explorer','motor-blocks.html','Explorateur des blocs moteurs','Motor block explorer','Membres supérieurs et inférieurs réunis dans un seul outil.','Upper and lower limbs together in one tool.','FR / EN','Neuro'),
@@ -59,7 +58,8 @@ def education(lang):
  page(path,lang,t('Éducation médicale et outils interactifs — Dr Andrei Bursuc','Medical education and interactive tools — Dr Andrei Bursuc'),t('Explorateurs des nerfs, blocs moteurs et muscles en échographie : outils interactifs en EMG et neuro-orthopédie.','Nerve explorers, motor blocks and ultrasound muscles: interactive tools for EMG and neuro-orthopaedics.'),body,active='edu',alternate='en/education/index.html' if fr else 'education/index.html')
  for slug,file,tf,te,df,de,badge,category in TOOLS:
   toolpath=('education/' if fr else 'en/education/')+slug+'/index.html';tr=lambda x:rel(toolpath,x)
-  body=f'''<main id="main"><div class="wrap tool-top"><div><a class="back" href="{tr(path)}">← {t('Tous les outils','All tools')}</a><h1>{t(tf,te)}</h1></div><a class="button secondary" href="{tr('tools/'+file)}">{t('Ouvrir en pleine page','Open full page')} ↗</a></div><iframe class="tool-frame" src="{tr('tools/'+file)}" title="{esc(t(tf,te))}" allow="fullscreen" allowfullscreen></iframe></main>'''
+  toolurl=tr('tools/'+file)+('?lang='+lang if file=='upper-limb.html' else '')
+  body=f'''<main id="main"><div class="wrap tool-top"><div><a class="back" href="{tr(path)}">← {t('Tous les outils','All tools')}</a><h1>{t(tf,te)}</h1></div><a class="button secondary" href="{toolurl}">{t('Ouvrir en pleine page','Open full page')} ↗</a></div><iframe class="tool-frame" src="{toolurl}" title="{esc(t(tf,te))}" allow="fullscreen" allowfullscreen></iframe></main>'''
   other=('en/education/' if fr else 'education/')+slug+'/index.html'
   page(toolpath,lang,t(tf,te)+' — Dr Andrei Bursuc',t(df,de),body,active='edu',alternate=other,cls='tool-page')
 for lang in ['fr','en']:
@@ -68,11 +68,10 @@ for lang in ['fr','en']:
  page(fp,lang,'Questions fréquentes — Physiatre à Montréal | Dr Andrei Bursuc' if lang=='fr' else 'Frequently asked questions — Montréal physiatrist | Dr Andrei Bursuc','Consultation en physiatrie à Montréal, EMG, préparation et rendez-vous : réponses aux questions des patients.' if lang=='fr' else 'Physiatry in Montréal, EMG, preparation and appointments: answers to common patient questions.',faq_html(lang,C,rel(fp,'index.html' if lang=='fr' else 'en/index.html')),active='faq',alternate='en/faq/index.html' if lang=='fr' else 'faq/index.html')
 # Preserve both Unicode spellings of the former upper-limb explorer address.
 for prefix in ['education/','en/education/']:
- for form in ['NFC','NFD']:
-  old=unicodedata.normalize(form,'explorateur-nerfs-membres-supérieurs')
+ for old in ['explorateur-nerfs-membres-superieurs']+[unicodedata.normalize(form,'explorateur-nerfs-membres-supérieurs') for form in ['NFC','NFD']]:
   dest=ROOT/prefix/old/'index.html';dest.parent.mkdir(parents=True,exist_ok=True)
-  target='../explorateur-nerfs-membres-superieurs/index.html'
-  dest.write_text('<!doctype html><html lang="'+('en' if prefix.startswith('en/') else 'fr')+'"><meta charset="utf-8"><meta http-equiv="refresh" content="0;url='+target+'"><link rel="canonical" href="'+D['domain']+'/'+prefix+'explorateur-nerfs-membres-superieurs/"><title>Explorateur des nerfs du membre supérieur</title><a href="'+target+'">Ouvrir / Open</a></html>')
+  target='../nerve-explorer/index.html'
+  dest.write_text('<!doctype html><html lang="'+('en' if prefix.startswith('en/') else 'fr')+'"><meta charset="utf-8"><meta http-equiv="refresh" content="0;url='+target+'"><link rel="canonical" href="'+D['domain']+'/'+prefix+'nerve-explorer/"><title>Explorateur des nerfs du membre supérieur</title><a href="'+target+'">Ouvrir / Open</a></html>')
 # Preserve previously shared links while retiring the separate block applications.
 for prefix in ['education/','en/education/']:
  for old in ['upper-extremity-nerve-blocks-blocs-moteurs-membre-supérieur','nerve-blocks-lower-extremity']:
