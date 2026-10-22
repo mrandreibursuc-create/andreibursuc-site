@@ -36,3 +36,21 @@
 .clinic-location p{margin-bottom:5px}
 .clinic-location a{color:var(--blue);font-size:14px;text-underline-offset:3px}
 @media(max-width:760px){.nav-fax{flex-basis:100%}.hero-contact h2{font-size:1.55rem}.hero-contact .button{width:100%}}
+
+/* Service information and the referral path. */
+.hero-contact .referral-next{font-size:14px;margin-top:12px;max-width:550px}
+.service-link{display:inline-block;color:var(--blue);font-size:14px;font-weight:700;margin-top:15px;text-underline-offset:4px}
+.service-hero{background:var(--navy);color:white;padding:52px 0 58px}
+.service-hero .back{display:inline-block;color:#c8dbf4;font-size:14px;margin-bottom:32px;text-underline-offset:4px}
+.service-hero .eyebrow{color:#a8ceff;margin-bottom:15px}
+.service-hero h1{max-width:900px}
+.service-hero .service-lead{color:#d1deea;font-size:19px;max-width:720px;margin-top:22px}
+.service-details{display:grid;grid-template-columns:1fr 1fr;gap:80px}
+.service-detail h2{font-size:clamp(1.75rem,2.7vw,2.45rem);margin-bottom:18px}
+.service-detail p,.service-referral p{max-width:700px;color:var(--muted)}
+.service-referral{max-width:850px}
+.service-referral h2{margin-bottom:18px}
+.service-referral p+p{margin-top:14px}
+.service-referral .button{margin-top:26px}
+@media(max-width:760px){.service-hero{padding:35px 0 42px}.service-hero .back{margin-bottom:26px}.service-hero h1{font-size:clamp(2.45rem,9vw,3.2rem)}.service-hero .service-lead{font-size:17px}.service-details{grid-template-columns:1fr;gap:38px}.services{grid-template-columns:1fr 1fr}.service-link{margin-top:10px}}
+@media(max-width:430px){.services{grid-template-columns:1fr}.service img{max-height:280px;object-fit:contain}}
